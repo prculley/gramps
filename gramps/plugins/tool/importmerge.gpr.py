@@ -1,0 +1,17 @@
+
+register(REPORT,
+    id = 'import_merge',
+    name = _("Import & Merge tool"),
+    description = _("Compares a Gramps XML database with the current one, and allows merging of the differences."),
+    version = '0.0.0',
+    gramps_target_version = "5.0",
+    status = STABLE,
+    fname = 'importmerge.py',
+    authors = ["Paul Culley"],
+    authors_email = ["paulr2787@gmail.com"],
+    category = TOOL_CLASS,
+    toolclass = 'ImportMerge',
+    optionclass = 'ImportMergeOptions',
+    tool_modes = [TOOL_MODE_GUI],
+    require_active = False,
+)
