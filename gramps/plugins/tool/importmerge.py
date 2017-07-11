@@ -1,7 +1,6 @@
 # Gramps - a GTK+/GNOME based genealogy program
 #
-# Copyright (C) 2012       Doug Blank <doug.blank@gmail.com>
-#               2017       Paul Culley <paulr2787@gmail.com>
+# Copyright (C) 2017       Paul Culley <paulr2787@gmail.com>
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -29,6 +28,12 @@ import copy
 import datetime
 import time
 import re
+#-------------------------------------------------------------------------
+#
+# GNOME libraries
+#
+#-------------------------------------------------------------------------
+from gi.repository import Gtk
 
 #------------------------------------------------------------------------
 #
@@ -39,17 +44,14 @@ from gramps.gen.const import GRAMPS_LOCALE as glocale
 _ = glocale.translation.gettext
 ngettext = glocale.translation.ngettext
 from gramps.gen.display.name import displayer as global_name_display
-from gramps.gen.plug.docgen import (FontStyle, ParagraphStyle, GraphicsStyle,
-                             FONT_SERIF, PARA_ALIGN_RIGHT,
-                             PARA_ALIGN_LEFT, PARA_ALIGN_CENTER,
-                             TableStyle, TableCellStyle, FONT_SANS_SERIF)
-from gramps.gen.plug.menu import (BooleanOption, DestinationOption, StringOption)
-from gramps.gen.plug.report import Report
-from gramps.gen.plug.report import utils as ReportUtils
-from gramps.gen.plug.report import MenuReportOptions
 from gramps.gen.merge.diff import diff_dbs, to_struct
+from gramps.gui.plug import tool
+from gramps.gui.display import display_url
+from gramps.gui.managedwindow import ManagedWindow
+from gramps.gui.dialog import ErrorDialog
 from gramps.gen.db.utils import import_as_dict
 from gramps.gen.simple import SimpleAccess
+from gramps.gui.glade import Glade
 
 #-------------------------------------------------------------------------
 #
@@ -59,6 +61,14 @@ from gramps.gen.simple import SimpleAccess
 
 WIKI_PAGE = 'https://gramps-project.org/wiki/index.php?title=Import_Merge_Tool'
 TITLE = _("Import and merge a Gramps XML")
+STATUS = 0
+OBJ_TYP = 1
+NAME = 2
+DIFF_I = 3
+TAG = 4
+ACTION = 5
+
+
 #------------------------------------------------------------------------
 #
 # Local Functions
@@ -67,31 +77,34 @@ TITLE = _("Import and merge a Gramps XML")
 def todate(t):
     return time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(t))
 
+def str_byte(string):
+    return (string, len(string.encode("utf8")))
 #------------------------------------------------------------------------
 #
 # ImportMerge
 #
 #------------------------------------------------------------------------
-class ImportMerge(Tool, ManagedWindow):
+class ImportMerge(tool.Tool, ManagedWindow):
     """
     Create the ImportMerge Gui.
     """
-    def __init__(self, dbstate, user, options, name, callback=None):
+    def __init__(self, dbstate, user, options_class, name, callback=None):
         uistate = user.uistate
         self._user = user
 
-        tool.Tool.__init__(self, dbstate, options, name)
+        tool.Tool.__init__(self, dbstate, options_class, name)
         ManagedWindow.__init__(self, uistate, [], self.__class__)
         self.db = dbstate.db
         self.uistate = uistate
-        menu = options.menu
+        # menu = options.menu
         self.top = Glade(toplevel="filechooserdialog1",
                          also_load=["filefilter1"])
         window = self.top.toplevel
         self.set_window(window, None, TITLE)
+        self.setup_configs('interface.importmergetoolfileopen', 750, 520)
         self.show()
         response = self.window.run()
-        if respone == Gtk.RESPONSE_CANCEL:
+        if response == Gtk.ResponseType.CANCEL:
             return
         self.filename = self.window.get_filename()
         window.destroy()
@@ -110,72 +123,61 @@ class ImportMerge(Tool, ManagedWindow):
             "on_ignore_clicked" : self.on_ignore,
             "on_tag_clicked"     : self.on_tag})
 
-        self.diff_liststore = self.top.get_object("diffs_liststore")
+        self.diff_list = self.top.get_object("diffs_liststore")
         self.imp_textbuf = self.top.get_object("import_textbuffer")
         self.tree_textbuf = self.top.get_object("tree_textbuffer")
         self.diff_view = self.top.get_object("Diffs_treeview")
         self.diff_sel = self.diff_view.get_selection()
-        self.fam_sel.connect('changed', self.on_fam_row_changed)
+        self.diff_sel.connect('changed', self.on_diff_row_changed)
+        self.db1_hndls = {}
+        self.db2_hndls = {}
 
-        self.diffs_liststore = self.top.get_object("diffs_liststore")
         self.show()
         if not self.find_diffs():
+            self.close()
             return
-        
-
 
     def find_diffs(self):
         """ Load import file, and search for diffs. """
-        self.database2 = import_as_dict(self.filename, self._user)
-        if self.database2 is None:
+        self.db2 = import_as_dict(self.filename, self._user)
+        if self.db2 is None:
             ErrorDialog(_("Import Failure"), parent=self.window)
             return False
-        self.sa = [SimpleAccess(self.database), SimpleAccess(self.database2)]
-        diffs, added, missing = diff_dbs(self.database, self.database2, self._user)
-            last_object = None
-            if diffs:
-                self._user.begin_progress(_('Family Tree Differences'),
-                                          _('Processing...'), len(diffs))
-                for diff in diffs:
-                    self._user.step_progress()
-                    obj_type, item1, item2 = diff
-                    if hasattr(item1, "gramps_id"):
-                        self.start_list(self.doc, "%s: %s" % (obj_type, item1.gramps_id),
-                                        "Database", "File")
-                    else:
-                        self.start_list(self.doc, "%s: %s" % (obj_type, item1.get_name()),
-                                        "Database", "File")
-                    self.report_diff(obj_type, to_struct(item1), to_struct(item2), self.doc)
-            if missing:
-                for pair in missing:
-                    obj_type, item = pair
-                    self.doc.write_text("Missing %s: %s" % (obj_type, self.sa[0].describe(item)))
-            if added:
-                for pair in added:
-                    obj_type, item = pair
-                    self.doc.write_text("Added %s: %s " % (obj_type, self.sa[1].describe(item)))
-        self._user.end_progress()
-
-    def start_list(self, doc, text, heading1, heading2):
-        doc.start_row()
-        doc.start_cell('DIFF-TableCell')
-        doc.start_paragraph('DIFF-TableHeading')
-        doc.write_text(text)
-        doc.end_paragraph()
-        doc.end_cell()
-        if heading1:
-            doc.start_cell('DIFF-TableCell')
-            doc.start_paragraph('DIFF-TableHeading')
-            doc.write_text(heading1)
-            doc.end_paragraph()
-            doc.end_cell()
-        if heading2:
-            doc.start_cell('DIFF-TableCell')
-            doc.start_paragraph('DIFF-TableHeading')
-            doc.write_text(heading2)
-            doc.end_paragraph()
-            doc.end_cell()
-        doc.end_row()
+        self.sa = [SimpleAccess(self.db), SimpleAccess(self.db2)]
+        self.diffs, self.added, self.missing = diff_dbs(
+            self.db, self.db2, self._user)
+        last_object = None
+        if self.diffs:
+            status = "Different"
+            # self._user.begin_progress(_('Family Tree Differences'),
+            #                           _('Processing...'), len(self.diffs))
+            for diff_i in range(len(self.diffs)):
+                # self._user.step_progress()
+                obj_type, item1, item2 = self.diffs[diff_i]
+                name = self.sa[0].describe(item1)
+                diff_data = (status, obj_type, name, diff_i, "tag", "")
+                self.diff_list.append(row=diff_data)
+        if self.missing:
+            status = "Missing"
+            for item_i in range(len(self.missing)):
+                obj_type, item = self.missing[item_i]
+                self.db1_hndls[item.handle] = (obj_type, item_i)
+                name = self.sa[0].describe(item)
+                diff_data = (status, obj_type, name, item_i, "tag", "")
+                self.diff_list.append(row=diff_data)
+        if self.added:
+            status = "Added"
+            for item_i in range(len(self.added)):
+                obj_type, item = self.added[item_i]
+                self.db2_hndls[item.handle] = (obj_type, item_i)
+                name = self.sa[1].describe(item)
+                diff_data = (status, obj_type, name, item_i, "tag", "")
+                self.diff_list.append(row=diff_data)
+        if len(self.diff_list) != 0:
+            spath = Gtk.TreePath.new_first()
+            self.diff_sel.select_path(spath)
+        # self._user.end_progress()
+        return True
 
     def format_struct_path(self, path):
         retval = ""
@@ -190,7 +192,7 @@ class ImportMerge(Tool, ManagedWindow):
                 retval += part
         return retval
 
-    def report_details(self, doc, path, diff1, diff2):
+    def report_details(self, path, diff1, diff2):
         if isinstance(diff1, bool):
             desc1 = repr(diff1)
         else:
@@ -206,25 +208,25 @@ class ImportMerge(Tool, ManagedWindow):
             desc2 = diff2
         if diff1 == diff2:
             return
-        doc.start_row()
-        doc.start_cell('DIFF-TableCell')
-        doc.start_paragraph('DIFF-TableHeading')
-        doc.write_text(self.format_struct_path(path))
-        doc.end_paragraph()
-        doc.end_cell()
-        doc.start_cell('DIFF-TableCell')
-        doc.start_paragraph('DIFF-Text')
-        doc.write_text(desc1)
-        doc.end_paragraph()
-        doc.end_cell()
-        doc.start_cell('DIFF-TableCell')
-        doc.start_paragraph('DIFF-Text')
-        doc.write_text(desc2)
-        doc.end_paragraph()
-        doc.end_cell()
-        doc.end_row()
+        obj_type = self.item1_hndls.get(desc1)
+        if obj_type:
+            hndl_func = self.db.get_table_metadata(obj_type)["handle_func"]
+            desc1 = obj_type + ": " + hndl_func(desc1).gramps_id
+        obj_type = self.item2_hndls.get(desc2)
+        if obj_type:
+            if self.db2_hndls.get(desc2):
+                text = _("imported ")
+            else:
+                text = _("your tree ")
+            hndl_func = self.db2.get_table_metadata(obj_type)["handle_func"]
+            desc2 = text + obj_type + ": " + hndl_func(desc2).gramps_id
+        path = self.format_struct_path(path)
+        desc1 = path + "\n" + desc1 + "\n"
+        desc2 = path + "\n" + desc2 + "\n"
+        self.text1 += desc1
+        self.text2 += desc2
 
-    def report_diff(self, path, struct1, struct2, doc):
+    def report_diff(self, path, struct1, struct2):
         """
         Compare two struct objects and report differences.
         """
@@ -237,119 +239,82 @@ class ImportMerge(Tool, ManagedWindow):
             for pos in range(max(len1, len2)):
                 value1 = struct1[pos] if pos < len1 else None
                 value2 = struct2[pos] if pos < len2 else None
-                self.report_diff(path + ("[%d]" % pos), value1, value2, doc)
+                self.report_diff(path + ("[%d]" % pos), value1, value2)
         elif isinstance(struct1, dict) or isinstance(struct2, dict):
             keys = struct1.keys() if isinstance(struct1, dict) else struct2.keys()
             for key in keys:
                 value1 = struct1[key] if struct1 is not None else None
                 value2 = struct2[key] if struct2 is not None else None
-                if key == "dict": # a raw dict, not a struct
-                    self.report_details(path, value1, value2, doc)
+                if key == "dict":  # a raw dict, not a struct
+                    self.report_details(path, value1, value2)
                 else:
-                    self.report_diff(path + "." + key, value1, value2, doc)
+                    self.report_diff(path + "." + key, value1, value2)
         else:
-            self.report_details(doc, path, struct1, struct2)
+            self.report_details(path, struct1, struct2)
+
+    def on_diff_row_changed(self, *obj):
+        """ Signal: update lower panes when the diff pane row changes """
+        if not obj:
+            return
+        self.diff_iter = obj[0].get_selected()[1]
+        if not self.diff_iter:
+            return
+        status = self.diff_list[self.diff_iter][STATUS]
+        if status == "Different":
+            diff = self.diffs[self.diff_list[self.diff_iter][DIFF_I]]
+            obj_type, item1, item2 = diff
+            self.item1_hndls = {i[1]: i[0] for i in
+                                item1.get_referenced_handles_recursively()}
+            self.item2_hndls = {i[1]: i[0] for i in
+                                item2.get_referenced_handles_recursively()}
+            self.text1 = self.text2 = ""
+            self.report_diff(obj_type, to_struct(item1), to_struct(item2))
+            self.tree_textbuf.set_text(*str_byte(self.text1))
+            self.imp_textbuf.set_text(*str_byte(self.text2))
+        elif status == "Added":
+            diff = self.added[self.diff_list[self.diff_iter][DIFF_I]]
+            obj_type, item = diff
+            name = self.sa[1].describe(item)
+            self.imp_textbuf.set_text(*str_byte(obj_type + ": " + name))
+            self.tree_textbuf.set_text(*str_byte(""))
+        else:  # status == "Missing":
+            diff = self.missing[self.diff_list[self.diff_iter][DIFF_I]]
+            obj_type, item = diff
+            name = self.sa[0].describe(item)
+            self.tree_textbuf.set_text(*str_byte(obj_type + ": " + name))
+            self.imp_textbuf.set_text(*str_byte(""))
+
+    def on_merge(self, dummy):
+        pass
+
+    def on_add(self, dummy):
+        pass
+
+    def on_ignore(self, dummy):
+        pass
+
+    def on_tag(self, dummy):
+        pass
+
+    def on_help_clicked(self, dummy):
+        """ Button: Display the relevant portion of GRAMPS manual"""
+        display_url(WIKI_PAGE)
+
+    def build_menu_names(self, obj):
+        return (TITLE, TITLE)
+
 
 #------------------------------------------------------------------------
 #
-# DifferencesOptions
+# ImportMergeOptions
 #
 #------------------------------------------------------------------------
-class DifferencesOptions(MenuReportOptions):
-    """ Options for the Differences Report """
+class ImportMergeOptions(tool.ToolOptions):
+    """ Options for the ImportMerge """
 
-    def add_menu_options(self, menu):
-        """ Add the options for the text differences report """
-        category_name = _("Report Options")
-        filename = DestinationOption(_("Family Tree file"), "data.gramps")
-        filename.set_help(_("Select a .gpkg or .gramps file"))
-        menu.add_option(category_name, "filename", filename)
+    def __init__(self, name, person_id=None):
+        tool.ToolOptions.__init__(self, name, person_id)
 
-        show_diff = BooleanOption(_("Show items that are different"), True)
-        show_diff.set_help(_("Include items that are different"))
-        menu.add_option(category_name, "show_diff", show_diff)
-
-        show_missing = BooleanOption(_("Show items missing from file"), True)
-        show_missing.set_help(_("Include items not in file but in database"))
-        menu.add_option(category_name, "show_missing", show_missing)
-
-        show_added = BooleanOption(_("Show items added in file"), True)
-        show_added.set_help(_("Include items in file but not in database"))
-        menu.add_option(category_name, "show_added", show_added)
-
-    def make_my_style(self, default_style, name, description,
-                      size=9, font=FONT_SERIF, justified ="left",
-                      color=None, align=PARA_ALIGN_CENTER,
-                      shadow = None, italic=0, bold=0, borders=0, indent=None):
-        """ Create paragraph and graphic styles of the same name """
-        # Paragraph:
-        f = FontStyle()
-        f.set_size(size)
-        f.set_type_face(font)
-        f.set_italic(italic)
-        f.set_bold(bold)
-        p = ParagraphStyle()
-        p.set_font(f)
-        p.set_alignment(align)
-        p.set_description(description)
-        p.set_top_border(borders)
-        p.set_left_border(borders)
-        p.set_bottom_border(borders)
-        p.set_right_border(borders)
-        if indent:
-            p.set(first_indent=indent)
-        if justified == "left":
-            p.set_alignment(PARA_ALIGN_LEFT)
-        elif justified == "right":
-            p.set_alignment(PARA_ALIGN_RIGHT)
-        elif justified == "center":
-            p.set_alignment(PARA_ALIGN_CENTER)
-        default_style.add_paragraph_style(name, p)
-        # Graphics:
-        g = GraphicsStyle()
-        g.set_paragraph_style(name)
-        if shadow:
-            g.set_shadow(*shadow)
-        if color is not None:
-            g.set_fill_color(color)
-        if not borders:
-            g.set_line_width(0)
-        default_style.add_draw_style(name, g)
-
-    def make_default_style(self, default_style):
-        """ Add the styles used in this report """
-        self.make_my_style(default_style, "DIFF-Text",
-                           _('Text'), 12, justified="left")
-        self.make_my_style(default_style, "DIFF-Title",
-                           _('Text'), 16, justified="left",
-                           bold=1)
-        self.make_my_style(default_style, "DIFF-Heading",
-                           _('Text'), 14, justified="left",
-                           bold=1, italic=1)
-        self.make_my_style(default_style, "DIFF-TableHeading",
-                           _('Text'), 12, justified="left",
-                           bold=1)
-
-        #Table Styles
-        cell = TableCellStyle()
-        cell.set_borders(1)
-        default_style.add_cell_style('DIFF-TableCell', cell)
-
-        cell = TableCellStyle()
-        default_style.add_cell_style('DIFF-TableCellNoBorder', cell)
-
-        table = TableStyle()
-        table.set_width(100)
-        table.set_columns(3)
-        table.set_column_width(0, 50)
-        table.set_column_width(1, 25)
-        table.set_column_width(2, 25)
-        default_style.add_table_style('DIFF-Table3',table)
-
-        table = TableStyle()
-        table.set_width(100)
-        table.set_columns(2)
-        table.set_column_width(0, 15)
-        table.set_column_width(1, 85)
-        default_style.add_table_style('DIFF-Table2',table)
-
+        # Options specific for this report
+        self.options_dict = {}
+        self.options_help = {}
