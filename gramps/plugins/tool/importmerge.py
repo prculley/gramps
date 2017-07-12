@@ -24,7 +24,7 @@
 # python modules
 #
 #------------------------------------------------------------------------
-import copy
+from copy import deepcopy
 import datetime
 import time
 import re
@@ -45,6 +45,7 @@ _ = glocale.translation.gettext
 ngettext = glocale.translation.ngettext
 from gramps.gen.display.name import displayer as global_name_display
 from gramps.gen.merge.diff import diff_dbs, to_struct
+from gramps.gen.utils.db import get_participant_from_event
 from gramps.gui.plug import tool
 from gramps.gui.display import display_url
 from gramps.gui.managedwindow import ManagedWindow
@@ -52,6 +53,9 @@ from gramps.gui.dialog import ErrorDialog
 from gramps.gen.db.utils import import_as_dict
 from gramps.gen.simple import SimpleAccess
 from gramps.gui.glade import Glade
+from gramps.gen.lib import (Person, Family, Event, Source, Place, Citation,
+                            Media, Repository, Note, Date, Tag)
+from gramps.gen.display.place import displayer as place_displayer
 
 #-------------------------------------------------------------------------
 #
@@ -67,7 +71,15 @@ NAME = 2
 DIFF_I = 3
 TAG = 4
 ACTION = 5
-
+S_MISS = _("Missing")
+S_ADD = _("Added")
+S_DIFFERS = _("Different")
+A_MERGE_L = _("Merge Left")
+A_MERGE_R = _("Merge Right")
+A_REPLACE = _("Replace")
+A_IGNORE = _("Ignore")
+A_ADD = _("Add")
+A_DEL = _("Delete")
 
 #------------------------------------------------------------------------
 #
@@ -109,29 +121,38 @@ class ImportMerge(tool.Tool, ManagedWindow):
         self.filename = self.window.get_filename()
         window.destroy()
         self.top = Glade(toplevel="main",
-                         also_load=["import_textbuffer", "tree_textbuffer",
-                                    "diffs_liststore"])
+                         also_load=["import_label", "tree_label",
+                                    "result_label", "diffs_liststore"])
         window = self.top.toplevel
         self.set_window(window, None, TITLE)
-        self.setup_configs('interface.importmergetool', 750, 520)
+        self.setup_configs('interface.importmergetool', 760, 560)
         self.top.connect_signals({
-            "on_close"              : self.close,
+            "on_merge_l_clicked"    : self.on_merge_l,
+            "on_edit_clicked"       : self.on_edit,
+            "on_merge_r_clicked"    : self.on_merge_r,
+            "on_ignore_clicked"     : self.on_ignore,
+            "on_add_clicked"        : self.on_add,
+            "on_replace_clicked"    : self.on_replace,
             "on_help_clicked"       : self.on_help_clicked,
+            "on_tag_clicked"        : self.on_tag,
             "on_delete_event"       : self.close,
-            "on_merge_clicked"     : self.on_merge,
-            "on_add_clicked"       : self.on_add,
-            "on_ignore_clicked" : self.on_ignore,
-            "on_tag_clicked"     : self.on_tag})
+            "on_close"              : self.close})
 
+        self.merge_l_btn = self.top.get_object("merge_l_btn")
+        self.merge_r_btn = self.top.get_object("merge_r_btn")
+        self.edit_btn = self.top.get_object("edit_btn")
+        self.add_btn = self.top.get_object("add_btn")
+        self.ignore_btn = self.top.get_object("ignore_btn")
+        self.replace_btn = self.top.get_object("replace_btn")
         self.diff_list = self.top.get_object("diffs_liststore")
-        self.imp_textbuf = self.top.get_object("import_textbuffer")
-        self.tree_textbuf = self.top.get_object("tree_textbuffer")
+        self.imp_label = self.top.get_object("import_label")
+        self.tree_label = self.top.get_object("tree_label")
+        self.res_label = self.top.get_object("result_label")
         self.diff_view = self.top.get_object("Diffs_treeview")
         self.diff_sel = self.diff_view.get_selection()
         self.diff_sel.connect('changed', self.on_diff_row_changed)
         self.db1_hndls = {}
         self.db2_hndls = {}
-
         self.show()
         if not self.find_diffs():
             self.close()
@@ -143,12 +164,12 @@ class ImportMerge(tool.Tool, ManagedWindow):
         if self.db2 is None:
             ErrorDialog(_("Import Failure"), parent=self.window)
             return False
-        self.sa = [SimpleAccess(self.db), SimpleAccess(self.db2)]
+        self.sa = [MySa(self.db), MySa(self.db2)]
         self.diffs, self.added, self.missing = diff_dbs(
             self.db, self.db2, self._user)
         last_object = None
         if self.diffs:
-            status = "Different"
+            status = S_DIFFERS
             # self._user.begin_progress(_('Family Tree Differences'),
             #                           _('Processing...'), len(self.diffs))
             for diff_i in range(len(self.diffs)):
@@ -158,7 +179,7 @@ class ImportMerge(tool.Tool, ManagedWindow):
                 diff_data = (status, obj_type, name, diff_i, "tag", "")
                 self.diff_list.append(row=diff_data)
         if self.missing:
-            status = "Missing"
+            status = S_MISS
             for item_i in range(len(self.missing)):
                 obj_type, item = self.missing[item_i]
                 self.db1_hndls[item.handle] = (obj_type, item_i)
@@ -166,7 +187,7 @@ class ImportMerge(tool.Tool, ManagedWindow):
                 diff_data = (status, obj_type, name, item_i, "tag", "")
                 self.diff_list.append(row=diff_data)
         if self.added:
-            status = "Added"
+            status = S_ADD
             for item_i in range(len(self.added)):
                 obj_type, item = self.added[item_i]
                 self.db2_hndls[item.handle] = (obj_type, item_i)
@@ -186,7 +207,7 @@ class ImportMerge(tool.Tool, ManagedWindow):
             if retval:
                 retval += ", "
             if "[" in part and "]" in part:
-                part, index = re.match("(.*)\[(\d*)\]", part).groups()
+                part, index = re.match(r"(.*)\[(\d*)\]", part).groups()
                 retval += "%s #%s" % (part.replace("_", " "), int(index) + 1)
             else:
                 retval += part
@@ -221,10 +242,16 @@ class ImportMerge(tool.Tool, ManagedWindow):
             hndl_func = self.db2.get_table_metadata(obj_type)["handle_func"]
             desc2 = text + obj_type + ": " + hndl_func(desc2).gramps_id
         path = self.format_struct_path(path)
-        desc1 = path + "\n" + desc1 + "\n"
-        desc2 = path + "\n" + desc2 + "\n"
-        self.text1 += desc1
-        self.text2 += desc2
+        if self.res_mode:
+            if desc1 and not desc2:
+                self.text2 += path + "<s>" + desc1 + "</s>\n"
+            else:
+                self.text2 += path + "<b>" + desc2 + "</b>\n"
+        else:
+            desc1 = path + "\n" + desc1 + "\n"
+            desc2 = path + "\n" + desc2 + "\n"
+            self.text1 += desc1
+            self.text2 += desc2
 
     def report_diff(self, path, struct1, struct2):
         """
@@ -260,7 +287,12 @@ class ImportMerge(tool.Tool, ManagedWindow):
         if not self.diff_iter:
             return
         status = self.diff_list[self.diff_iter][STATUS]
-        if status == "Different":
+        action = self.diff_list[self.diff_iter][ACTION]
+        diff_i = self.diff_list[self.diff_iter][DIFF_I]
+        self.fix_btns(status)
+        self.show_results(action, diff_i)
+        self.res_mode = False
+        if status == S_DIFFERS:
             diff = self.diffs[self.diff_list[self.diff_iter][DIFF_I]]
             obj_type, item1, item2 = diff
             self.item1_hndls = {i[1]: i[0] for i in
@@ -269,28 +301,90 @@ class ImportMerge(tool.Tool, ManagedWindow):
                                 item2.get_referenced_handles_recursively()}
             self.text1 = self.text2 = ""
             self.report_diff(obj_type, to_struct(item1), to_struct(item2))
-            self.tree_textbuf.set_text(*str_byte(self.text1))
-            self.imp_textbuf.set_text(*str_byte(self.text2))
-        elif status == "Added":
+            self.tree_label.set_markup(self.text1)
+            self.imp_label.set_markup(self.text2)
+        elif status == S_ADD:
             diff = self.added[self.diff_list[self.diff_iter][DIFF_I]]
             obj_type, item = diff
             name = self.sa[1].describe(item)
-            self.imp_textbuf.set_text(*str_byte(obj_type + ": " + name))
-            self.tree_textbuf.set_text(*str_byte(""))
-        else:  # status == "Missing":
+            self.imp_label.set_markup(obj_type + ": " + name)
+            self.tree_label.set_markup("")
+        else:  # status == S_MISS:
             diff = self.missing[self.diff_list[self.diff_iter][DIFF_I]]
             obj_type, item = diff
             name = self.sa[0].describe(item)
-            self.tree_textbuf.set_text(*str_byte(obj_type + ": " + name))
-            self.imp_textbuf.set_text(*str_byte(""))
+            self.tree_label.set_markup(obj_type + ": " + name)
+            self.imp_label.set_markup("")
 
-    def on_merge(self, dummy):
+    def fix_btns(self, status):
+        if status == S_DIFFERS:
+            self.add_btn.set_sensitive(False)
+            self.edit_btn.set_sensitive(True)
+            self.merge_l_btn.set_sensitive(True)
+            self.merge_r_btn.set_sensitive(True)
+            self.replace_btn.set_sensitive(True)
+        elif status == S_ADD:
+            self.add_btn.set_label(_("Add"))
+            self.add_btn.set_sensitive(True)
+            self.edit_btn.set_sensitive(True)
+            self.merge_l_btn.set_sensitive(False)
+            self.merge_r_btn.set_sensitive(False)
+            self.replace_btn.set_sensitive(False)
+        else:
+            self.add_btn.set_label(_("Delete"))
+            self.add_btn.set_sensitive(True)
+            self.edit_btn.set_sensitive(False)
+            self.merge_l_btn.set_sensitive(False)
+            self.merge_r_btn.set_sensitive(False)
+            self.replace_btn.set_sensitive(False)
+
+    def show_result(self, action, diff_i):
+        res = ""
+        tag = None
+        if action == A_ADD or action == A_REPLACE:
+            obj_type, item = self.added[diff_i]
+            res = obj_type + ": " + self.sa[1].describe(item)
+        elif action == A_IGNORE:
+            obj_type, item = self.missing[diff_i]
+            res = obj_type + ": " + self.sa[0].describe(item)
+        elif action == A_DEL:
+            obj_type, item = self.missing[diff_i]
+            res = "<s>" + obj_type + ": " + self.sa[0].describe(item) + "</s>"
+        elif action == A_MERGE_L:
+            diff = self.diffs[self.diff_list[self.diff_iter][DIFF_I]]
+            obj_type, item1, item2 = self.diffs[diff_i]
+            self.text1 = self.text2 = ""
+            item_r = deepcopy(item1)
+            item_r.merge(item2)
+            self.report_diff(obj_type, to_struct(item1), to_struct(item_r))
+            res = self.text2
+        elif action == A_MERGE_R:
+            diff = self.diffs[self.diff_list[self.diff_iter][DIFF_I]]
+            obj_type, item1, item2 = self.diffs[diff_i]
+            self.text1 = self.text2 = ""
+            item_r = deepcopy(item2)
+            item_r.merge(item1)
+            self.report_diff(obj_type, to_struct(item1), to_struct(item_r))
+            res = self.text2
+             
+        self.res_label.set_markup(res)
+
+    def on_merge_l(self, dummy):
+        pass
+
+    def on_merge_r(self, dummy):
+        pass
+
+    def on_edit(self, dummy):
         pass
 
     def on_add(self, dummy):
         pass
 
     def on_ignore(self, dummy):
+        pass
+
+    def on_replace(self, dummy):
         pass
 
     def on_tag(self, dummy):
@@ -304,6 +398,51 @@ class ImportMerge(tool.Tool, ManagedWindow):
         return (TITLE, TITLE)
 
 
+#------------------------------------------------------------------------
+#
+# MySa extended SimpleAccess for more info
+#
+#------------------------------------------------------------------------
+class MySa(SimpleAccess):
+    """ Extended SimpleAccess """
+
+    def __init__(self, dbase):
+        SimpleAccess.__init__(self, dbase)
+
+    def describe(self, obj, prop=None, value=None):
+        """
+        Given a object, return a string describing the object.
+        """
+        if prop and value:
+            if self.dbase.get_table_metadata(obj):
+                obj = self.dbase.get_table_metadata(obj)[prop + "_func"](value)
+        if isinstance(obj, Person):
+            return "%s [%s]" % (self.name(obj), self.gid(obj))
+        elif isinstance(obj, Event):
+            return "%s [%s] %s" % (
+                self.event_type(obj), self.gid(obj),
+                get_participant_from_event(self.dbase, obj.handle))
+        elif isinstance(obj, Family):
+            return "%s/%s [%s]" % (self.name(self.mother(obj)),
+                                   self.name(self.father(obj)),
+                                   self.gid(obj))
+        elif isinstance(obj, Media):
+            return "%s [%s]" % (obj.desc, self.gid(obj))
+        elif isinstance(obj, Source):
+            return "%s [%s]" % (self.title(obj), self.gid(obj))
+        elif isinstance(obj, Citation):
+            return "[%s] %s" % (self.gid(obj), obj.page)
+        elif isinstance(obj, Place):
+            place_title = place_displayer.display(self.dbase, obj)
+            return "%s [%s]" % (place_title, self.gid(obj))
+        elif isinstance(obj, Repository):
+            return "%s [%s] %s" % (obj.type, self.gid(obj), obj.name)
+        elif isinstance(obj, Note):
+            return "%s [%s] %s" % (obj.type, self.gid(obj), obj.get())
+        elif isinstance(obj, Tag):
+            return "[%s]" % (obj.name)
+        else:
+            return "Error: incorrect object class in describe: '%s'" % type(obj)
 #------------------------------------------------------------------------
 #
 # ImportMergeOptions
