@@ -145,14 +145,15 @@ class ImportMerge(tool.Tool, ManagedWindow):
         self.ignore_btn = self.top.get_object("ignore_btn")
         self.replace_btn = self.top.get_object("replace_btn")
         self.diff_list = self.top.get_object("diffs_liststore")
-        self.imp_label = self.top.get_object("import_label")
+        self.imp_label = self.top.get_object("imp_label")
         self.tree_label = self.top.get_object("tree_label")
-        self.res_label = self.top.get_object("result_label")
+        self.res_label = self.top.get_object("res_label")
         self.diff_view = self.top.get_object("Diffs_treeview")
         self.diff_sel = self.diff_view.get_selection()
         self.diff_sel.connect('changed', self.on_diff_row_changed)
         self.db1_hndls = {}
         self.db2_hndls = {}
+        self.res_mode = False
         self.show()
         if not self.find_diffs():
             self.close()
@@ -217,11 +218,11 @@ class ImportMerge(tool.Tool, ManagedWindow):
         if isinstance(diff1, bool):
             desc1 = repr(diff1)
         else:
-            desc1 = str(diff1) if diff1 else ""
+            desc1 = str(diff1) if diff1 is not None else ""
         if isinstance(diff2, bool):
             desc2 = repr(diff2)
         else:
-            desc2 = str(diff2) if diff2 else ""
+            desc2 = str(diff2) if diff2 is not None else ""
         if path.endswith(".change"):
             diff1 = todate(diff1)
             diff2 = todate(diff2)
@@ -261,6 +262,9 @@ class ImportMerge(tool.Tool, ManagedWindow):
             return
         elif (isinstance(struct1, (list, tuple)) or
               isinstance(struct2, (list, tuple))):
+            if (isinstance(struct1, tuple) or
+                isinstance(struct2, tuple)):
+                pass
             len1 = len(struct1) if isinstance(struct1, (list, tuple)) else 0
             len2 = len(struct2) if isinstance(struct2, (list, tuple)) else 0
             for pos in range(max(len1, len2)):
@@ -287,10 +291,8 @@ class ImportMerge(tool.Tool, ManagedWindow):
         if not self.diff_iter:
             return
         status = self.diff_list[self.diff_iter][STATUS]
-        action = self.diff_list[self.diff_iter][ACTION]
-        diff_i = self.diff_list[self.diff_iter][DIFF_I]
         self.fix_btns(status)
-        self.show_results(action, diff_i)
+        self.show_results()
         self.res_mode = False
         if status == S_DIFFERS:
             diff = self.diffs[self.diff_list[self.diff_iter][DIFF_I]]
@@ -338,54 +340,72 @@ class ImportMerge(tool.Tool, ManagedWindow):
             self.merge_r_btn.set_sensitive(False)
             self.replace_btn.set_sensitive(False)
 
-    def show_result(self, action, diff_i):
+    def show_results(self):
+        action = self.diff_list.get_value(self.diff_iter, ACTION)
+        diff_i = self.diff_list.get_value(self.diff_iter, DIFF_I)
+        status = self.diff_list.get_value(self.diff_iter, STATUS)
         res = ""
-        tag = None
         if action == A_ADD or action == A_REPLACE:
-            obj_type, item = self.added[diff_i]
+            if status == S_DIFFERS:
+                obj_type, dummy, item = self.diffs[diff_i]
+            else:
+                obj_type, item = self.added[diff_i]
             res = obj_type + ": " + self.sa[1].describe(item)
         elif action == A_IGNORE:
-            obj_type, item = self.missing[diff_i]
+            if status == S_DIFFERS:
+                obj_type, item, dummy = self.diffs[diff_i]
+            elif status == S_ADD:
+                obj_type, item = self.added[diff_i]
+            else:
+                obj_type, item = self.missing[diff_i]
             res = obj_type + ": " + self.sa[0].describe(item)
         elif action == A_DEL:
             obj_type, item = self.missing[diff_i]
             res = "<s>" + obj_type + ": " + self.sa[0].describe(item) + "</s>"
         elif action == A_MERGE_L:
-            diff = self.diffs[self.diff_list[self.diff_iter][DIFF_I]]
             obj_type, item1, item2 = self.diffs[diff_i]
             self.text1 = self.text2 = ""
             item_r = deepcopy(item1)
-            item_r.merge(item2)
+            item_m = deepcopy(item2)
+            item_m.gramps_id = None
+            item_r.merge(item_m)
             self.report_diff(obj_type, to_struct(item1), to_struct(item_r))
             res = self.text2
         elif action == A_MERGE_R:
-            diff = self.diffs[self.diff_list[self.diff_iter][DIFF_I]]
             obj_type, item1, item2 = self.diffs[diff_i]
             self.text1 = self.text2 = ""
             item_r = deepcopy(item2)
-            item_r.merge(item1)
+            item_m = deepcopy(item1)
+            item_m.gramps_id = None
+            item_r.merge(item_m)
             self.report_diff(obj_type, to_struct(item1), to_struct(item_r))
             res = self.text2
-             
+
         self.res_label.set_markup(res)
 
     def on_merge_l(self, dummy):
-        pass
+        self.on_btn(A_MERGE_L)
 
     def on_merge_r(self, dummy):
-        pass
+        self.on_btn(A_MERGE_R)
 
     def on_edit(self, dummy):
         pass
 
     def on_add(self, dummy):
-        pass
+        self.on_btn(A_ADD)
 
     def on_ignore(self, dummy):
-        pass
+        self.on_btn(A_IGNORE)
 
     def on_replace(self, dummy):
-        pass
+        self.on_btn(A_REPLACE)
+
+    def on_btn(self, action):
+        if not self.diff_iter:
+            return
+        self.diff_list.set_value(self.diff_iter, ACTION, action)
+        self.show_results()
 
     def on_tag(self, dummy):
         pass
