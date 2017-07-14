@@ -272,21 +272,29 @@ class ImportMerge(tool.Tool, ManagedWindow):
             return
         elif (isinstance(struct1, (list, tuple)) or
               isinstance(struct2, (list, tuple))):
-            if (isinstance(struct1, tuple) or
-                isinstance(struct2, tuple)):
-                pass
+            assert not (isinstance(struct1, tuple) or
+                        isinstance(struct2, tuple))
             len1 = len(struct1) if isinstance(struct1, (list, tuple)) else 0
             len2 = len(struct2) if isinstance(struct2, (list, tuple)) else 0
             len3 = 0
             if struct3 and isinstance(struct3, (list, tuple)):
                 len3 = len(struct3)
-                
             for pos in range(max(len1, len2, len3)):
                 value1 = struct1[pos] if pos < len1 else None
                 value2 = struct2[pos] if pos < len2 else None
                 value3 = struct3[pos] if pos < len3 else None
                 self.report_diff(path + ("[%d]" % pos), value1, value2, value3)
         elif isinstance(struct1, dict) or isinstance(struct2, dict):
+            # test if we have added/deleted and only list the class info
+            value1 = value2 = value3 = None
+            if struct1 is None or struct2 is None:
+                if struct1 is None:
+                    value2 = struct2.get("_class")
+                if struct2 is None:
+                    value1 = struct1.get("_class")
+                value3 = struct3.get("_class") if struct3 is not None else None
+                self.report_details(path, value1, value2, value3)
+                return
             keys = struct1.keys() if isinstance(struct1, dict) else struct2.keys()
             for key in keys:
                 value1 = struct1[key] if struct1 is not None else None
