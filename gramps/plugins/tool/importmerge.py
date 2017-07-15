@@ -112,18 +112,18 @@ class ImportMerge(tool.Tool, ManagedWindow):
         self.db = dbstate.db
         self.uistate = uistate
         # menu = options.menu
-#         self.top = Glade(toplevel="filechooserdialog1",
-#                          also_load=["filefilter1"])
-#         window = self.top.toplevel
-#         self.set_window(window, None, TITLE)
-#         self.setup_configs('interface.importmergetoolfileopen', 750, 520)
-#         self.show()
-#         response = self.window.run()
-#         if response == Gtk.ResponseType.CANCEL:
-#             return
-#         self.filename = self.window.get_filename()
-#         window.destroy()
-        self.filename = r"d:\users\prc\documents\Gramps\data\tests\imp_sample.gramps"
+        self.top = Glade(toplevel="filechooserdialog1",
+                         also_load=["filefilter1"])
+        window = self.top.toplevel
+        self.set_window(window, None, TITLE)
+        self.setup_configs('interface.importmergetoolfileopen', 750, 520)
+        self.show()
+        response = self.window.run()
+        if response == Gtk.ResponseType.CANCEL:
+            return
+        self.filename = self.window.get_filename()
+        window.destroy()
+        #self.filename = r"d:\users\prc\documents\Gramps\data\tests\imp_sample.gramps"
         self.top = Glade(toplevel="main",
                          also_load=["res_treeview", "res_liststore",
                                     "diffs_liststore"])
@@ -157,10 +157,15 @@ class ImportMerge(tool.Tool, ManagedWindow):
         self.db1_hndls = {}
         self.db2_hndls = {}
         self.res_mode = False
+        self.classes = set()
         self.show()
         if not self.find_diffs():
             self.close()
             return
+
+    def close(self, *args):
+        print(self.classes)
+        ManagedWindow.close(self, *args)
 
     def find_diffs(self):
         """ Load import file, and search for diffs. """
@@ -270,12 +275,16 @@ class ImportMerge(tool.Tool, ManagedWindow):
         """
         Compare two struct objects and report differences.
         """
-        if to_struct(item1) == to_struct(item2):
-            return   # _eq_ doesn't work on Gramps objects for this purpose
+        #if to_struct(item1) == to_struct(item2):
+            #return   # _eq_ doesn't work on Gramps objects for this purpose
+        if item1 is None and item2 is None:
+            return
         elif (isinstance(item1, (list, tuple)) or
               isinstance(item2, (list, tuple))):
-            assert not (isinstance(item1, tuple) or
-                        isinstance(item2, tuple))
+            #assert not (isinstance(item1, tuple) or
+            if (isinstance(item1, tuple) or
+                        isinstance(item2, tuple)):
+                pass  # yes there are tuples
             len1 = len(item1) if isinstance(item1, (list, tuple)) else 0
             len2 = len(item2) if isinstance(item2, (list, tuple)) else 0
             len3 = 0
@@ -298,6 +307,7 @@ class ImportMerge(tool.Tool, ManagedWindow):
             else:
                 class_name = item1.__class__.__name__
                 schema = item1.get_schema()
+            self.classes.add(class_name)
             if item2 is None:
                 val1 = schema.get('title', class_name)
             if item1 is None or item2 is None:
@@ -317,7 +327,8 @@ class ImportMerge(tool.Tool, ManagedWindow):
                 elif not key.startswith('_'):
                     key_ = key.replace('_' + class_name + '__', '')
                     if schema['properties'].get(key_) is None:
-                        pass
+                        print("**** obj: ", path, key)
+                        continue
                     key_ = schema['properties'][key_].get('title', key_)
                     self.report_diff(path + "." + key_, val1, val2, val3)
             for key, value in item.__class__.__dict__.items():
@@ -331,7 +342,8 @@ class ImportMerge(tool.Tool, ManagedWindow):
                 elif not key.startswith('_'):
                     key_ = key.replace('_' + class_name + '__', '')
                     if schema['properties'].get(key_) is None:
-                        pass
+                        print("**** classprop: ", path, key)
+                        continue
                     key_ = schema['properties'][key_].get('title', key_)
                     self.report_diff(path + "." + key_, val1, val2, val3)
         else:
