@@ -67,10 +67,11 @@ WIKI_PAGE = 'https://gramps-project.org/wiki/index.php?title=Import_Merge_Tool'
 TITLE = _("Import and merge a Gramps XML")
 STATUS = 0
 OBJ_TYP = 1
-NAME = 2
-DIFF_I = 3
-TAG = 4
-ACTION = 5
+GID = 2
+NAME = 3
+DIFF_I = 4
+TAG = 5
+ACTION = 6
 S_MISS = _("Missing")
 S_ADD = _("Added")
 S_DIFFERS = _("Different")
@@ -111,17 +112,18 @@ class ImportMerge(tool.Tool, ManagedWindow):
         self.db = dbstate.db
         self.uistate = uistate
         # menu = options.menu
-        self.top = Glade(toplevel="filechooserdialog1",
-                         also_load=["filefilter1"])
-        window = self.top.toplevel
-        self.set_window(window, None, TITLE)
-        self.setup_configs('interface.importmergetoolfileopen', 750, 520)
-        self.show()
-        response = self.window.run()
-        if response == Gtk.ResponseType.CANCEL:
-            return
-        self.filename = self.window.get_filename()
-        window.destroy()
+#         self.top = Glade(toplevel="filechooserdialog1",
+#                          also_load=["filefilter1"])
+#         window = self.top.toplevel
+#         self.set_window(window, None, TITLE)
+#         self.setup_configs('interface.importmergetoolfileopen', 750, 520)
+#         self.show()
+#         response = self.window.run()
+#         if response == Gtk.ResponseType.CANCEL:
+#             return
+#         self.filename = self.window.get_filename()
+#         window.destroy()
+        self.filename = r"d:\users\prc\documents\Gramps\data\tests\imp_sample.gramps"
         self.top = Glade(toplevel="main",
                          also_load=["res_treeview", "res_liststore",
                                     "diffs_liststore"])
@@ -177,24 +179,24 @@ class ImportMerge(tool.Tool, ManagedWindow):
             for diff_i in range(len(self.diffs)):
                 # self._user.step_progress()
                 obj_type, item1, item2 = self.diffs[diff_i]
-                name = self.sa[0].describe(item1)
-                diff_data = (status, obj_type, name, diff_i, "tag", "")
+                gid, name = self.sa[0].describe(item1)
+                diff_data = (status, obj_type, gid, name, diff_i, "tag", "")
                 self.diff_list.append(row=diff_data)
         if self.missing:
             status = S_MISS
             for item_i in range(len(self.missing)):
                 obj_type, item = self.missing[item_i]
                 self.db1_hndls[item.handle] = (obj_type, item_i)
-                name = self.sa[0].describe(item)
-                diff_data = (status, obj_type, name, item_i, "tag", "")
+                gid, name = self.sa[0].describe(item)
+                diff_data = (status, obj_type, gid, name, item_i, "tag", "")
                 self.diff_list.append(row=diff_data)
         if self.added:
             status = S_ADD
             for item_i in range(len(self.added)):
                 obj_type, item = self.added[item_i]
                 self.db2_hndls[item.handle] = (obj_type, item_i)
-                name = self.sa[1].describe(item)
-                diff_data = (status, obj_type, name, item_i, "tag", "")
+                gid, name = self.sa[1].describe(item)
+                diff_data = (status, obj_type, gid, name, item_i, "tag", "")
                 self.diff_list.append(row=diff_data)
         if len(self.diff_list) != 0:
             spath = Gtk.TreePath.new_first()
@@ -228,7 +230,7 @@ class ImportMerge(tool.Tool, ManagedWindow):
             desc3 = repr(diff3)
         else:
             desc3 = str(diff3) if diff3 is not None else ""
-        if path.endswith(".change"):
+        if path.endswith(_("Last changed")):
             diff1 = todate(diff1)
             diff2 = todate(diff2)
             diff3 = todate(diff3)
@@ -264,48 +266,76 @@ class ImportMerge(tool.Tool, ManagedWindow):
             text += "\n" + SPN_MONO + _("Result") + "   >> " + SPN_ + desc3
         self.res_list.append((path, text))
 
-    def report_diff(self, path, struct1, struct2, struct3=[]):
+    def report_diff(self, path, item1, item2, item3=None):
         """
         Compare two struct objects and report differences.
         """
-        if struct1 == struct2:
-            return
-        elif (isinstance(struct1, (list, tuple)) or
-              isinstance(struct2, (list, tuple))):
-            assert not (isinstance(struct1, tuple) or
-                        isinstance(struct2, tuple))
-            len1 = len(struct1) if isinstance(struct1, (list, tuple)) else 0
-            len2 = len(struct2) if isinstance(struct2, (list, tuple)) else 0
+        if to_struct(item1) == to_struct(item2):
+            return   # _eq_ doesn't work on Gramps objects for this purpose
+        elif (isinstance(item1, (list, tuple)) or
+              isinstance(item2, (list, tuple))):
+            assert not (isinstance(item1, tuple) or
+                        isinstance(item2, tuple))
+            len1 = len(item1) if isinstance(item1, (list, tuple)) else 0
+            len2 = len(item2) if isinstance(item2, (list, tuple)) else 0
             len3 = 0
-            if struct3 and isinstance(struct3, (list, tuple)):
-                len3 = len(struct3)
+            if item3 and isinstance(item3, (list, tuple)):
+                len3 = len(item3)
             for pos in range(max(len1, len2, len3)):
-                value1 = struct1[pos] if pos < len1 else None
-                value2 = struct2[pos] if pos < len2 else None
-                value3 = struct3[pos] if pos < len3 else None
-                self.report_diff(path + ("[%d]" % pos), value1, value2, value3)
-        elif isinstance(struct1, dict) or isinstance(struct2, dict):
+                val1 = item1[pos] if pos < len1 else None
+                val2 = item2[pos] if pos < len2 else None
+                val3 = item3[pos] if pos < len3 else None
+                self.report_diff(path + ("[%d]" % pos), val1, val2, val3)
+        elif hasattr(item1, '__dict__') or hasattr(item2, '__dict__'):
+            # dealing with Gramps object.  Note: we assume that Gramps class
+            # objects attached to an another object are always the same type
             # test if we have added/deleted and only list the class info
-            value1 = value2 = value3 = None
-            if struct1 is None or struct2 is None:
-                if struct1 is None:
-                    value2 = struct2.get("_class")
-                if struct2 is None:
-                    value1 = struct1.get("_class")
-                value3 = struct3.get("_class") if struct3 is not None else None
-                self.report_details(path, value1, value2, value3)
+            val1 = val2 = val3 = None
+            if item1 is None:
+                class_name = item2.__class__.__name__
+                schema = item2.get_schema()
+                val2 = schema.get('title', class_name)
+            else:
+                class_name = item1.__class__.__name__
+                schema = item1.get_schema()
+            if item2 is None:
+                val1 = schema.get('title', class_name)
+            if item1 is None or item2 is None:
+                val3 = schema.get('title', class_name) \
+                    if item3 is not None else None
+                self.report_details(path, val1, val2, val3)
                 return
-            keys = struct1.keys() if isinstance(struct1, dict) else struct2.keys()
+            assert item1.__class__.__name__ == item2.__class__.__name__
+            item = item1 if item2 is None else item2
+            keys = list(item.__dict__.keys())
             for key in keys:
-                value1 = struct1[key] if struct1 is not None else None
-                value2 = struct2[key] if struct2 is not None else None
-                value3 = struct3[key] if struct3 is not None else None
+                val1 = item1.__dict__[key] if item1 is not None else None
+                val2 = item2.__dict__[key] if item2 is not None else None
+                val3 = item3.__dict__[key] if item3 is not None else None
                 if key == "dict":  # a raw dict, not a struct
-                    self.report_details(path, value1, value2, value3)
-                else:
-                    self.report_diff(path + "." + key, value1, value2, value3)
+                    self.report_details(path, val1, val2, val3)
+                elif not key.startswith('_'):
+                    key_ = key.replace('_' + class_name + '__', '')
+                    if schema['properties'].get(key_) is None:
+                        pass
+                    key_ = schema['properties'][key_].get('title', key_)
+                    self.report_diff(path + "." + key_, val1, val2, val3)
+            for key, value in item.__class__.__dict__.items():
+                if not (isinstance(value, property) and key != 'year'):
+                    continue
+                val1 = getattr(item1, key) if item1 is not None else None
+                val2 = getattr(item2, key) if item2 is not None else None
+                val3 = getattr(item3, key) if item3 is not None else None
+                if key == "dict":  # a raw dict, not a struct
+                    self.report_details(path, val1, val2, val3)
+                elif not key.startswith('_'):
+                    key_ = key.replace('_' + class_name + '__', '')
+                    if schema['properties'].get(key_) is None:
+                        pass
+                    key_ = schema['properties'][key_].get('title', key_)
+                    self.report_diff(path + "." + key_, val1, val2, val3)
         else:
-            self.report_details(path, struct1, struct2, struct3)
+            self.report_details(path, item1, item2, item3)
 
     def on_diff_row_changed(self, *obj):
         """ Signal: update lower panes when the diff pane row changes """
@@ -367,12 +397,11 @@ class ImportMerge(tool.Tool, ManagedWindow):
                 item_m = deepcopy(item1)
                 item_m.gramps_id = None
                 item3.merge(item_m)
-            self.report_diff(obj_type, to_struct(item1), to_struct(item2),
-                             to_struct(item3))
+            self.report_diff(obj_type, item1, item2, item3)
         elif status == S_ADD:
             obj_type, item = self.added[diff_i]
             desc1 = ""
-            desc2 = self.sa[1].describe(item)
+            desc2 = '[%s] %s' % self.sa[1].describe(item)
             if action == A_ADD:
                 desc3 = desc2
             else:  # action == A_IGNORE:
@@ -384,7 +413,7 @@ class ImportMerge(tool.Tool, ManagedWindow):
             self.res_list.append((_(obj_type), text))
         else:  # status == S_MISS:
             obj_type, item = self.missing[diff_i]
-            desc1 = self.sa[0].describe(item)
+            desc1 = '[%s] %s' % self.sa[0].describe(item)
             desc2 = ""
             if action == A_IGNORE:
                 desc3 = desc1
@@ -450,32 +479,32 @@ class MySa(SimpleAccess):
             if self.dbase.get_table_metadata(obj):
                 obj = self.dbase.get_table_metadata(obj)[prop + "_func"](value)
         if isinstance(obj, Person):
-            return "%s [%s]" % (self.name(obj), self.gid(obj))
+            return (self.gid(obj), self.name(obj))
         elif isinstance(obj, Event):
-            return "%s [%s] %s" % (
-                self.event_type(obj), self.gid(obj),
-                get_participant_from_event(self.dbase, obj.handle))
+            return (self.gid(obj), "%s %s" % (
+                self.event_type(obj),
+                get_participant_from_event(self.dbase, obj.handle)))
         elif isinstance(obj, Family):
-            return "%s/%s [%s]" % (self.name(self.mother(obj)),
-                                   self.name(self.father(obj)),
-                                   self.gid(obj))
+            return (self.gid(obj), "%s/%s" % (self.name(self.mother(obj)),
+                                              self.name(self.father(obj))))
         elif isinstance(obj, Media):
-            return "%s [%s]" % (obj.desc, self.gid(obj))
+            return (self.gid(obj), obj.desc)
         elif isinstance(obj, Source):
-            return "%s [%s]" % (self.title(obj), self.gid(obj))
+            return (self.gid(obj), self.title(obj))
         elif isinstance(obj, Citation):
-            return "[%s] %s" % (self.gid(obj), obj.page)
+            return (self.gid(obj), obj.page)
         elif isinstance(obj, Place):
             place_title = place_displayer.display(self.dbase, obj)
-            return "%s [%s]" % (place_title, self.gid(obj))
+            return (self.gid(obj), place_title)
         elif isinstance(obj, Repository):
-            return "%s [%s] %s" % (obj.type, self.gid(obj), obj.name)
+            return (self.gid(obj), "%s %s" % (obj.type, obj.name))
         elif isinstance(obj, Note):
-            return "%s [%s] %s" % (obj.type, self.gid(obj), obj.get())
+            return (self.gid(obj), "%s %s" % (obj.type, obj.get()))
         elif isinstance(obj, Tag):
-            return "[%s]" % (obj.name)
+            return ("", obj.name)
         else:
-            return "Error: incorrect object class in describe: '%s'" % type(obj)
+            return ("", "Error: incorrect object class in describe: '%s'"
+                    % type(obj))
 #------------------------------------------------------------------------
 #
 # ImportMergeOptions
