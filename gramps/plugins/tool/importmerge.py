@@ -157,14 +157,16 @@ class ImportMerge(tool.Tool, ManagedWindow):
         self.db1_hndls = {}
         self.db2_hndls = {}
         self.res_mode = False
-        self.classes = set()
+        self.classes = set()  # set of classes encountered
+        self.nokey = set()  # list of missing keys
+        self.notitle = set()  # list of objects/keys with no title
         self.show()
         if not self.find_diffs():
             self.close()
             return
 
     def close(self, *args):
-        print(self.classes)
+        print(self.classes, '\n', self.notitle, '\n', self.nokey, '\n')
         ManagedWindow.close(self, *args)
 
     def find_diffs(self):
@@ -176,7 +178,6 @@ class ImportMerge(tool.Tool, ManagedWindow):
         self.sa = [MySa(self.db), MySa(self.db2)]
         self.diffs, self.added, self.missing = diff_dbs(
             self.db, self.db2, self._user)
-        last_object = None
         if self.diffs:
             status = S_DIFFERS
             # self._user.begin_progress(_('Family Tree Differences'),
@@ -298,6 +299,7 @@ class ImportMerge(tool.Tool, ManagedWindow):
         elif hasattr(item1, '__dict__') or hasattr(item2, '__dict__'):
             # dealing with Gramps object.  Note: we assume that Gramps class
             # objects attached to an another object are always the same type
+
             # test if we have added/deleted and only list the class info
             val1 = val2 = val3 = None
             if item1 is None:
@@ -308,6 +310,8 @@ class ImportMerge(tool.Tool, ManagedWindow):
                 class_name = item1.__class__.__name__
                 schema = item1.get_schema()
             self.classes.add(class_name)
+            if schema.get('title') is None:
+                self.notitle.add(class_name)
             if item2 is None:
                 val1 = schema.get('title', class_name)
             if item1 is None or item2 is None:
@@ -315,6 +319,7 @@ class ImportMerge(tool.Tool, ManagedWindow):
                     if item3 is not None else None
                 self.report_details(path, val1, val2, val3)
                 return
+
             assert item1.__class__.__name__ == item2.__class__.__name__
             item = item1 if item2 is None else item2
             keys = list(item.__dict__.keys())
@@ -327,8 +332,10 @@ class ImportMerge(tool.Tool, ManagedWindow):
                 elif not key.startswith('_'):
                     key_ = key.replace('_' + class_name + '__', '')
                     if schema['properties'].get(key_) is None:
-                        print("**** obj: ", path, key)
+                        self.nokey.add(class_name + ':' + key)
                         continue
+                    if schema['properties'][key_].get('title') is None:
+                        self.notitle.add(class_name + ':' + key_)
                     key_ = schema['properties'][key_].get('title', key_)
                     self.report_diff(path + "." + key_, val1, val2, val3)
             for key, value in item.__class__.__dict__.items():
@@ -342,8 +349,10 @@ class ImportMerge(tool.Tool, ManagedWindow):
                 elif not key.startswith('_'):
                     key_ = key.replace('_' + class_name + '__', '')
                     if schema['properties'].get(key_) is None:
-                        print("**** classprop: ", path, key)
+                        self.nokey.add(class_name + ' cl:' + key)
                         continue
+                    if schema['properties'][key_].get('title') is None:
+                        self.notitle.add(class_name + ' cl:' + key_)
                     key_ = schema['properties'][key_].get('title', key_)
                     self.report_diff(path + "." + key_, val1, val2, val3)
         else:
