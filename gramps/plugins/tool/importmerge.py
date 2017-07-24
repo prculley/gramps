@@ -47,7 +47,7 @@ from gramps.gen.display.name import displayer as global_name_display
 from gramps.gen.merge.diff import diff_items, to_struct
 from gramps.gen.dbstate import DbState
 from gramps.gen.utils.db import get_participant_from_event
-from gramps.gen.db import CLASS_TO_KEY_MAP
+from gramps.gen.db import CLASS_TO_KEY_MAP, DbTxn
 from gramps.gui.plug import tool
 from gramps.gui.display import display_url
 from gramps.gui.managedwindow import ManagedWindow
@@ -150,7 +150,7 @@ class ImportMerge(tool.Tool, ManagedWindow):
         # bring up the main screen and fill it
         self.top = Glade(toplevel="main",
                          also_load=["res_treeview", "res_liststore",
-                                    "diffs_liststore"])
+                                    "diffs_liststore", "actionlabel"])
         window = self.top.toplevel
         self.set_window(window, None, TITLE)
         self.setup_configs('interface.importmergetool', 760, 560)
@@ -162,9 +162,9 @@ class ImportMerge(tool.Tool, ManagedWindow):
             "on_replace_clicked"    : (self.on_btn, A_REPLACE),
             "on_help_clicked"       : self.on_help_clicked,
             "on_edit_clicked"       : self.on_edit,
-            "on_tag_clicked"        : self.on_tag,
+            "on_details_toggled"    : self.on_details,
             "on_delete_event"       : self.close,
-            "on_close"              : self.close})
+            "on_close"              : self.done})
 
         self.merge_l_btn = self.top.get_object("merge_l_btn")
         self.merge_r_btn = self.top.get_object("merge_r_btn")
@@ -174,6 +174,7 @@ class ImportMerge(tool.Tool, ManagedWindow):
         self.replace_btn = self.top.get_object("replace_btn")
         self.parent_fam_btn = self.top.get_object("parent_fam_btn")
         self.fam_btn = self.top.get_object("fam_btn")
+        self.more_details_btn = self.top.get_object("more_details_btn")
         self.diff_list = self.top.get_object("diffs_liststore")
         self.res_list = self.top.get_object("res_liststore")
         self.res_view = self.top.get_object("res_treeview")
@@ -181,6 +182,9 @@ class ImportMerge(tool.Tool, ManagedWindow):
         self.diff_sel = self.diff_view.get_selection()
         self.diff_iter = None
         self.diff_sel.connect('changed', self.on_diff_row_changed)
+        self.diffs = []  # list with (obj_type, hndl1, hndl2) tuples
+        self.added = []  # list with (obj_type, hndl) tuples
+        self.missing = []  # list with (obj_type, hndl) tuples
         self.db1_hndls = {}  # dict with (iter, diff_i) tuples, handle as key
         self.db2_hndls = {}  # dict with (iter, diff_i) tuples, handle as key
         self.my_families = True      # wether to automark my families
@@ -193,6 +197,8 @@ class ImportMerge(tool.Tool, ManagedWindow):
 
     def close(self, *args):
         print(self.classes, '\n', self.notitle, '\n', self.nokey, '\n')
+        self.db2.disconnect_all()
+        self.db2.close()
         ManagedWindow.close(self, *args)
 
     def progress_step(self, percent):
@@ -356,7 +362,6 @@ class ImportMerge(tool.Tool, ManagedWindow):
             # dealing with Gramps object.  Note: we assume that Gramps class
             # objects attached to an another object are always the same type
 
-            # test if we have added/deleted and only list the class info
             val1 = val2 = val3 = None
             if item1 is None:
                 class_name = item2.__class__.__name__
@@ -368,15 +373,17 @@ class ImportMerge(tool.Tool, ManagedWindow):
             self.classes.add(class_name)
             if schema.get('title') is None:
                 self.notitle.add(class_name)
-            if item2 is None:
-                val1 = schema.get('title', class_name)
-            if item1 is None or item2 is None:
-                val3 = schema.get('title', class_name) \
-                    if item3 is not None else None
-                self.report_details(path, val1, val2, val3)
-                return
+            if not self.more_details:
+                # test if we have added/deleted and only list the class info
+                if item2 is None:
+                    val1 = schema.get('title', class_name)
+                if item1 is None or item2 is None:
+                    val3 = schema.get('title', class_name) \
+                        if item3 is not None else None
+                    self.report_details(path, val1, val2, val3)
+                    return
+                assert item1.__class__.__name__ == item2.__class__.__name__
 
-            assert item1.__class__.__name__ == item2.__class__.__name__
             item = item1 if item2 is None else item2
             keys = list(item.__dict__.keys())
             for key in keys:
@@ -445,11 +452,7 @@ class ImportMerge(tool.Tool, ManagedWindow):
                 continue  # not in the list of differences
             if handle in not_list:
                 continue  # family handle we don't want to mark.
-            c_mark = self.diff_list[d_list_iter][ACTION]
-            if c_mark.startswith('*'):  # automarked entries get lower priority
-                cur_mark = A_LST.index(c_mark.replace('*', '')) - 10
-            else:
-                cur_mark = A_LST.index(c_mark)
+            cur_mark = self.get_act(d_list_iter)
             if cur_mark == mark or cur_mark + 10 == mark:
                 continue  # already marked (prevents infinite recursion)
             # if the previous mark is same as this, user changed mind, allow
@@ -465,13 +468,152 @@ class ImportMerge(tool.Tool, ManagedWindow):
                         *self.missing[item_i])
                 self.mark_refs(item, mark, status, old_mark)
 
-    def do_commits(self):
-        ''' need to make sure that we don't reuse GIDs on add/merge.  When
-        deleting something from current db, make sure nothing else holds
-        reference first.  Need to adds/dels first, and then check on merges
-        that references still exist.
+    def done(self, *args):
+        ''' user is finished with tool, time to save work '''
+
+        top = Glade(toplevel='savedialog').toplevel
+        top.set_transient_for(self.window)
+        parent_modal = self.window.get_modal()
+        if parent_modal:
+            self.window.set_modal(False)
+        top.show()
+        response = top.run()
+        top.destroy()
+        if self.window and parent_modal:
+            self.window.set_modal(True)
+        if response == Gtk.ResponseType.CANCEL:
+            return
+        if response == Gtk.ResponseType.NO:
+            self.close(0)
+            return
+        # response == Gtk.ResponseType.YES:
+
+        self._progress = ProgressMeter(_('Import and Merge tool'),
+                                       parent=self.window)
+        self._progress.set_pass(_("Processing..."), len(self.diff_list))
+        with DbTxn(_("ImportMerge"), self.db1, batch=True) as trans:
+
+            d_iter = self.diff_list.get_iter_first()
+            while d_iter:
+                self._progress.step()
+                status, diff_i = self.diff_list.get(d_iter, STATUS, DIFF_I)
+                action = self.get_act(d_iter)
+                d_iter = self.diff_list.iter_next(d_iter)
+                self.do_commits(status, diff_i, action, trans)
+        self._progress.close()
+        self.close(0)
+
+    def do_commits(self, status, diff_i, action, trans):
+        ''' To make sure db will be consistent, we check all result objects
+        to make sure referenced items are something valid.  User may have
+        excluded something that an included item referenced.
+        For differs items, we create the result object according to action.
+          For each handle in referenced items, we check if it is
+        1) in added list and marked for Exclusion (Ignore).
+        2) in missing list and marked for deletion.
+        If either is true, we remove reference from object.
+
+        For Added list we use added item if marked for inclusion.
+          For each handle in referenced items, we check if it is in added list
+        and marked for Exclusion (Ignore).
+        If true, we remove reference from object.
+
+        For items in missing list, if an item action specifies inclusion it's
+        already in current db.
+          For each handle in referenced items, we check if it is in missing
+        list and marked for Exclusion (delete).
+        If true, we remove reference from object.
+
+        We need to make sure that we don't reuse GIDs on add/merge.
+
+        Once checks are complete, we do the commit.
+        Note that we always commit, so its possible that a change date can be
+        updated on unchanged data.
         '''
-        pass
+        if action < 0:  # deal with automark
+            action += 10
+        changed = False
+        if status == S_DIFFERS:
+            obj_type, item1, dummy, item = self.differ_result(action, diff_i)
+            if action == 0 or action == A_IGNORE:
+                item = item1
+            else:
+                changed = True
+            hndl = item.handle
+        elif status == S_ADD:
+            if action != A_ADD:
+                return
+            obj_type, hndl = self.added[diff_i]
+            item = self.db2.get_from_name_and_handle(obj_type, hndl)
+            changed = True
+        elif status == S_MISS and action == A_DEL:
+            obj_type, hndl = self.missing[diff_i]
+            getattr(self.db1, 'remove_' + obj_type.lower())(hndl, trans)
+            return
+        else:  # status == S_MISS and action != A_DEL
+            obj_type, hndl = self.missing[diff_i]
+            item = self.db1.get_from_name_and_handle(obj_type, hndl)
+            # now check the missing list for a match
+            r_hndls = item.get_referenced_handles_recursively()
+            for r_objtype, r_hndl in r_hndls:
+                d_list_iter, item_i = self.db1_hndls.get(r_hndl, (None, None))
+                if item_i:
+                    action = self.get_act(d_list_iter)
+                    if action < 0:
+                        action += 10
+                    if action == A_DEL:  # remove it
+                        item.remove_handle_references(r_objtype, r_hndl)
+                        changed = True
+                    continue
+            # finally commit it
+            if changed:
+                getattr(self.db1, 'commit_' + obj_type.lower())(item, trans)
+            return
+        r_hndls = item.get_referenced_handles_recursively()
+        for r_obj_type, r_hndl in r_hndls:
+            # check the added list for a match
+            d_list_iter, item_i = self.db2_hndls.get(r_hndl, (None, None))
+            if item_i:
+                action = self.get_act(d_list_iter)
+                if action < 0:
+                    action += 10
+                if action != A_ADD:  # ignore it
+                    item.remove_handle_references(r_obj_type, r_hndl)
+                    changed = True
+                continue
+            # now check the missing list for a match
+            d_list_iter, item_i = self.db1_hndls.get(r_hndl, (None, None))
+            if item_i:
+                action = self.get_act(d_list_iter)
+                if action < 0:
+                    action += 10
+                if action == A_DEL:  # remove it
+                    item.remove_handle_references(r_obj_type, r_hndl)
+                    changed = True
+
+        if status == S_DIFFERS:
+            # check for GID conflict
+            if item.gramps_id != item1.gramps_id:
+                if getattr(self.db1, 'has_' + obj_type.lower() +
+                           '_gramps_id')(item.gramps_id):
+                    item.gramps_id = getattr(self.db1, 'find_next_' +
+                                             obj_type.lower() +
+                                             '_gramps_id')()
+                    changed = True
+            # finally commit it
+            if changed:
+                getattr(self.db1, 'commit_' + obj_type.lower())(item, trans)
+        else:  # status == S_ADD
+            # check for GID conflict
+            if getattr(self.db1, 'has_' + obj_type.lower() +
+                       '_gramps_id')(item.gramps_id):
+                item.gramps_id = getattr(self.db1, 'find_next_' +
+                                         obj_type.lower() +
+                                         '_gramps_id')()
+                changed = True
+            # finally commit it
+            if changed:
+                getattr(self.db1, 'add_' + obj_type.lower())(item, trans)
 
     def on_diff_row_changed(self, *obj):
         ''' Signal: update lower panes when the diff pane row changes '''
@@ -509,34 +651,16 @@ class ImportMerge(tool.Tool, ManagedWindow):
 
     def show_results(self):
         ''' update the lower pane '''
+        self.more_details = self.more_details_btn.get_active()
         status = self.diff_list[self.diff_iter][STATUS]
-        action = A_LST.index(self.diff_list[self.diff_iter][ACTION])
+        action = self.get_act(self.diff_iter)
+        if action < 0:  # for this, don't care if automarked or not
+            action += 10
         diff_i = self.diff_list[self.diff_iter][DIFF_I]
         self.res_mode = action != 0
         self.res_list.clear()
         if status == S_DIFFERS:
-            obj_type, hndl1, hndl2 = self.diffs[diff_i]
-            item1 = self.db1.get_from_name_and_handle(obj_type, hndl1)
-            item2 = self.db2.get_from_name_and_handle(obj_type, hndl2)
-            item3 = None
-            self.item1_hndls = {i[1]: i[0] for i in
-                                item1.get_referenced_handles_recursively()}
-            self.item2_hndls = {i[1]: i[0] for i in
-                                item2.get_referenced_handles_recursively()}
-            if action == A_REPLACE:
-                item3 = item2
-            elif action == A_IGNORE:
-                item3 = item1
-            elif action == A_MERGE_L:
-                item3 = deepcopy(item1)
-                item_m = deepcopy(item2)
-                item_m.gramps_id = None
-                item3.merge(item_m)
-            elif action == A_MERGE_R:
-                item3 = deepcopy(item2)
-                item_m = deepcopy(item1)
-                item_m.gramps_id = None
-                item3.merge(item_m)
+            obj_type, item1, item2, item3 = self.differ_result(action, diff_i)
             self.report_diff(obj_type, item1, item2, item3)
         elif status == S_ADD:
             obj_type, hndl = self.added[diff_i]
@@ -553,7 +677,7 @@ class ImportMerge(tool.Tool, ManagedWindow):
                 text += "\n" + SPN_MONO + _("Result") + "   >> " + SPN_ + desc3
             self.res_list.append((_(obj_type), text))
         else:  # status == S_MISS:
-            obj_type, item = self.missing[diff_i]
+            obj_type, hndl = self.missing[diff_i]
             item = self.db1.get_from_name_and_handle(obj_type, hndl)
             desc1 = '[%s] %s' % self.sa[0].describe(item)
             desc2 = ""
@@ -566,6 +690,31 @@ class ImportMerge(tool.Tool, ManagedWindow):
             if self.res_mode:
                 text += "\n" + SPN_MONO + _("Result") + "   >> " + SPN_ + desc3
             self.res_list.append((_(obj_type), text))
+
+    def differ_result(self, action, diff_i):
+        obj_type, hndl1, hndl2 = self.diffs[diff_i]
+        item1 = self.db1.get_from_name_and_handle(obj_type, hndl1)
+        item2 = self.db2.get_from_name_and_handle(obj_type, hndl2)
+        item3 = None
+        self.item1_hndls = {i[1]: i[0] for i in
+                            item1.get_referenced_handles_recursively()}
+        self.item2_hndls = {i[1]: i[0] for i in
+                            item2.get_referenced_handles_recursively()}
+        if action == A_REPLACE:
+            item3 = item2
+        elif action == A_IGNORE:
+            item3 = item1
+        elif action == A_MERGE_L:
+            item3 = deepcopy(item1)
+            item_m = deepcopy(item2)
+            item_m.gramps_id = None
+            item3.merge(item_m)
+        elif action == A_MERGE_R:
+            item3 = deepcopy(item2)
+            item_m = deepcopy(item1)
+            item_m.gramps_id = None
+            item3.merge(item_m)
+        return obj_type, item1, item2, item3
 
     def on_edit(self, dummy):
         ''' deal with button press '''
@@ -586,13 +735,67 @@ class ImportMerge(tool.Tool, ManagedWindow):
     def edit_callback(self, *args):
         ''' This gets called by db signals during the edit operation
         args = (obj_type, operation, list_of_handles)
-        if handle is in self.added group, or self.differs group, and operation
-        is an update, just refresh lower pane
-        if operation is add, handle is not, then we need to add it added;
-        means user added something new. So should redo auto mark
+        If operation is an update and handle is in self.added group, or
+        self.diffs group, just refresh lower pane.
+        If operation is an update and handle is NOT in one of above groups,
+        then it must be in original db.  We need to make a new diffs group
+        entry.
+        if operation is add, handle is not in either group, then we need to add
+        an entry to added group; means user added something new.
+        If new entry in either list is made we should redo
+        auto mark for current entry in likely case he added a new referenced
+        item.  It's possible he added a new primary object that is not
+        referenced, this will end up with no action initially.
         Should never get a delete operation'''
-        pass
-        # self.db2.disconnect_all()
+        item_i = self.diff_list[self.diff_iter][DIFF_I]
+        status = self.diff_list[self.diff_iter][STATUS]
+        action = self.get_act(self.diff_iter)
+        if status == S_ADD:
+            dummy, edit_hndl = self.added[item_i]
+        else:  # mis be different list
+            dummy, dummy, edit_hndl = self.diffs[item_i]
+        obj_type = args[0].capitalize()
+        if args[1] == 'update':
+            for hndl in args[2]:
+                found = False
+                item_i = self.db2_hndls.get(hndl)
+                if item_i:
+                    found = True
+                else:
+                    for dummy, dummy, hndl1 in self.diffs:
+                        found = hndl1 == hndl
+                        break
+                if found:
+                    continue
+                item1 = self.db1.get_from_name_and_handle(obj_type, hndl)
+                item2 = self.db2.get_from_name_and_handle(obj_type, hndl)
+                diff = diff_items(obj_type, to_struct(item1), to_struct(item2))
+                if diff:
+                    diff_i = len(self.diffs)
+                    self.diffs.append((obj_type, hndl, hndl))
+                    gid, name = self.sa[0].describe(item1)
+                    diff_data = (S_DIFFERS, obj_type, gid, name, diff_i, "tag",
+                                 "")
+                    self.diff_list.append(row=diff_data)
+
+        elif args[1] == 'add':
+            for hndl in args[2]:
+                diff_i = len(self.added)
+                self.added.append((obj_type, hndl))
+                item = self.db2.get_from_name_and_handle(obj_type, hndl)
+                gid, name = self.sa[1].describe(item)
+                diff_data = (S_ADD, obj_type, gid, name, diff_i, "tag", "")
+                d_list_iter = self.diff_list.append(row=diff_data)
+                self.db2_hndls[hndl] = (d_list_iter, diff_i)
+
+        else:  # delete
+            raise AssertionError("User deleted something unexpectedly")
+        if args[1] == 'update':
+            for hndl in args[2]:
+                if hndl == edit_hndl:  # update of original edit
+                    self.show_results()  # lower pane
+                    if action:  # redo automark
+                        self.on_btn(item_i, action)
 
     def on_btn(self, dummy, action):
         ''' deal with general action button press '''
@@ -600,8 +803,7 @@ class ImportMerge(tool.Tool, ManagedWindow):
         self.my_families = self.fam_btn.get_active()
         if not self.diff_iter:
             return
-        old_act = A_LST.index(self.diff_list[self.diff_iter][ACTION])
-        self.diff_list.set_value(self.diff_iter, ACTION, A_LST[action])
+        old_act = self.get_act(self.diff_iter)
         diff_i = self.diff_list[self.diff_iter][DIFF_I]
         status = self.diff_list[self.diff_iter][STATUS]
         # do markup of referenced items
@@ -613,7 +815,9 @@ class ImportMerge(tool.Tool, ManagedWindow):
             self.mark_refs(item1, x_act(action)[1], S_MISS, x_act(old_act)[1])
         elif status == S_MISS:
             item = self.db1.get_from_name_and_handle(*self.missing[diff_i])
-            if action == A_ADD:  # really A_DEL dual mode button.
+            # note that A_ADD really A_DEL dual mode button.
+            if action == A_ADD or action == A_DEL:
+                action = A_DEL
                 self.mark_refs(item, A_DEL, S_MISS, old_act)
             else:  # action == A_IGNORE:
                 self.mark_refs(item, A_IGNORE, S_MISS, old_act)
@@ -623,11 +827,12 @@ class ImportMerge(tool.Tool, ManagedWindow):
                 self.mark_refs(item, A_ADD, status, old_act)
             else:  # A_IGNORE
                 self.mark_refs(item, A_IGNORE, status, old_act)
+        self.diff_list.set_value(self.diff_iter, ACTION, A_LST[action])
         self.show_results()
 
-    def on_tag(self, dummy):
+    def on_details(self, dummy):
         ''' deal with button press '''
-        pass
+        self.show_results()
 
     def on_help_clicked(self, dummy):
         ''' Button: Display the relevant portion of GRAMPS manual'''
@@ -636,7 +841,6 @@ class ImportMerge(tool.Tool, ManagedWindow):
     def build_menu_names(self, obj):
         ''' So ManagedWindow is happy '''
         return (TITLE, TITLE)
-
 
     def connect_everything(self):
         ''' Make connections to all db signals of import db '''
@@ -650,6 +854,13 @@ class ImportMerge(tool.Tool, ManagedWindow):
                 setattr(ImportMerge, sig_func, my_func)
                 self.db2.connect(sig_name, getattr(self, sig_func))
 
+    def get_act(self, d_iter):
+        txt_act = self.diff_list[d_iter][ACTION]
+        if txt_act.startswith('*'):  # automarked entries get lower priority
+            return A_LST.index(txt_act.replace('*', '')) - 10
+        else:
+            return A_LST.index(txt_act)
+
 
 def make_function(sig_name):
     """ This is here to support the dynamic function creation.  This creates
@@ -657,12 +868,14 @@ def make_function(sig_name):
     """
     def myfunc(self, *args):
         obj_type, action = sig_name.split('-')
-        self.edit_callback(obj_type, action, args)
+        self.edit_callback(obj_type, action, *args)
 
     return myfunc
 
 
 def x_act(action):
+    if action < 0:
+        action += 10
     if action == A_NONE:
         return (A_NONE, A_NONE)
     elif action == A_REPLACE:
@@ -705,26 +918,26 @@ def diff_dbs(db1, db2, progress):
                 item2 = handle_func2(handles2[p2])
                 diff = diff_items(item, to_struct(item1), to_struct(item2))
                 if diff:
-                    diffs += [(item, handles1[p1], handles2[p2])]
+                    diffs.append((item, handles1[p1], handles2[p2]))
                 # else same!
                 progress.step()
                 progress.step()
                 p1 += 1
                 p2 += 1
             elif handles1[p1] < handles2[p2]:  # p1 is mssing in p2
-                missing_from_new += [(item, handles1[p1])]
+                missing_from_new.append((item, handles1[p1]))
                 progress.step()
                 p1 += 1
             elif handles1[p1] > handles2[p2]:  # p2 is mssing in p1
-                missing_from_old += [(item, handles2[p2])]
+                missing_from_old.append((item, handles2[p2]))
                 progress.step()
                 p2 += 1
         while p1 < len(handles1):
-            missing_from_new += [(item, handles1[p1])]
+            missing_from_new.append((item, handles1[p1]))
             progress.step()
             p1 += 1
         while p2 < len(handles2):
-            missing_from_old += [(item, handles2[p2])]
+            missing_from_old.append((item, handles2[p2]))
             progress.step()
             p2 += 1
     return diffs, missing_from_old, missing_from_new
