@@ -478,7 +478,7 @@ class ManagedWindow:
         self.titlelabel = title
         if self.isWindow :
             set_titles(self, title, text, msg)
-            self.window = self
+            self.window = window  #self
         else :
             set_titles(window, title, text, msg)
             #closing the Gtk.Window must also close ManagedWindow

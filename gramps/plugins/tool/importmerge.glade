@@ -279,6 +279,22 @@
               </packing>
             </child>
             <child>
+              <object class="GtkLabel" id="hint">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="label" translatable="yes">Use buttons below to set the 'Action' for each difference.  No changes will be made to your tree until you press 'Done' and confirm.</property>
+                <property name="wrap">True</property>
+                <attributes>
+                  <attribute name="weight" value="semibold"/>
+                </attributes>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">True</property>
+                <property name="position">1</property>
+              </packing>
+            </child>
+            <child>
               <object class="GtkGrid" id="grid_l">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
@@ -288,6 +304,7 @@
                   <object class="GtkButtonBox" id="buttonbox3">
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
+                    <property name="valign">end</property>
                     <property name="homogeneous">True</property>
                     <property name="layout_style">expand</property>
                     <child>
@@ -352,7 +369,7 @@
                   </object>
                   <packing>
                     <property name="left_attach">0</property>
-                    <property name="top_attach">2</property>
+                    <property name="top_attach">1</property>
                   </packing>
                 </child>
                 <child>
@@ -425,29 +442,14 @@
                   </object>
                   <packing>
                     <property name="left_attach">0</property>
-                    <property name="top_attach">1</property>
-                  </packing>
-                </child>
-                <child>
-                  <object class="GtkLabel" id="hint">
-                    <property name="visible">True</property>
-                    <property name="can_focus">False</property>
-                    <property name="label" translatable="yes">Use buttons below to set the 'Action' for each difference.  No changes will be made to your tree until you press 'Done' and confirm.</property>
-                    <property name="wrap">True</property>
-                    <attributes>
-                      <attribute name="weight" value="semibold"/>
-                    </attributes>
-                  </object>
-                  <packing>
-                    <property name="left_attach">0</property>
                     <property name="top_attach">0</property>
-                    <property name="width">2</property>
                   </packing>
                 </child>
                 <child>
                   <object class="GtkBox" id="box2">
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
+                    <property name="halign">center</property>
                     <property name="orientation">vertical</property>
                     <child>
                       <object class="GtkCheckButton" id="more_details_btn">
@@ -503,7 +505,7 @@
                   </object>
                   <packing>
                     <property name="left_attach">1</property>
-                    <property name="top_attach">1</property>
+                    <property name="top_attach">0</property>
                     <property name="height">2</property>
                   </packing>
                 </child>
@@ -511,7 +513,7 @@
               <packing>
                 <property name="expand">False</property>
                 <property name="fill">True</property>
-                <property name="position">1</property>
+                <property name="position">2</property>
               </packing>
             </child>
           </object>
