@@ -58,7 +58,7 @@ from gramps.gen.db.utils import import_as_dict
 from gramps.gen.simple import SimpleAccess
 from gramps.gui.glade import Glade
 from gramps.gen.lib import (Person, Family, Event, Source, Place, Citation,
-                            Media, Repository, Note, Tag)
+                            Media, Repository, Note, Tag, GrampsType, Date)
 from gramps.gen.display.place import displayer as place_displayer
 
 #-------------------------------------------------------------------------
@@ -150,7 +150,7 @@ def todate(tim):
 # ImportMerge
 #
 #------------------------------------------------------------------------
-class ImportMerge(tool.Tool, ManagedWindow):
+class ImportMerge(tool.BatchTool, ManagedWindow):
     '''
     Create the ImportMerge Gui and run it.
     '''
@@ -158,14 +158,18 @@ class ImportMerge(tool.Tool, ManagedWindow):
         uistate = user.uistate
         self._user = user
 
-        tool.Tool.__init__(self, dbstate, options_class, name)
-        ManagedWindow.__init__(self, uistate, [], self.__class__)
+        tool.BatchTool.__init__(self, dbstate, user, options_class, name)
+        if self.fail:
+            return
+        # we run modal so that the current db cannot change from under us
+        ManagedWindow.__init__(self, uistate, [], self.__class__, modal=True)
         self.db1 = dbstate.db
         self.uistate = uistate
         # some diagnostic data saved to print at end
         self.classes = set()  # set of classes encountered
         self.nokey = set()  # list of missing keys
         self.notitle = set()  # list of objects/keys with no title
+        # used in result display
         self.item1_hndls = {}  # handles found in current difference of db
         self.item2_hndls = {}  # handles found in current difference of import
 
@@ -177,11 +181,15 @@ class ImportMerge(tool.Tool, ManagedWindow):
         self.setup_configs('interface.importmergetoolfileopen', 750, 520)
         self.show()
         response = self.window.run()
-        self.filename = self.window.get_filename()
-        window.destroy()
-        if response == Gtk.ResponseType.CANCEL:
-            self.close()
+        if response != Gtk.ResponseType.OK:
+            if self.opened:
+                # if user deleted the dialog it is already closed
+                ManagedWindow.close(self, 0)
+            window.destroy()
             return
+        else:
+            self.filename = self.window.get_filename()
+            window.destroy()
         #self.filename = (r"d:\users\prc\documents\Gramps\data\tests\imp"
         #                 "_sample.gramps")
 
@@ -220,9 +228,11 @@ class ImportMerge(tool.Tool, ManagedWindow):
         #              action_txt, action)
         self.diff_list = self.top.get_object("diffs_liststore")
         self.diff_list.set_sort_column_id(4, Gtk.SortType.ASCENDING)
+        self.diff_list.set_sort_func(99, sort_name, None)
         self.res_list = self.top.get_object("res_liststore")
         self.res_view = self.top.get_object("res_treeview")
         self.diff_view = self.top.get_object("Diffs_treeview")
+        self.diff_view.set_search_equal_func(search_func, None)
         self.diff_sel = self.diff_view.get_selection()
         self.diff_iter = None
         self.diffs = {}    # dict with hndl key and self.diff_list iters
@@ -235,17 +245,19 @@ class ImportMerge(tool.Tool, ManagedWindow):
         self.show()
         self.diff_sel.connect('changed', self.on_diff_row_changed)
         if not self.find_diffs():
-            self.close()
+            self.close(0)
             return
 
     def close(self, *args):
         print(self.classes, '\n', self.notitle, '\n', self.nokey, '\n')
-        self.db2.disconnect_all()
-        self.db2.close()
+        if hasattr(self, 'db2'):
+            self.db2.disconnect_all()
+            self.db2.close()
         ManagedWindow.close(self, *args)
 
     def progress_step(self, percent):
-        ''' a hack to allow import XML callback progress to work '''
+        ''' a hack to allow import XML callback progress to work since its
+        step uses percentages instead of step per call'''
         self._progress._ProgressMeter__pbar_index = percent - 1.0
         self._progress.step()
 
@@ -414,8 +426,8 @@ class ImportMerge(tool.Tool, ManagedWindow):
         '''
         Compare two struct objects and report differences.
         '''
-        if to_struct(item1) == to_struct(item2):
-            return   # _eq_ doesn't work on Gramps objects for this purpose
+        # if to_struct(item1) == to_struct(item2):
+        #     return   # _eq_ doesn't work on Gramps objects for this purpose
         if item1 is None and item2 is None:
             return
         elif (isinstance(item1, (list, tuple)) or
@@ -445,9 +457,9 @@ class ImportMerge(tool.Tool, ManagedWindow):
             else:
                 class_name = item1.__class__.__name__
                 schema = item1.get_schema()
-            self.classes.add(class_name)
+            self.classes.add(class_name)  # diagnostic data
             if schema.get('title') is None:
-                self.notitle.add(class_name)
+                self.notitle.add(class_name)  # diagnostic data
             if not self.more_details:
                 # test if we have added/deleted and only list the class info
                 if item2 is None:
@@ -460,39 +472,61 @@ class ImportMerge(tool.Tool, ManagedWindow):
                 assert item1.__class__.__name__ == item2.__class__.__name__
 
             item = item1 if item2 is None else item2
-            keys = list(item.__dict__.keys())
-            for key in keys:
-                val1 = item1.__dict__[key] if item1 is not None else None
-                val2 = item2.__dict__[key] if item2 is not None else None
-                val3 = item3.__dict__[key] if item3 is not None else None
-                if key == "dict":  # a raw dict, not a struct
-                    self.report_details(path, val1, val2, val3)
-                elif not key.startswith('_'):
-                    key_ = key.replace('_' + class_name + '__', '')
-                    if schema['properties'].get(key_) is None:
-                        self.nokey.add(class_name + ':' + key)
-                        continue
-                    if schema['properties'][key_].get('title') is None:
-                        self.notitle.add(class_name + ':' + key_)
-                    key_ = schema['properties'][key_].get('title', key_)
-                    self.report_diff(path + "." + key_, val1, val2, val3)
+            keys = []
+            if isinstance(item, GrampsType):
+                keys.append('string')
+            if isinstance(item, Date):
+                pass
+            #     if obj.is_empty() and not obj.text:
+            #         return None
+            for key in item.__dict__.keys():
+                if not key.startswith('_'):
+                    keys.append(key)
             for key, value in item.__class__.__dict__.items():
-                if not (isinstance(value, property) and key != 'year'):
-                    continue
-                val1 = getattr(item1, key) if item1 is not None else None
-                val2 = getattr(item2, key) if item2 is not None else None
-                val3 = getattr(item3, key) if item3 is not None else None
+                if isinstance(value, property):
+                    if key != 'year':
+                        keys.append(key)
+                    else:
+                        pass
+            # keys = list(item.__dict__.keys())
+            for key in keys:
+                try:
+                    val1 = getattr(item1, key) if item1 is not None else None
+                    val2 = getattr(item2, key) if item2 is not None else None
+                    val3 = getattr(item3, key) if item3 is not None else None
+                except:
+                    pass
+#                 val1 = item1.__dict__[key] if item1 is not None else None
+#                 val2 = item2.__dict__[key] if item2 is not None else None
+#                 val3 = item3.__dict__[key] if item3 is not None else None
                 if key == "dict":  # a raw dict, not a struct
                     self.report_details(path, val1, val2, val3)
-                elif not key.startswith('_'):
+                else:  # if not key.startswith('_'):
                     key_ = key.replace('_' + class_name + '__', '')
                     if schema['properties'].get(key_) is None:
-                        self.nokey.add(class_name + ' cl:' + key)
+                        self.nokey.add(class_name + ':' + key)  # diagnostic
                         continue
                     if schema['properties'][key_].get('title') is None:
-                        self.notitle.add(class_name + ' cl:' + key_)
+                        self.notitle.add(class_name + ':' + key_)  # diagnostic
                     key_ = schema['properties'][key_].get('title', key_)
                     self.report_diff(path + "." + key_, val1, val2, val3)
+#             for key, value in item.__class__.__dict__.items():
+#                 if not (isinstance(value, property) and key != 'year'):
+#                     continue
+#                 val1 = getattr(item1, key) if item1 is not None else None
+#                 val2 = getattr(item2, key) if item2 is not None else None
+#                 val3 = getattr(item3, key) if item3 is not None else None
+#                 if key == "dict":  # a raw dict, not a struct
+#                     self.report_details(path, val1, val2, val3)
+#                 elif not key.startswith('_'):
+#                     key_ = key.replace('_' + class_name + '__', '')
+#                     if schema['properties'].get(key_) is None:
+#                         self.nokey.add(class_name + ' cl:' + key)  # diagnostic
+#                         continue
+#                     if schema['properties'][key_].get('title') is None:
+#                         self.notitle.add(class_name + ' cl:' + key_)  # diag
+#                     key_ = schema['properties'][key_].get('title', key_)
+#                     self.report_diff(path + "." + key_, val1, val2, val3)
         else:
             self.report_details(path, item1, item2, item3)
 
@@ -505,10 +539,10 @@ class ImportMerge(tool.Tool, ManagedWindow):
         the original mark info.  This avoids issues with different mark types
         that follow different paths through the tree.
 
+        status: str used to figure out which list we are marking
         obj_type: for object to check
         hndl: handle for object to check
         mark: index into A_LST action strings
-        status: str used to figure out which list we are marking
         old_mrk: Previous mark of main item, used to decide if we should
                 override priority
         clear:  Indicates we are clearing a previous auto mark
@@ -546,7 +580,7 @@ class ImportMerge(tool.Tool, ManagedWindow):
                 self.mark_it(d_iter, not_list, handle, mark, old_mrk, clear)
                 d_iter = self.diffs.get(handle)
                 self.mark_it(d_iter, not_list, handle, mark, old_mrk, clear)
-        else:  # diff_act:
+        else:  # differs list:
             # we need to check all three lists
             if not clear:  # use result object references
                 item1, dummy, obj = self.diff_result(xlt_act(mark, status),
@@ -608,6 +642,7 @@ class ImportMerge(tool.Tool, ManagedWindow):
                 self.mark_refs(status, obj_type, handle, mark, old_mrk, True)
                 # now we can mark up according to new mark
             if not clear:
+                # mark conflict if priority allows a mark
                 auto = '?' if mark - 10 > cur_mark else '*'
                 self.set_act(d_iter, mark, auto, status)
                 self.mark_refs(status, obj_type, handle, mark, old_mrk, False)
@@ -690,6 +725,10 @@ class ImportMerge(tool.Tool, ManagedWindow):
         We need to make sure that we don't reuse GIDs on add/merge.
 
         Once checks are complete, we do the commit if there are any changes.
+
+        It would be nice if we always had a generic object method API call.
+        Since we don't, I make the method call up as a string and then use
+        getattr to get the actual method and append the () to call it.
         '''
         changed = False
         if status == S_MISS and action == A_DEL:
@@ -830,7 +869,7 @@ class ImportMerge(tool.Tool, ManagedWindow):
         self.show_results()
 
     def fix_btns(self, status):
-        ''' Update the buttons '''
+        ''' Update the buttons depending on status'''
         if status == S_DIFFERS:
             self.gen_btn.set_label(_("Replace"))
             self.edit_btn.set_sensitive(True)
@@ -897,7 +936,7 @@ class ImportMerge(tool.Tool, ManagedWindow):
                 return
             desc1 = '[%s] %s' % self.sa[0].describe(item)
             desc2 = ""
-            if action == A_IGNORE:
+            if action == A_IGNORE or action == A_KEEP:
                 desc3 = desc1
             else:  # action == A_DEL
                 desc3 = "<s>" + desc1 + "</s>"
@@ -908,6 +947,11 @@ class ImportMerge(tool.Tool, ManagedWindow):
             self.res_list.append((_(obj_type), text))
 
     def diff_result(self, action, obj_type, hndl):
+        ''' this creates all three objects, the last of which is the actual
+        result when dealing with the differs list.  Result depends on action,
+        for merges we create the merged object (use deepcopy to avoid messing
+        up our source).  For ignore and replace we can refer to original
+        objects. '''
         item1 = self.db1.get_from_name_and_handle(obj_type, hndl)
         item2 = self.db2.get_from_name_and_handle(obj_type, hndl)
         item3 = None
@@ -930,11 +974,13 @@ class ImportMerge(tool.Tool, ManagedWindow):
         return item1, item2, item3
 
     def on_edit(self, dummy):
-        ''' deal with button press '''
+        ''' deal with edit import button press '''
         if not self.diff_iter:
             return
         hndl = self.diff_list[self.diff_iter][HNDL]
         obj_type = OBJ_LST[self.diff_list[self.diff_iter][SORT] & 15]
+        # Not sure if changes affect automark, so clear them
+        self.on_btn(None, A_NONE)
         dbstate = DbState()
         dbstate.db = self.db2
         self.connect_everything()
@@ -951,7 +997,7 @@ class ImportMerge(tool.Tool, ManagedWindow):
         entry.
         if operation is add, handle is not in either group, then we need to add
         an entry to added group; means user added something new.
-        If new entry in either list is made we should redo
+        Since changes in any list could affect the automark we should redo
         auto mark for current entry in likely case he added a new referenced
         item.  It's possible he added a new primary object that is not
         referenced, this will end up with no action initially.
@@ -987,9 +1033,9 @@ class ImportMerge(tool.Tool, ManagedWindow):
             raise AssertionError("User deleted something unexpectedly")
         if args[1] == 'update':
             for hndl in args[2]:
-                if hndl == edit_hndl:  # update of original edit
+                if hndl == edit_hndl:
+                    # update of original edit, should be last one so refresh
                     self.show_results()  # lower pane
-                    self.on_btn(None, A_NONE)
 
     def on_btn(self, dummy, action):
         ''' deal with general action button press '''
@@ -1041,6 +1087,8 @@ class ImportMerge(tool.Tool, ManagedWindow):
                 self.db2.connect(sig_name, getattr(self, sig_func))
 
     def get_act(self, d_iter, status):
+        ''' return the action for the current entry.  If status is provided,
+        we give translated action specifically for the list involved.'''
         action = self.diff_list[d_iter][ACTION_INT]
         if status:
             if action < 0:
@@ -1054,20 +1102,21 @@ class ImportMerge(tool.Tool, ManagedWindow):
         return action
 
     def set_act(self, d_iter, action, auto, status):
-        try:
-            self.diff_list[d_iter][ACTION_INT] = action - (10 if auto else 0)
-            if status == S_ADD:
-                action = ACT_ACT[action][0]
-            elif status == S_MISS:
-                action = ACT_ACT[action][1]
-            else:  # status == S_DIFFERS
-                action = ACT_ACT[action][2]
-            self.diff_list[d_iter][ACTION] = auto + A_LST[action]
-        except:
-            pass
+        ''' set the action for the current entry.  Since we have both text and
+        int versions of action, update both.  The text version shows the
+        translated action appropriate to the specific list.'''
+        self.diff_list[d_iter][ACTION_INT] = action - (10 if auto else 0)
+        if status == S_ADD:
+            action = ACT_ACT[action][0]
+        elif status == S_MISS:
+            action = ACT_ACT[action][1]
+        else:  # status == S_DIFFERS
+            action = ACT_ACT[action][2]
+        self.diff_list[d_iter][ACTION] = auto + A_LST[action]
 
 
 def xlt_act(action, status):
+    ''' do a list specific translation of the action.'''
     if status:
         if action < 0:
             action += 10  # don't care about automark for final action
@@ -1089,6 +1138,23 @@ def make_function(sig_name):
         self.edit_callback(obj_type, action, *args)
 
     return myfunc
+
+
+def sort_name(model, iter1, iter2, dummy):
+    ''' This supports the Gtk sort for the name field.  We group the sorted
+    names by object type.'''
+    item1 = model[iter1][OBJ_TYP] + model[iter1][NAME]
+    item2 = model[iter2][OBJ_TYP] + model[iter2][NAME]
+    return (item1 > item2) - (item1 < item2)
+
+
+def search_func(model, column, key, _iter, dummy):
+    ''' This supports the Gtk 'find'.  Allows user to find in name field or
+    ID field.  We ignore the column (from glade) and use our own.'''
+    if key.startswith('#'):
+        return key[1:].lower() not in model[_iter][GID].lower()
+    else:
+        return key.lower() not in model[_iter][NAME].lower()
 
 
 #------------------------------------------------------------------------
@@ -1140,12 +1206,15 @@ class MySa(SimpleAccess):
 
 
 def trunc(content):
+    ''' A simple truncation to make for shorter name/description '''
     length = 120
     content = ' '.join(content.split())
     if len(content) <= length:
         return content
     else:
         return content[:length - 3] + '...'
+
+
 #------------------------------------------------------------------------
 #
 # ImportMergeOptions
