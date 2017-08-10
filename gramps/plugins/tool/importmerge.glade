@@ -387,7 +387,7 @@
                     <property name="layout_style">expand</property>
                     <child>
                       <object class="GtkButton" id="merge_l_btn">
-                        <property name="label" translatable="yes">Merge Left</property>
+                        <property name="label" translatable="yes">Merge Original</property>
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>
                         <property name="receives_default">True</property>
@@ -417,7 +417,7 @@
                     </child>
                     <child>
                       <object class="GtkButton" id="merge_r_btn">
-                        <property name="label" translatable="yes">Merge Right</property>
+                        <property name="label" translatable="yes">Merge Import</property>
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>
                         <property name="receives_default">True</property>

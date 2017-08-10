@@ -28,6 +28,9 @@ from copy import deepcopy
 #import datetime
 import time
 import re
+import locale
+import ctypes
+import os
 #-------------------------------------------------------------------------
 #
 # GNOME libraries
@@ -40,9 +43,6 @@ from gi.repository import Gtk
 # GRAMPS modules
 #
 #------------------------------------------------------------------------
-from gramps.gen.const import GRAMPS_LOCALE as glocale
-_ = glocale.translation.gettext
-ngettext = glocale.translation.ngettext
 #from gramps.gen.display.name import displayer as global_name_display
 from gramps.gen.merge.diff import diff_items, to_struct
 from gramps.gen.dbstate import DbState
@@ -58,8 +58,16 @@ from gramps.gen.db.utils import import_as_dict
 from gramps.gen.simple import SimpleAccess
 from gramps.gui.glade import Glade
 from gramps.gen.lib import (Person, Family, Event, Source, Place, Citation,
-                            Media, Repository, Note, Tag, GrampsType, Date)
+                            Media, Repository, Note, Tag, GrampsType)
 from gramps.gen.display.place import displayer as place_displayer
+from gramps.gen.constfunc import win, mac
+from gramps.gen.const import GRAMPS_LOCALE as glocale
+try:
+    _trans = glocale.get_addon_translator(__file__)
+except ValueError:
+    _trans = glocale.translation
+_ = _trans.gettext
+ngettext = _trans.ngettext
 
 #-------------------------------------------------------------------------
 #
@@ -132,6 +140,9 @@ ACT_ACT = [(A_NONE, A_NONE, A_NONE),
 
 OBJ_LST = ['Family', 'Person', 'Citation', 'Event', 'Media', 'Note', 'Place',
            'Repository', 'Source', 'Tag']
+# The following is so the translations file will contain the main object names
+OBJ_XLT = [_('Family'), _('Person'), _('Citation'), _('Event'), _('Media'),
+           _('Note'), _('Place'), _('Repository'), _('Source'), _('Tag')]
 SPN_MONO = "<span font_family='monospace'>"
 SPN_ = "</span>"
 
@@ -173,11 +184,41 @@ class ImportMerge(tool.BatchTool, ManagedWindow):
         self.item1_hndls = {}  # handles found in current difference of db
         self.item2_hndls = {}  # handles found in current difference of import
 
+        self.top = Gtk.Builder()
+        # Found out that Glade does not support translations for plugins, so
+        # have to do it manually.
+        base = os.path.dirname(__file__)
+        glade_file = base + os.sep + "importmerge.glade"
+        # This is needed to make gtk.Builder work by specifying the
+        # translations directory in a separate 'domain'
+        try:
+            localedomain = "addon"
+            localepath = base + os.sep + "locale"
+            if hasattr(locale, 'bindtextdomain'):
+                libintl = locale
+            elif win():  # apparently wants strings in bytes
+                localedomain = localedomain.encode('utf-8')
+                localepath = localepath.encode('utf-8')
+                libintl = ctypes.cdll.LoadLibrary('libintl-8.dll')
+            else:  # mac, No way for author to test this
+                libintl = ctypes.cdll.LoadLibrary('libintl.dylib')
+
+            libintl.bindtextdomain(localedomain, localepath)
+            libintl.textdomain(localedomain)
+            libintl.bind_textdomain_codeset(localedomain, "UTF-8")
+            # and finally, tell Gtk Builder to use that domain
+            self.top.set_translation_domain("addon")
+        except (OSError, AttributeError):
+            # Will leave it in English
+            print("Localization of ImportMerge failed!")
+
         # start with a file name dialog
-        self.top = Glade(toplevel="filechooserdialog1",
-                         also_load=["filefilter1"])
-        window = self.top.toplevel
-        self.set_window(window, None, TITLE)
+        self.top.add_objects_from_file(glade_file, ["filechooserdialog1",
+                                                    "filefilter1"])
+        # self.top = Glade(toplevel="filechooserdialog1",
+        #                  also_load=["filefilter1"])
+        window = self.top.get_object("filechooserdialog1")
+        self.set_window(window, None, None)
         self.setup_configs('interface.importmergetoolfileopen', 750, 520)
         self.show()
         response = self.window.run()
@@ -194,10 +235,13 @@ class ImportMerge(tool.BatchTool, ManagedWindow):
         #                 "_sample.gramps")
 
         # bring up the main screen and fill it
-        self.top = Glade(toplevel="main",
-                         also_load=["res_treeview", "res_liststore",
-                                    "diffs_liststore", "actionlabel"])
-        window = self.top.toplevel
+        self.top.add_objects_from_file(
+            glade_file, ["main", "res_treeview", "res_liststore",
+                         "diffs_liststore", "actionlabel"])
+        # self.top = Glade(toplevel="main",
+        #                  also_load=["res_treeview", "res_liststore",
+        #                             "diffs_liststore", "actionlabel"])
+        window = self.top.get_object("main")
         self.set_window(window, None, TITLE)
         self.window = window
         self.setup_configs('interface.importmergetool', 760, 560)
@@ -249,7 +293,7 @@ class ImportMerge(tool.BatchTool, ManagedWindow):
             return
 
     def close(self, *args):
-        print(self.classes, '\n', self.notitle, '\n', self.nokey, '\n')
+        # print(self.classes, '\n', self.notitle, '\n', self.nokey, '\n')
         if hasattr(self, 'db2'):
             self.db2.disconnect_all()
             self.db2.close()
@@ -416,10 +460,10 @@ class ImportMerge(tool.BatchTool, ManagedWindow):
             gname = self.sa[0].describe(hndl_func(desc3))
             desc3 = "%s%s: [%s] %s" % (text, _(obj_type), gname[0], gname[1])
         path = self.format_struct_path(path)
-        text = SPN_MONO + _("Current") + "  >> " + SPN_ + desc1 + "\n"
+        text = SPN_MONO + _("Original") + " >> " + SPN_ + desc1 + "\n"
         text += SPN_MONO + _("Imported") + " >> " + SPN_ + desc2
         if self.res_mode:
-            text += "\n" + SPN_MONO + _("Result") + "   >> " + SPN_ + desc3
+            text += "\n" + SPN_MONO + _("Result  ") + " >> " + SPN_ + desc3
         self.res_list.append((path, text))
 
     def report_diff(self, path, item1, item2, item3=None):
@@ -475,10 +519,6 @@ class ImportMerge(tool.BatchTool, ManagedWindow):
             keys = []
             if isinstance(item, GrampsType):
                 keys.append('string')
-            if isinstance(item, Date):
-                pass
-            #     if obj.is_empty() and not obj.text:
-            #         return None
             for key in item.__dict__.keys():
                 if not key.startswith('_'):
                     keys.append(key)
@@ -486,19 +526,10 @@ class ImportMerge(tool.BatchTool, ManagedWindow):
                 if isinstance(value, property):
                     if key != 'year':
                         keys.append(key)
-                    else:
-                        pass
-            # keys = list(item.__dict__.keys())
             for key in keys:
-                try:
-                    val1 = getattr(item1, key) if item1 is not None else None
-                    val2 = getattr(item2, key) if item2 is not None else None
-                    val3 = getattr(item3, key) if item3 is not None else None
-                except:
-                    pass
-#                 val1 = item1.__dict__[key] if item1 is not None else None
-#                 val2 = item2.__dict__[key] if item2 is not None else None
-#                 val3 = item3.__dict__[key] if item3 is not None else None
+                val1 = getattr(item1, key) if item1 is not None else None
+                val2 = getattr(item2, key) if item2 is not None else None
+                val3 = getattr(item3, key) if item3 is not None else None
                 if key == "dict":  # a raw dict, not a struct
                     self.report_details(path, val1, val2, val3)
                 else:  # if not key.startswith('_'):
@@ -510,23 +541,6 @@ class ImportMerge(tool.BatchTool, ManagedWindow):
                         self.notitle.add(class_name + ':' + key_)  # diagnostic
                     key_ = schema['properties'][key_].get('title', key_)
                     self.report_diff(path + "." + key_, val1, val2, val3)
-#             for key, value in item.__class__.__dict__.items():
-#                 if not (isinstance(value, property) and key != 'year'):
-#                     continue
-#                 val1 = getattr(item1, key) if item1 is not None else None
-#                 val2 = getattr(item2, key) if item2 is not None else None
-#                 val3 = getattr(item3, key) if item3 is not None else None
-#                 if key == "dict":  # a raw dict, not a struct
-#                     self.report_details(path, val1, val2, val3)
-#                 elif not key.startswith('_'):
-#                     key_ = key.replace('_' + class_name + '__', '')
-#                     if schema['properties'].get(key_) is None:
-#                         self.nokey.add(class_name + ' cl:' + key)  # diagnostic
-#                         continue
-#                     if schema['properties'][key_].get('title') is None:
-#                         self.notitle.add(class_name + ' cl:' + key_)  # diag
-#                     key_ = schema['properties'][key_].get('title', key_)
-#                     self.report_diff(path + "." + key_, val1, val2, val3)
         else:
             self.report_details(path, item1, item2, item3)
 
@@ -673,7 +687,7 @@ class ImportMerge(tool.BatchTool, ManagedWindow):
         self._progress = ProgressMeter(_('Import and Merge tool'),
                                        parent=self.window)
         self._progress.set_pass(_("Processing..."), len(self.diff_list))
-        with DbTxn(_("ImportMerge"), self.db1, batch=True) as trans:
+        with DbTxn(_("Import and Merge"), self.db1, batch=True) as trans:
 
             d_iter = self.diff_list.get_iter_first()
             while d_iter:
@@ -902,16 +916,16 @@ class ImportMerge(tool.BatchTool, ManagedWindow):
                                 item1.get_referenced_handles_recursively()}
             self.item2_hndls = {i[1]: i[0] for i in
                                 item2.get_referenced_handles_recursively()}
-            self.report_diff(obj_type, item1, item2, item3)
+            self.report_diff(_(obj_type), item1, item2, item3)
         elif status == S_ADD:
             item = self.db2.get_from_name_and_handle(obj_type, hndl)
             self.item2_hndls = {i[1]: i[0] for i in
                                 item.get_referenced_handles_recursively()}
             if self.more_details:
                 if action == A_ADD:
-                    self.report_diff(obj_type, None, item, item)
+                    self.report_diff(_(obj_type), None, item, item)
                 else:
-                    self.report_diff(obj_type, None, item, None)
+                    self.report_diff(_(obj_type), None, item, None)
                 return
             desc1 = ""
             desc2 = '[%s] %s' % self.sa[1].describe(item)
@@ -919,10 +933,10 @@ class ImportMerge(tool.BatchTool, ManagedWindow):
                 desc3 = desc2
             else:  # action == A_IGNORE:
                 desc3 = desc1
-            text = SPN_MONO + _("Current") + "  >> " + SPN_ + desc1 + "\n"
+            text = SPN_MONO + _("Original") + " >> " + SPN_ + desc1 + "\n"
             text += SPN_MONO + _("Imported") + " >> " + SPN_ + desc2
             if self.res_mode:
-                text += "\n" + SPN_MONO + _("Result") + "   >> " + SPN_ + desc3
+                text += "\n" + SPN_MONO + _("Result  ") + " >> " + SPN_ + desc3
             self.res_list.append((_(obj_type), text))
         else:  # status == S_MISS:
             item = self.db1.get_from_name_and_handle(obj_type, hndl)
@@ -930,9 +944,9 @@ class ImportMerge(tool.BatchTool, ManagedWindow):
                                 item.get_referenced_handles_recursively()}
             if self.more_details:
                 if action == A_IGNORE:
-                    self.report_diff(obj_type, item, None, item)
+                    self.report_diff(_(obj_type), item, None, item)
                 else:
-                    self.report_diff(obj_type, item, None, None)
+                    self.report_diff(_(obj_type), item, None, None)
                 return
             desc1 = '[%s] %s' % self.sa[0].describe(item)
             desc2 = ""
@@ -940,10 +954,10 @@ class ImportMerge(tool.BatchTool, ManagedWindow):
                 desc3 = desc1
             else:  # action == A_DEL
                 desc3 = "<s>" + desc1 + "</s>"
-            text = SPN_MONO + _("Current") + "  >> " + SPN_ + desc1 + "\n"
+            text = SPN_MONO + _("Original") + " >> " + SPN_ + desc1 + "\n"
             text += SPN_MONO + _("Imported") + " >> " + SPN_ + desc2
             if self.res_mode:
-                text += "\n" + SPN_MONO + _("Result") + "   >> " + SPN_ + desc3
+                text += "\n" + SPN_MONO + _("Result  ") + " >> " + SPN_ + desc3
             self.res_list.append((_(obj_type), text))
 
     def diff_result(self, action, obj_type, hndl):
