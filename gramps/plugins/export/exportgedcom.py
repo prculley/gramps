@@ -26,7 +26,8 @@
 #
 
 "Export to GEDCOM"
-
+# pylint: disable=locally-disabled,wrong-import-position,too-many-branches
+# pylint: disable=locally-disabled,too-many-boolean-expressions,too-many-lines
 #-------------------------------------------------------------------------
 #
 # Standard Python Modules

@@ -82,7 +82,8 @@ not a valid token, it would not be in the table, and a function that would skip
 all lines until the next level 2 token is found (in this case, skipping the
 "3 NOTE DATA" line.
 """
-
+# pylint: disable=no-self-use,unused-argument,wrong-import-position
+# pylint: disable=too-many-locals,too-many-branches,too-many-statements
 #-------------------------------------------------------------------------
 #
 # standard python modules
