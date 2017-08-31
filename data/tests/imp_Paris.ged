@@ -29,7 +29,8 @@
 1 SEX F
 1 ORDN
 2 TYPE Notre-Dame-de-Bonne-Nouvelle
-2 PLAC Notre-Dame-de-Bonne-Nouvelle,75102,Paris,Île-de-France,FRANCE,
+2 PLAC Notre-Dame-de-Bonne-Nouvelle,75102,Paris,Île-de-France,FRANCE,subdiv,extra
+3 FORM Town , Area code , County , Region , Country, Subdivision, Extra
 1 ORDN
 2 TYPE Saint-Benoît
 2 PLAC Saint-Benoît,75102,Paris,Île-de-France,FRANCE,
@@ -246,7 +247,7 @@
 2 SURN PARIS
 1 SEX M
 1 BIRT
-2 PLAC Paris 20,75120,Paris,Île-de-France,FRANCE,
+2 PLAC Pantin, 93500 , Seine-Saint-Denis , Île-de-France , FRANCE , rue de la Gare
 1 FAMC @181U@
 0 @181U@ FAM
 1 HUSB @3I@
