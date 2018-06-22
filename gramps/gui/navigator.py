@@ -38,22 +38,21 @@ from gi.repository import Gdk
 #-------------------------------------------------------------------------
 from gramps.gen.plug import (START, END)
 from .pluginmanager import GuiPluginManager
-from .actiongroup import ActionGroup
+from .uimanager import ActionGroup
 
 #-------------------------------------------------------------------------
 #
 # Constants
 #
 #-------------------------------------------------------------------------
-UICATEGORY = '''<ui>
-<menubar name="MenuBar">
-  <menu action="ViewMenu">
-    <placeholder name="ViewsInCategory">%s
-    </placeholder>
-  </menu>
-</menubar>
-</ui>
-'''
+UICATEGORY = '''      <section id="ViewsInCatagory">
+        %s
+      </section>
+    '''
+UICATAGORYBAR = '''    <placeholder id='ViewsInCategoryBar'>
+        %s
+      </placeholder>
+    '''
 
 CATEGORY_ICON = {
     'Dashboard': 'gramps-gramplet',
@@ -88,7 +87,7 @@ class Navigator:
         self.active_view = None
 
         self.ui_category = {}
-        self.view_toggle_actions = {}
+        # self.view_toggle_actions = {}
         self.cat_view_group = None
         self.merge_ids = []
 
@@ -139,13 +138,34 @@ class Navigator:
         """
         Load the sidebar plugins.
         """
+        menuitem = '''
+            <item>
+              <attribute name="action">win.ViewInCatagory</attribute>
+              <attribute name="label" translatable="yes">%s</attribute>
+              <attribute name="target">%d</attribute>
+              %s
+            </item>
+            '''
+        baritem = '''
+            <child>
+              <object class="GtkToolButton">
+                <property name="action-name">win.ViewInCatagory</property>
+                <property name="action-target">%d</property>
+                <property name="icon-name">%s</property>
+                <property name="tooltip_text" translatable="yes">%s</property>
+              </object>
+            </child>
+            '''
+
+        accel = '<attribute name="accel">&lt;Primary&gt;&lt;ALT&gt;%d</attribute>'
         plugman = GuiPluginManager.get_instance()
 
         categories = []
         views = {}
         for cat_num, cat_views in enumerate(self.viewmanager.get_views()):
             uimenuitems = ''
-            self.view_toggle_actions[cat_num] = []
+            uibaritems = ''
+            #self.view_toggle_actions[cat_num] = []
             for view_num, page in enumerate(cat_views):
 
                 if view_num == 0:
@@ -157,25 +177,28 @@ class Navigator:
                     categories.append([cat_num, cat_name, cat_icon])
 
                 pageid = 'page_%i_%i' % (cat_num, view_num)
-                uimenuitems += '\n<menuitem action="%s"/>' % pageid
+                #uimenuitems += '\n<menuitem action="%s"/>' % pageid
                 # id, stock, button text, UI, tooltip, page
                 if view_num < 9:
-                    modifier = "<PRIMARY><ALT>%d" % ((view_num % 9) + 1)
+                    modifier = accel % ((view_num % 9) + 1)
                 else:
                     modifier = ""
+                uimenuitems += menuitem % (page[0].name, view_num, modifier)
 
                 stock_icon = page[0].stock_icon
                 if stock_icon is None:
                     stock_icon = cat_icon
-                self.view_toggle_actions[cat_num].append((pageid,
-                            stock_icon,
-                            page[0].name, modifier, page[0].name, view_num))
+                # self.view_toggle_actions[cat_num].append((pageid,
+                            # stock_icon,
+                            # page[0].name, modifier, page[0].name, view_num))
+                uibaritems += baritem % (view_num, stock_icon, page[0].name)
 
                 views[cat_num].append((view_num, page[0].name, stock_icon))
 
             if len(cat_views) > 1:
                 #allow for switching views in a category
-                self.ui_category[cat_num] = UICATEGORY % uimenuitems
+                self.ui_category[cat_num] = [UICATEGORY % uimenuitems,
+                                             UICATAGORYBAR % uibaritems]
 
         for pdata in plugman.get_reg_sidebars():
             module = plugman.load_plugin(pdata)
@@ -229,11 +252,12 @@ class Navigator:
             list(map(uimanager.remove_ui, self.merge_ids))
 
         if cat_num in self.ui_category:
-            self.cat_view_group = ActionGroup(name='viewmenu')
-            self.cat_view_group.add_radio_actions(
-                    self.view_toggle_actions[cat_num], value=view_num,
-                    on_change=self.cb_view_clicked, user_data=cat_num)
-            self.cat_view_group.set_sensitive(True)
+            action = ('ViewInCatagory', self.cb_view_clicked, view_num)
+            self.cat_view_group = ActionGroup('viewmenu', [action])
+            # self.cat_view_group.add_actions(
+                    # self.view_toggle_actions[cat_num], value=view_num,
+                    # on_change=self.cb_view_clicked, user_data=cat_num)
+            # self.cat_view_group.set_sensitive(True)
             uimanager.insert_action_group(self.cat_view_group, 1)
             mergeid = uimanager.add_ui_from_string(self.ui_category[cat_num])
             self.merge_ids.append(mergeid)

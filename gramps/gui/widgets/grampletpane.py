@@ -1440,6 +1440,23 @@ class GrampletPane(Gtk.ScrolledWindow):
             LOG.warning("Can't make gramplet of type '%s'.", name)
 
     def _button_press(self, obj, event):
+        self.ui_def ='''    <menu id="Popup">
+      <section>
+        <item>
+          <attribute name="action">win.AddGramplet</attribute>
+          <attribute name="label" translatable="yes">_Add Bookmark</attribute>
+        </item>
+        <item>
+          <attribute name="action">win.RestoreGramplet</attribute>
+          <attribute name="label" translatable="yes">_Add Bookmark</attribute>
+        </item>
+''' 
+        '''<ui>
+         <popup name="GrampletPopup">
+            <menuitem action="AddGramplet"/>
+            <menuitem action="RestoreGramplet"/>
+          </popup>
+        </ui>'''
         if is_right_click(event):
             self._popup_xy = (event.x, event.y)
             uiman = self.uistate.uimanager
@@ -1475,6 +1492,9 @@ class GrampletPane(Gtk.ScrolledWindow):
                 self.menu.popup(None, None, None, None, event.button, event.time)
                 return True
         return False
+
+        self._add_action("AddGramplet", 'list-add', _("Add a gramplet"))
+        self._add_action("RestoreGramplet", None, _("Restore a gramplet"))
 
     def set_inactive(self):
         for title in self.gramplet_map:

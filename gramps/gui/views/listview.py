@@ -55,7 +55,7 @@ from gramps.gen.const import GRAMPS_LOCALE as glocale
 _ = glocale.translation.sgettext
 from .pageview import PageView
 from .navigationview import NavigationView
-from ..actiongroup import ActionGroup
+from ..uimanager import ActionGroup
 from ..columnorder import ColumnOrder
 from gramps.gen.config import config
 from gramps.gen.errors import WindowActiveError, FilterError, HandleError
@@ -208,22 +208,15 @@ class ListView(NavigationView):
 
         self.edit_action = ActionGroup(name=self.title + '/ChangeOrder')
         self.edit_action.add_actions([
-                ('Add', 'list-add', _("_Add..."), "<PRIMARY>Insert",
-                    self.ADD_MSG, self.add),
-                ('Remove', 'list-remove', _("_Delete"), "<PRIMARY>Delete",
-                    self.DEL_MSG, self.remove),
-                ('Merge', 'gramps-merge', _('_Merge...'), None,
-                    self.MERGE_MSG, self.merge),
-                ('ExportTab', None, _('Export View...'), None, None,
-                    self.export),
+                ('Add', self.add),
+                ('Remove', self.remove),
+                ('Merge', self.merge),
+                ('ExportTab', self.export),
                 ])
 
         self._add_action_group(self.edit_action)
 
-        self._add_action('Edit', 'gtk-edit', _("action|_Edit..."),
-                         accel="<PRIMARY>Return",
-                         tip=self.EDIT_MSG,
-                         callback=self.edit)
+        self._add_action('Edit', self.edit)
 
     def build_columns(self):
         list(map(self.list.remove_column, self.columns))

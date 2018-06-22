@@ -140,11 +140,11 @@ class PlaceBaseView(ListView):
 
     def define_actions(self):
         ListView.define_actions(self)
-        self._add_toolmenu_action('MapsList', _('Loading...'),
-                        _("Attempt to see selected locations with a Map "
-                                "Service (OpenstreetMap, Google Maps, ...)"),
-                        self.gotomap,
-                        _('Select a Map Service'))
+        # self._add_toolmenu_action('MapsList', _('Loading...'),
+                        # _("Attempt to see selected locations with a Map "
+                                # "Service (OpenstreetMap, Google Maps, ...)"),
+                        # self.gotomap,
+                        # _('Select a Map Service'))
         self._add_action('GotoMap', 'go-jump',
                         _('_Look up with Map Service'),
                         callback=self.gotomap,

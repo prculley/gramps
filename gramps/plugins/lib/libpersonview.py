@@ -48,13 +48,14 @@ _LOG = logging.getLogger(".gui.personview")
 from gramps.gen.lib import Person, Surname
 from gramps.gen.db import DbTxn
 from gramps.gui.views.listview import ListView, TEXT, MARKUP, ICON
-from gramps.gui.actiongroup import ActionGroup
+from gramps.gui.uimanager import ActionGroup
 from gramps.gen.utils.string import data_recover_msg
 from gramps.gen.display.name import displayer as name_displayer
 from gramps.gui.dialog import ErrorDialog, MultiSelectDialog, QuestionDialog
 from gramps.gen.errors import WindowActiveError
 from gramps.gui.views.bookmarks import PersonBookmarks
 from gramps.gen.config import config
+from gramps.gen.constfunc import is_quartz
 from gramps.gui.ddtargets import DdTargets
 from gramps.gui.editors import EditPerson
 from gramps.gui.filters.sidebar import PersonSidebarFilter
@@ -160,7 +161,7 @@ class BasePersonView(ListView):
         uistate.connect('nameformat-changed', self.build_tree)
         uistate.connect('placeformat-changed', self.build_tree)
 
-        self.additional_uis.append(self.additional_ui())
+        self.additional_uis.append(self.additional_ui)
 
     def navigation_type(self):
         """
@@ -187,11 +188,200 @@ class BasePersonView(ListView):
         """
         return 'gramps-person'
 
-    def additional_ui(self):
-        """
-        Defines the UI string for UIManager
-        """
-        return '''<ui>
+    """
+    Defines the UI string for UIManager
+    """
+    additional_ui = ['''
+      <placeholder name="LocalExport">
+        <item>
+          <attribute name="action">win.ExportTab</attribute>
+          <attribute name="label" translatable="yes">Export View...</attribute>
+        </item>
+      </placeholder>
+    ''',
+                     '''
+      <section id="AddEditBook">
+        <item>
+          <attribute name="action">win.AddBook</attribute>
+          <attribute name="label" translatable="yes">_Add Bookmark</attribute>
+          <attribute name="accel">&lt;Primary&gt;d</attribute>
+        </item>
+        <item>
+          <attribute name="action">win.EditBook</attribute>
+          <attribute name="label" translatable="no">%s...</attribute>
+          <attribute name="accel">&lt;shift&gt;&lt;Primary&gt;D</attribute>
+        </item>
+      </section>
+    ''' % _('Organize Bookmarks'),
+                     '''
+      <placeholder id="CommonGo">
+      <section>
+        <item>
+          <attribute name="action">win.Back</attribute>
+          <attribute name="label" translatable="yes">_Add Bookmark</attribute>
+          <attribute name="accel">&lt;%s&gt;d</attribute>
+        </item>
+        <item>
+          <attribute name="action">win.Forward</attribute>
+          <attribute name="label" translatable="yes">Organize Bookmarks...</attribute>
+          <attribute name="accel">&lt;%s&gt;D</attribute>
+        </item>
+      </section>
+      </placeholder>
+    ''' % (('ctrl', 'ctrl') if is_quartz() else ('alt', 'alt')),
+    '''
+      <section>
+        <item>
+          <attribute name="action">win.HomePerson</attribute>
+          <attribute name="label" translatable="yes">_Home</attribute>
+          <attribute name="accel">&lt;%s&gt;Home</attribute>
+        </item>
+      </section>
+      </placeholder>
+''' % ('ctrl' if is_quartz() else 'alt'),
+                     '''
+      <section id='CommonEdit' groups='RW'>
+        <item>
+          <attribute name="action">win.Add</attribute>
+          <attribute name="label" translatable="yes">_Add...</attribute>
+          <attribute name="accel">&lt;Primary&gt;Insert</attribute>
+        </item>
+        <item>
+          <attribute name="action">win.Edit</attribute>
+          <attribute name="label" translatable="yes">action|_Edit...</attribute>
+          <attribute name="accel">&lt;Primary&gt;Return</attribute>
+        </item>
+        <item>
+          <attribute name="action">win.Remove</attribute>
+          <attribute name="label" translatable="yes">_Delete</attribute>
+          <attribute name="accel">&lt;Primary&gt;Delete</attribute>
+        </item>
+        <item>
+          <attribute name="action">win.Merge</attribute>
+          <attribute name="label" translatable="yes">_Merge...</attribute>
+        </item>
+      </section>
+''',
+'''
+        <placeholder id='otheredit'>
+        <item>
+          <attribute name="action">win.SetActive</attribute>
+          <attribute name="label" translatable="yes">Set _Home Person</attribute>
+        </item>
+        <item>
+          <attribute name="action">win.FilterEdit</attribute>
+          <attribute name="label" translatable="yes">Person Filter Editor</attribute>
+          <attribute name="accel">&lt;Primary&gt;Return</attribute>
+        </item>
+        </placeholder>
+''',  # Following are the Toolbar items
+'''
+    <placeholder id='CommonNavigation'>
+    <child groups='RO'>
+      <object class="GtkToolButton"">
+        <property name="icon-name">go-previous</property>
+        <property name="action-name">win.Back</property>
+        <property name="tooltip_text" translatable="yes">Go to the previous object in the history</property>
+      </object>
+    </child>
+    <child groups='RO'>
+      <object class="GtkToolButton"">
+        <property name="icon-name">go-next</property>
+        <property name="action-name">win.Forward</property>
+        <property name="tooltip_text" translatable="yes">Go to the next object in the history</property>
+      </object>
+    </child>
+    <child groups='RO'>
+      <object class="GtkToolButton"">
+        <property name="icon-name">go-home</property>
+        <property name="action-name">win.HomePerson</property>
+        <property name="tooltip_text" translatable="yes">Go to the default person</property>
+      </object>
+    </child>
+    </placeholder>
+''',
+'''
+    <placeholder id='BarCommonEdit'>
+    <child groups='RW'>
+      <object class="GtkToolButton"">
+        <property name="icon-name">list-add</property>
+        <property name="action-name">win.Add</property>
+        <property name="tooltip_text" translatable="yes">%s</property>
+      </object>
+    </child>
+    <child groups='RW'>
+      <object class="GtkToolButton"">
+        <property name="icon-name">gtk-edit</property>
+        <property name="action-name">win.Edit</property>
+        <property name="tooltip_text" translatable="yes">%s</property>
+      </object>
+    </child>
+    <child groups='RW'>
+      <object class="GtkToolButton"">
+        <property name="icon-name">list-remove</property>
+        <property name="action-name">win.Remove</property>
+        <property name="tooltip_text" translatable="yes">%s</property>
+      </object>
+    </child>
+    <child groups='RW'>
+      <object class="GtkToolButton"">
+        <property name="icon-name">gramps-merge</property>
+        <property name="action-name">win.Merge</property>
+        <property name="tooltip_text" translatable="yes">%s</property>
+      </object>
+    </child>
+    </placeholder>
+''' % (ADD_MSG, EDIT_MSG, DEL_MSG, MERGE_MSG),
+'''
+    <menu id="Popup">
+      <section>
+        <item>
+          <attribute name="action">win.Back</attribute>
+          <attribute name="label" translatable="yes">_Add Bookmark</attribute>
+        </item>
+        <item>
+          <attribute name="action">win.Forward</attribute>
+          <attribute name="label" translatable="yes">Organize Bookmarks...</attribute>
+        </item>
+        <item>
+          <attribute name="action">win.HomePerson</attribute>
+          <attribute name="label" translatable="yes">_Home</attribute>
+        </item>
+        <item>
+          <attribute name="action">win.SetActive</attribute>
+          <attribute name="label" translatable="yes">Set _Home Person</attribute>
+        </item>
+      </section>
+      <section>
+        <item>
+          <attribute name="action">win.Add</attribute>
+          <attribute name="label" translatable="yes">_Add...</attribute>
+        </item>
+        <item>
+          <attribute name="action">win.Edit</attribute>
+          <attribute name="label" translatable="yes">action|_Edit...</attribute>
+        </item>
+        <item>
+          <attribute name="action">win.Remove</attribute>
+          <attribute name="label" translatable="yes">_Delete</attribute>
+        </item>
+        <item>
+          <attribute name="action">win.Merge</attribute>
+          <attribute name="label" translatable="yes">_Merge...</attribute>
+        </item>
+      </section>
+      <section>
+        <submenu id='QuickReport'>
+          <attribute name="label" translatable="yes">Quick View</attribute>
+        </submenu>
+        <submenu id='WebConnect'>
+          <attribute name="label" translatable="yes">Web Connection</attribute>
+        </submenu>
+      </section>
+    </menu>
+'''
+]
+    tmp = '''<ui>
           <menubar name="MenuBar">
             <menu action="FileMenu">
               <placeholder name="LocalExport">

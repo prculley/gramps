@@ -51,7 +51,7 @@ from ..dbguielement import DbGUIElement
 from ..widgets.grampletbar import GrampletBar
 from ..configure import ConfigureDialog
 from gramps.gen.config import config
-from ..actiongroup import ActionGroup
+from ..uimanager import ActionGroup
 
 #------------------------------------------------------------------------------
 #
@@ -97,21 +97,25 @@ class PageView(DbGUIElement, metaclass=ABCMeta):
         self.uistate = uistate
         self.action_list = []
         self.action_toggle_list = []
-        self.action_toolmenu_list = []
+        # self.action_toolmenu_list = []
         self.action_toolmenu = {} #easy access to toolmenuaction and proxies
         self.action_group = None
         self.additional_action_groups = []
         self.additional_uis = []
-        self.ui_def = '''<ui>
-          <menubar name="MenuBar">
-            <menu action="ViewMenu">
-              <placeholder name="Bars">
-                <menuitem action="Sidebar"/>
-                <menuitem action="Bottombar"/>
-              </placeholder>
-            </menu>
-          </menubar>
-        </ui>'''
+        self.ui_def = ['''
+          <placeholder id="Bars">
+            <item>
+              <attribute name="action">win.Sidebar</attribute>
+              <attribute name="label" translatable="yes">_Sidebar</attribute>
+              <attribute name="accel">&lt;Shift&gt;&lt;Primary&gt;R</attribute>
+            </item>
+             <item>
+              <attribute name="action">win.Bottombar</attribute>
+              <attribute name="label" translatable="yes">_Bottombar</attribute>
+              <attribute name="accel">&lt;Shift&gt;&lt;Primary&gt;B</attribute>
+            </item>
+          </placeholder>
+            ''']
         self.dirty = True
         self.active = False
         self._dirty_on_change_inactive = True
@@ -435,11 +439,9 @@ class PageView(DbGUIElement, metaclass=ABCMeta):
         View. The user typically defines self.action_list and
         self.action_toggle_list in this function.
         """
-        self._add_toggle_action('Sidebar', None, _('_Sidebar'),
-             "<shift><PRIMARY>R", None, self.__sidebar_toggled,
+        self._add_toggle_action('Sidebar', self.__sidebar_toggled,
              self.sidebar.get_property('visible'))
-        self._add_toggle_action('Bottombar', None, _('_Bottombar'),
-             "<shift><PRIMARY>B", None, self.__bottombar_toggled,
+        self._add_toggle_action('Bottombar', self.__bottombar_toggled,
              self.bottombar.get_property('visible'))
 
     def __build_action_group(self):
@@ -452,31 +454,27 @@ class PageView(DbGUIElement, metaclass=ABCMeta):
         if len(self.action_list) > 0:
             self.action_group.add_actions(self.action_list)
         if len(self.action_toggle_list) > 0:
-            self.action_group.add_toggle_actions(self.action_toggle_list)
+            self.action_group.add_actions(self.action_toggle_list)
 
-    def _add_action(self, name, icon_name, label, accel=None, tip=None,
-                   callback=None):
+    def _add_action(self, name, callback=None):
         """
         Add an action to the action list for the current view.
         """
-        self.action_list.append((name, icon_name, label, accel, tip,
-                                 callback))
+        self.action_list.append((name, callback))
 
-    def _add_toggle_action(self, name, icon_name, label, accel=None,
-                           tip=None, callback=None, value=False):
+    def _add_toggle_action(self, name, callback=None, value=False):
         """
         Add a toggle action to the action list for the current view.
         """
-        self.action_toggle_list.append((name, icon_name, label, accel,
-                                        tip, callback, value))
+        self.action_toggle_list.append((name, callback, value))
 
-    def _add_toolmenu_action(self, name, label, tooltip, callback,
-                             arrowtooltip):
-        """
-        Add a menu action to the action list for the current view.
-        """
-        self.action_toolmenu_list.append((name, label, tooltip, callback,
-                                          arrowtooltip))
+    # def _add_toolmenu_action(self, name, label, tooltip, callback,
+                             # arrowtooltip):
+        # """
+        # Add a menu action to the action list for the current view.
+        # """
+        # self.action_toolmenu_list.append((name, label, tooltip, callback,
+                                          # arrowtooltip))
 
     def get_actions(self):
         """

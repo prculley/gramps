@@ -63,6 +63,12 @@ from gramps.gen.plug import (CATEGORY_QR_PERSON, CATEGORY_QR_FAMILY, CATEGORY_QR
 from ._textbufdoc import TextBufDoc
 from gramps.gen.simple import make_basic_stylesheet
 
+MENUITEM = ('<item>\n'
+            '<attribute name="action">win.%s</attribute>\n'
+            '<attribute name="label" translatable="yes">'
+            '%s</attribute>\n'
+            '</item>\n')
+
 def flatten(L):
     """
     Flattens a possibly nested list. Removes None results, too.
@@ -88,12 +94,15 @@ def create_web_connect_menu(dbstate, uistate, nav_group, handle):
     handle as input method.  A tuple is returned, containing the ui
     string of the menu, and its associated actions.
     """
+    top = ("<submenu id='WebConnect'>\n"
+           '<attribute name="label" translatable="yes">'
+           'Web Connection</attribute>\n')
     actions = []
     ofile = StringIO()
-    ofile.write('<menu action="WebConnect">')
-    actions.append(('WebConnect', None, _("Web Connect"), None, None, None))
-    menu = Gtk.Menu()
-    menu.show()
+    ofile.write(top)
+    #actions.append(('WebConnect', None, _("Web Connect"), None, None, None))
+    #menu = Gtk.Menu()
+    #menu.show()
     #select the web connects to show
     showlst = []
     pmgr = GuiPluginManager.get_instance()
@@ -109,10 +118,10 @@ def create_web_connect_menu(dbstate, uistate, nav_group, handle):
     connections.sort(key=lambda plug: plug.name)
     actions = []
     for connect in connections:
-        ofile.write('<menuitem action="%s"/>' % connect.key)
-        actions.append((connect.key, None, connect.name, None, None,
+        ofile.write(MENUITEM % (connect.key, connect.name))
+        actions.append((connect.key,
                         connect(dbstate, uistate, nav_group, handle)))
-    ofile.write('</menu>')
+    ofile.write('</submenu>\n')
     retval = [ofile.getvalue()]
     retval.extend(actions)
     return retval
@@ -132,15 +141,17 @@ def create_quickreport_menu(category, dbstate, uistate, handle, track=[]):
         A tuple is returned, containing the ui string of the quick report menu,
         and its associated actions
     """
-
+    top = ("<submenu id='QuickReport'>\n"
+           '<attribute name="label" translatable="yes">'
+           'Quick View</attribute>\n')
     actions = []
     ofile = StringIO()
-    ofile.write('<menu action="QuickReport">')
+    ofile.write(top)
 
-    actions.append(('QuickReport', None, _("Quick View"), None, None, None))
+    #actions.append(('QuickReport', None, _("Quick View"), None, None, None))
 
-    menu = Gtk.Menu()
-    menu.show()
+    #menu = Gtk.Menu()
+    #menu.show()
 
     #select the reports to show
     showlst = []
@@ -153,11 +164,13 @@ def create_quickreport_menu(category, dbstate, uistate, handle, track=[]):
     showlst.sort(key=lambda x: x.name)
     for pdata in showlst:
         new_key = pdata.id.replace(' ', '-')
-        ofile.write('<menuitem action="%s"/>' % new_key)
-        actions.append((new_key, None, pdata.name, None, None,
-                make_quick_report_callback(pdata, category, dbstate,
-                                           uistate, handle, track=track)))
-    ofile.write('</menu>')
+        ofile.write(MENUITEM % (new_key, pdata.name))
+        #actions.append((new_key, None, pdata.name, None, None,
+        #        make_quick_report_callback(pdata, category, dbstate,
+        #                                   uistate, handle, track=track)))
+        actions.append((new_key, make_quick_report_callback(
+            pdata, category, dbstate, uistate, handle, track=track)))
+    ofile.write('</submenu>\n')
 
     return (ofile.getvalue(), actions)
 
