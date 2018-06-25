@@ -426,8 +426,9 @@ class RelationshipView(NavigationView):
         self._add_action_group(self.order_action)
         self._add_action_group(self.family_action)
 
-        self.order_action.set_sensitive(self.reorder_sensitive)
-        self.family_action.set_sensitive(False)
+        self.uimanager.set_actions_sensitive(self.order_action,
+                                             self.reorder_sensitive)
+        self.uimanager.set_actions_sensitive(self.family_action, False)
 
     def filter_editor(self, obj):
         try:
@@ -504,11 +505,11 @@ class RelationshipView(NavigationView):
         if obj:
             person = self.dbstate.db.get_person_from_handle(obj)
         if not person:
-            self.family_action.set_sensitive(False)
-            self.order_action.set_sensitive(False)
+            self.uimanager.set_actions_sensitive(self.family_action, False)
+            self.uimanager.set_actions_sensitive(self.order_action, False)
             self.redrawing = False
             return
-        self.family_action.set_sensitive(True)
+        self.uimanager.set_actions_sensitive(self.family_action, True)
 
         self.write_title(person)
 
@@ -548,7 +549,8 @@ class RelationshipView(NavigationView):
         self.redrawing = False
         self.uistate.modify_statusbar(self.dbstate)
 
-        self.order_action.set_sensitive(self.reorder_sensitive)
+        self.uimanager.set_actions_sensitive(self.order_action,
+                                             self.reorder_sensitive)
         self.dirty = False
 
         return True

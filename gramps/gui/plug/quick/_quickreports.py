@@ -119,12 +119,11 @@ def create_web_connect_menu(dbstate, uistate, nav_group, handle):
     actions = []
     for connect in connections:
         ofile.write(MENUITEM % (connect.key, connect.name))
+        callback = connect(dbstate, uistate, nav_group, handle)
         actions.append((connect.key,
-                        connect(dbstate, uistate, nav_group, handle)))
+                        lambda x, y: callback(x)))
     ofile.write('</submenu>\n')
-    retval = [ofile.getvalue()]
-    retval.extend(actions)
-    return retval
+    return (ofile.getvalue(), actions)
 
 
 def create_quickreport_menu(category, dbstate, uistate, handle, track=[]):
@@ -176,8 +175,8 @@ def create_quickreport_menu(category, dbstate, uistate, handle, track=[]):
 
 def make_quick_report_callback(pdata, category, dbstate, uistate, handle,
                                track=[]):
-    return lambda x: run_report(dbstate, uistate, category, handle, pdata,
-                                track=track)
+    return lambda x, y: run_report(dbstate, uistate, category, handle, pdata,
+                                   track=track)
 
 def get_quick_report_list(qv_category=None):
     """

@@ -192,7 +192,7 @@ class BasePersonView(ListView):
     Defines the UI string for UIManager
     """
     additional_ui = ['''
-      <placeholder name="LocalExport">
+      <placeholder id="LocalExport">
         <item>
           <attribute name="action">win.ExportTab</attribute>
           <attribute name="label" translatable="yes">Export View...</attribute>
@@ -227,9 +227,6 @@ class BasePersonView(ListView):
           <attribute name="accel">&lt;%s&gt;D</attribute>
         </item>
       </section>
-      </placeholder>
-    ''' % (('ctrl', 'ctrl') if is_quartz() else ('alt', 'alt')),
-    '''
       <section>
         <item>
           <attribute name="action">win.HomePerson</attribute>
@@ -238,7 +235,7 @@ class BasePersonView(ListView):
         </item>
       </section>
       </placeholder>
-''' % ('ctrl' if is_quartz() else 'alt'),
+    ''' % (('ctrl', 'ctrl', 'ctrl') if is_quartz() else ('alt', 'alt', 'alt')),
                      '''
       <section id='CommonEdit' groups='RW'>
         <item>
@@ -248,7 +245,7 @@ class BasePersonView(ListView):
         </item>
         <item>
           <attribute name="action">win.Edit</attribute>
-          <attribute name="label" translatable="yes">action|_Edit...</attribute>
+          <attribute name="label" translatable="yes">%s</attribute>
           <attribute name="accel">&lt;Primary&gt;Return</attribute>
         </item>
         <item>
@@ -261,7 +258,7 @@ class BasePersonView(ListView):
           <attribute name="label" translatable="yes">_Merge...</attribute>
         </item>
       </section>
-''',
+''' % _("action|_Edit..."),  # to use sgettext()
 '''
         <placeholder id='otheredit'>
         <item>
@@ -278,21 +275,21 @@ class BasePersonView(ListView):
 '''
     <placeholder id='CommonNavigation'>
     <child groups='RO'>
-      <object class="GtkToolButton"">
+      <object class="GtkToolButton">
         <property name="icon-name">go-previous</property>
         <property name="action-name">win.Back</property>
         <property name="tooltip_text" translatable="yes">Go to the previous object in the history</property>
       </object>
     </child>
     <child groups='RO'>
-      <object class="GtkToolButton"">
+      <object class="GtkToolButton">
         <property name="icon-name">go-next</property>
         <property name="action-name">win.Forward</property>
         <property name="tooltip_text" translatable="yes">Go to the next object in the history</property>
       </object>
     </child>
     <child groups='RO'>
-      <object class="GtkToolButton"">
+      <object class="GtkToolButton">
         <property name="icon-name">go-home</property>
         <property name="action-name">win.HomePerson</property>
         <property name="tooltip_text" translatable="yes">Go to the default person</property>
@@ -303,28 +300,28 @@ class BasePersonView(ListView):
 '''
     <placeholder id='BarCommonEdit'>
     <child groups='RW'>
-      <object class="GtkToolButton"">
+      <object class="GtkToolButton">
         <property name="icon-name">list-add</property>
         <property name="action-name">win.Add</property>
         <property name="tooltip_text" translatable="yes">%s</property>
       </object>
     </child>
     <child groups='RW'>
-      <object class="GtkToolButton"">
+      <object class="GtkToolButton">
         <property name="icon-name">gtk-edit</property>
         <property name="action-name">win.Edit</property>
         <property name="tooltip_text" translatable="yes">%s</property>
       </object>
     </child>
     <child groups='RW'>
-      <object class="GtkToolButton"">
+      <object class="GtkToolButton">
         <property name="icon-name">list-remove</property>
         <property name="action-name">win.Remove</property>
         <property name="tooltip_text" translatable="yes">%s</property>
       </object>
     </child>
     <child groups='RW'>
-      <object class="GtkToolButton"">
+      <object class="GtkToolButton">
         <property name="icon-name">gramps-merge</property>
         <property name="action-name">win.Merge</property>
         <property name="tooltip_text" translatable="yes">%s</property>
@@ -337,11 +334,11 @@ class BasePersonView(ListView):
       <section>
         <item>
           <attribute name="action">win.Back</attribute>
-          <attribute name="label" translatable="yes">_Add Bookmark</attribute>
+          <attribute name="label" translatable="yes">_Back</attribute>
         </item>
         <item>
           <attribute name="action">win.Forward</attribute>
-          <attribute name="label" translatable="yes">Organize Bookmarks...</attribute>
+          <attribute name="label" translatable="yes">Forward</attribute>
         </item>
         <item>
           <attribute name="action">win.HomePerson</attribute>
@@ -352,6 +349,8 @@ class BasePersonView(ListView):
           <attribute name="label" translatable="yes">Set _Home Person</attribute>
         </item>
       </section>
+      <section id="PopUpTree">
+      </section>
       <section>
         <item>
           <attribute name="action">win.Add</attribute>
@@ -359,7 +358,7 @@ class BasePersonView(ListView):
         </item>
         <item>
           <attribute name="action">win.Edit</attribute>
-          <attribute name="label" translatable="yes">action|_Edit...</attribute>
+          <attribute name="label" translatable="yes">%s</attribute>
         </item>
         <item>
           <attribute name="action">win.Remove</attribute>
@@ -379,7 +378,7 @@ class BasePersonView(ListView):
         </submenu>
       </section>
     </menu>
-'''
+''' % _('action|_Edit...')  # to use sgettext()
 ]
     tmp = '''<ui>
           <menubar name="MenuBar">
@@ -452,7 +451,7 @@ class BasePersonView(ListView):
         else:
             return None
 
-    def add(self, obj):
+    def add(self, *obj):
         """
         Add a new person to the database.
         """
@@ -466,7 +465,7 @@ class BasePersonView(ListView):
         except WindowActiveError:
             pass
 
-    def edit(self, obj):
+    def edit(self, *obj):
         """
         Edit an existing person in the database.
         """
@@ -477,7 +476,7 @@ class BasePersonView(ListView):
             except WindowActiveError:
                 pass
 
-    def remove(self, obj):
+    def remove(self, *obj):
         """
         Remove a person from the database.
         """
@@ -567,25 +566,19 @@ class BasePersonView(ListView):
         self.edit_action = ActionGroup(name=self.title + "/PersonEdit")
 
         self.all_action.add_actions([
-                ('FilterEdit', None, _('Person Filter Editor'), None, None,
-                self.filter_editor),
-                ('Edit', 'gtk-edit', _("action|_Edit..."),
-                "<PRIMARY>Return", self.EDIT_MSG, self.edit),
-                ('QuickReport', None, _("Quick View"), None, None, None),
-                ('WebConnect', None, _("Web Connection"), None, None, None),
+                ('FilterEdit', self.filter_editor),
+                ('Edit', self.edit),
+                #('QuickReport', None, _("Quick View"), None, None, None),
+                #('WebConnect', None, _("Web Connection"), None, None, None),
                 ])
 
 
         self.edit_action.add_actions(
             [
-                ('Add', 'list-add', _("_Add..."), "<PRIMARY>Insert",
-                 self.ADD_MSG, self.add),
-                ('Remove', 'list-remove', _("_Delete"), "<PRIMARY>Delete",
-                 self.DEL_MSG, self.remove),
-                ('Merge', 'gramps-merge', _('_Merge...'), None,
-                 self.MERGE_MSG, self.merge),
-                ('ExportTab', None, _('Export View...'), None, None,
-                 self.export),
+                ('Add', self.add),
+                ('Remove', self.remove),
+                ('Merge', self.merge),
+                ('ExportTab', self.export),
                 ])
 
         self._add_action_group(self.edit_action)
@@ -596,9 +589,10 @@ class BasePersonView(ListView):
         Turns on the visibility of the View's action group.
         """
         ListView.enable_action_group(self, obj)
-        self.all_action.set_visible(True)
-        self.edit_action.set_visible(True)
-        self.edit_action.set_sensitive(not self.dbstate.db.readonly)
+        self.uimanager.set_actions_visible(self.all_action, True)
+        self.uimanager.set_actions_visible(self.edit_action, True)
+        self.uimanager.set_actions_sensitive(self.edit_action,
+                                             not self.dbstate.db.readonly)
 
     def disable_action_group(self):
         """
@@ -606,10 +600,10 @@ class BasePersonView(ListView):
         """
         ListView.disable_action_group(self)
 
-        self.all_action.set_visible(False)
-        self.edit_action.set_visible(False)
+        self.uimanager.set_actions_visible(self.all_action, False)
+        self.uimanager.set_actions_visible(self.edit_action, False)
 
-    def merge(self, obj):
+    def merge(self, *obj):
         """
         Merge the selected people.
         """

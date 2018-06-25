@@ -122,6 +122,8 @@ class ListView(NavigationView):
         self.generic_filter = None
         dbstate.connect('database-changed', self.change_db)
         self.connect_signals()
+        self.at_popup_action = None
+        self.at_popup_menu = None
 
     def no_database(self):
         ## TODO GTK3: This is never called!! Dbguielement disconnects
@@ -365,7 +367,7 @@ class ListView(NavigationView):
         """
         return 'gramps-tree-list'
 
-    def filter_editor(self, obj):
+    def filter_editor(self, *obj):
         try:
             FilterEditor(self.FILTER_TYPE , CUSTOM_FILTERS,
                          self.dbstate, self.uistate)
@@ -844,6 +846,7 @@ class ListView(NavigationView):
         """
         if not self.dbstate.is_open():
             return False
+        menu = self.uimanager.get_widget('Popup')
         if event.type == Gdk.EventType._2BUTTON_PRESS and event.button == 1:
             if self.model.get_flags() & Gtk.TreeModelFlags.LIST_ONLY:
                 self.edit(obj)
@@ -859,48 +862,72 @@ class ListView(NavigationView):
                     else:
                         self.edit(obj)
                         return True
-        elif is_right_click(event):
-            menu = self.uistate.uimanager.get_widget('/Popup')
-            if menu:
-                # Quick Reports
-                qr_menu = self.uistate.uimanager.\
-                            get_widget('/Popup/QuickReport')
-                if qr_menu and self.QR_CATEGORY > -1 :
-                    (ui, qr_actions) = create_quickreport_menu(
-                                            self.QR_CATEGORY,
-                                            self.dbstate,
-                                            self.uistate,
-                                            self.first_selected())
-                    self.__build_menu(qr_menu, qr_actions)
+        elif is_right_click(event) and menu:
+            self.at_popup_menu = []
+            actions = []
+            # Quick Reports
+            qr_menu = self.uimanager.get_widget('QuickReport')
+            if qr_menu and self.QR_CATEGORY > -1 :
+                (qr_ui, qr_actions) = create_quickreport_menu(
+                    self.QR_CATEGORY,
+                    self.dbstate,
+                    self.uistate,
+                    self.first_selected())
+                #self.__build_menu(qr_menu, qr_actions)
+                if self.get_active() and qr_actions:
+                    actions.extend(qr_actions)
+                    self.at_popup_menu.append(qr_ui)
 
-                # Web Connects
-                web_menu = self.uistate.uimanager.\
-                                get_widget('/Popup/WebConnect')
-                if web_menu:
-                    web_actions = create_web_connect_menu(
-                                        self.dbstate,
-                                        self.uistate,
-                                        self.navigation_type(),
-                                        self.first_selected())
-                    self.__build_menu(web_menu, web_actions)
+            # Web Connects
+            web_menu = self.uimanager.get_widget('WebConnect')
+            if web_menu:
+                (web_ui, web_actions) = create_web_connect_menu(
+                    self.dbstate,
+                    self.uistate,
+                    self.navigation_type(),
+                    self.first_selected())
+                #self.__build_menu(web_menu, web_actions)
+                if self.get_active() and web_actions:
+                    actions.extend(web_actions)
+                    self.at_popup_menu.append(web_ui)
 
-                menu.popup(None, None, None, None, event.button, event.time)
-                return True
+            if self.at_popup_action:
+                self.uimanager.remove_ui(self.at_popup_menu)
+                self.uimanager.remove_action_group(self.at_popup_action)
+            self.at_popup_action = ActionGroup('AtPopupActions',
+                                               actions)
+            self.uimanager.insert_action_group(self.at_popup_action, 1)
+            self.at_popup_menu = self.uimanager.add_ui_from_string(
+                self.at_popup_menu)
+            self.uimanager.update_menu()
+
+            menu = self.uimanager.get_widget('Popup')
+            popup_menu = Gtk.Menu.new_from_model(menu)
+            popup_menu.attach_to_widget(obj, None)
+            popup_menu.show_all()
+            if Gtk.MINOR_VERSION < 22:
+                # ToDo The following is reported to work poorly with Wayland
+                popup_menu.popup(None, None, None, None,
+                                 event.button, event.time)
+            else:
+                popup_menu.popup_at_pointer(event)
+            return True
 
         return False
 
-    def __build_menu(self, menu, actions):
+    #def __build_menu(self, menu, actions):
         """
         Build a submenu for quick reports and web connects
         """
-        if self.get_active() and len(actions) > 1:
-            sub_menu = Gtk.Menu()
-            for action in actions[1:]:
-                add_menuitem(sub_menu, action[2], None, action[5])
-            menu.set_submenu(sub_menu)
-            menu.show()
-        else:
-            menu.hide()
+        #if self.get_active() and len(actions) > 1:
+            #sub_menu = Gtk.Menu()
+            #for action in actions[1:]:
+            #    add_menuitem(sub_menu, action[2], None, action[5])
+            #menu.set_submenu(sub_menu)
+            #menu.show()
+        #else:
+            #menu.hide()
+            
 
     def _key_press(self, obj, event):
         """
@@ -1007,8 +1034,9 @@ class ListView(NavigationView):
             self.uistate.show_filter_results(self.dbstate,
                                              self.model.displayed(),
                                              self.model.total())
-        self.edit_action.set_visible(True)
-        self.edit_action.set_sensitive(not self.dbstate.db.readonly)
+        self.uimanager.set_actions_visible(self.edit_action, True)
+        self.uimanager.set_actions_sensitive(self.edit_action,
+                                             not self.dbstate.db.readonly)
 
     def on_delete(self):
         """
@@ -1031,7 +1059,7 @@ class ListView(NavigationView):
     ####################################################################
     # Export data
     ####################################################################
-    def export(self, obj):
+    def export(self, *obj):
         chooser = Gtk.FileChooserDialog(
             _("Export View as Spreadsheet"),
             self.uistate.window,
@@ -1162,7 +1190,7 @@ class ListView(NavigationView):
         Template function to allow the removal of an object by its handle
         """
 
-    def open_all_nodes(self, obj):
+    def open_all_nodes(self, *obj):
         """
         Method for Treeviews to open all groups
         obj: for use of method in event callback
@@ -1175,7 +1203,7 @@ class ListView(NavigationView):
         self.uistate.set_busy_cursor(False)
         self.uistate.modify_statusbar(self.dbstate)
 
-    def close_all_nodes(self, obj):
+    def close_all_nodes(self, *obj):
         """
         Method for Treeviews to close all groups
         obj: for use of method in event callback

@@ -24,7 +24,7 @@ A replacement UIManager and ActionGroup.
 
 import xml.etree.ElementTree as ET
 from gi.repository import GLib, Gio, Gtk
-import copy
+import copy, sys
 
 ACTION_NAME = 0  # tuple index for action name
 ACTION_CB = 1    # tuple index for action callback
@@ -35,7 +35,7 @@ class ActionGroup():
     """ This class represents a group of actions that con be manipulated
     together.
     """
-    def __init__(self, name, actionlist=[]):
+    def __init__(self, name, actionlist=None):
         """
         @param name: the action group name, used to match to the 'groups'
                      attribute in the ui xml.
@@ -53,7 +53,7 @@ class ActionGroup():
                      accelerator (the name is also the accelerator value)
         """
         self.name = name
-        self.actionlist = actionlist
+        self.actionlist = actionlist if actionlist else []
 
     def add_actions(self, actionlist):
         """  Add a list of actions to the current list
@@ -194,10 +194,14 @@ class UIManager():
         # the following updates the toolbar from the new builder
         #toolbar = self.app.window.grid.get_child_at(0, 0)
         toolbar_parent = toolbar.get_parent()
+        tb_show = toolbar.get_visible()
         toolbar_parent.remove(toolbar)
         toolbar = self.builder.get_object("ToolBar")  # new toolbar
         toolbar_parent.pack_start(toolbar, False, True, 0)
-        toolbar.show_all()
+        if tb_show:
+            toolbar.show_all()
+        else:
+            toolbar.hide()
 
     def add_ui_from_string(self, changexml):
         """ This performs a merge operation on the xml elements that have
@@ -210,17 +214,25 @@ class UIManager():
         @type changexml: list
         @return: changexml
         """
-        for xml in changexml:
-            update = ET.fromstring(xml)
-            el_id = update.attrib['id']
-            parent = self.et_xml.find(".//*[@id='%s'].." % el_id)
-            for indx in range(len(parent)):
-                if parent[indx].get('id') == el_id:
-                    del parent[indx]
-                    parent.insert(indx, update)
-        results = ET.tostring(self.et_xml, encoding="unicode")
-        print(results)
-        return changexml
+        try:
+            for xml in changexml:
+                update = ET.fromstring(xml)
+                el_id = update.attrib['id']
+                parent = self.et_xml.find(".//*[@id='%s'].." % el_id)
+                if parent:
+                    for indx in range(len(parent)):
+                        if parent[indx].get('id') == el_id:
+                            del parent[indx]
+                            parent.insert(indx, update)
+                else:
+                    self.et_xml.append(update)
+            results = ET.tostring(self.et_xml, encoding="unicode")
+            print(results)
+            return changexml
+        except:
+            print('*****', sys.exc_info())
+            print(xml)
+            print(changexml)
 
     def remove_ui(self, change_xml):
         """ This removes the 'change_xml' from the current ui xml.  It works on
@@ -235,8 +247,9 @@ class UIManager():
             update = ET.fromstring(xml)
             el_id = update.attrib['id']
             element = self.et_xml.find(".//*[@id='%s']" % el_id)
-            for dummy in range(len(element)):
-                del element[0]
+            if element:  # element may have already been deleted
+                for dummy in range(len(element)):
+                    del element[0]
         results = ET.tostring(self.et_xml, encoding="unicode")
         print(results)
         return results
@@ -259,27 +272,31 @@ class UIManager():
         @param pos: the position of the action group (not used)
         @type pos: int
         """
-        for item in group.actionlist:
-            if len(item) == 2 or item[ACTION_ST] is None:
-                action = Gio.SimpleAction.new(item[ACTION_NAME], None)
-                action.connect("activate", item[ACTION_CB])
-            elif isinstance(item[ACTION_ST], str):
-                action = Gio.SimpleAction.new_stateful(
-                    item[ACTION_NAME], GLib.VariantType.new("s"),
-                    GLib.Variant("s", item[ACTION_ST]))
-                action.connect("change-state", item[ACTION_CB])
-            elif isinstance(item[ACTION_ST], bool):
-                action = Gio.SimpleAction.new_stateful(
-                    item[ACTION_NAME], None,
-                    GLib.Variant.new_boolean(item[ACTION_ST]))
-                action.connect("change-state", item[ACTION_CB])
-            elif isinstance(item[ACTION_ST], int):
-                action = Gio.SimpleAction.new(item[ACTION_NAME], None)
-                action.connect("activate", item[ACTION_CB])
-                self.app.set_accels_for_action('win.' + item[ACTION_NAME],
-                                               [item[ACTION_NAME]])
-            self.app.window.add_action(action)
-        self.action_groups.append(group)
+        try:
+            for item in group.actionlist:
+                if len(item) == 2 or item[ACTION_ST] is None:
+                    action = Gio.SimpleAction.new(item[ACTION_NAME], None)
+                    action.connect("activate", item[ACTION_CB])
+                elif isinstance(item[ACTION_ST], str):
+                    action = Gio.SimpleAction.new_stateful(
+                        item[ACTION_NAME], GLib.VariantType.new("s"),
+                        GLib.Variant("s", item[ACTION_ST]))
+                    action.connect("change-state", item[ACTION_CB])
+                elif isinstance(item[ACTION_ST], bool):
+                    action = Gio.SimpleAction.new_stateful(
+                        item[ACTION_NAME], None,
+                        GLib.Variant.new_boolean(item[ACTION_ST]))
+                    action.connect("change-state", item[ACTION_CB])
+                elif isinstance(item[ACTION_ST], int):
+                    action = Gio.SimpleAction.new(item[ACTION_NAME], None)
+                    action.connect("activate", item[ACTION_CB])
+                    self.app.set_accels_for_action('win.' + item[ACTION_NAME],
+                                                   [item[ACTION_NAME]])
+                self.app.window.add_action(action)
+            self.action_groups.append(group)
+        except:
+            print(group.name, item)
+            assert(False)
 
     def remove_action_group(self, group):
         """ This removes the ActionGroup from the UIManager

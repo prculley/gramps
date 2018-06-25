@@ -49,6 +49,7 @@ class DashboardView(PageView):
         Create a DashboardView, with the current dbstate and uistate
         """
         PageView.__init__(self, _('Dashboard'), pdata, dbstate, uistate)
+        self.ui_def = ''  # No special menu for Dashboard, Popup in GrampletPane
 
     def build_interface(self):
         """

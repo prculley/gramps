@@ -205,24 +205,24 @@ class PageView(DbGUIElement, metaclass=ABCMeta):
         """
         self._config.set(setting, widget.get_position())
 
-    def __sidebar_toggled(self, action):
+    def __sidebar_toggled(self, action, value):
         """
         Called when the sidebar is toggled.
         """
-        active = action.get_active()
-        if active:
+        action.set_state(value)  # change GUI
+        if value.get_boolean():
             self.sidebar.show()
             self.sidebar_toggled(True)
         else:
             self.sidebar.hide()
             self.sidebar_toggled(False)
 
-    def __bottombar_toggled(self, action):
+    def __bottombar_toggled(self, action, value):
         """
         Called when the bottombar is toggled.
         """
-        active = action.get_active()
-        if active:
+        action.set_state(value)  # change GUI
+        if value.get_boolean():
             self.bottombar.show()
         else:
             self.bottombar.hide()

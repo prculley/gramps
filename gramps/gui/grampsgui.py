@@ -86,7 +86,7 @@ UIDEFAULT = '''<?xml version="1.0" encoding="UTF-8"?>
           <attribute name="label" translatable="yes">_Export...</attribute>
           <attribute name="accel">&lt;Primary&gt;e</attribute>
         </item>
-        <placeholder name="LocalExport">
+        <placeholder id="LocalExport">
         </placeholder>
         <item>
           <attribute name="action">win.Backup</attribute>

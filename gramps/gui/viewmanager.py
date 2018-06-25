@@ -295,12 +295,12 @@ class ViewManager(CLIManager):
 
         hpane.add2(self.notebook)
         #self.menubar = self.uimanager.get_widget('menumar')
-        self.toolbar = self.uimanager.get_widget('ToolBar')
+        toolbar = self.uimanager.get_widget('ToolBar')
         #self.__attach_menubar(vbox)
         self.statusbar = Statusbar()
         self.statusbar.show()
         vbox.pack_end(self.statusbar, False, True, 0)  #attach(self.statusbar, 0, 2, 1, 1)
-        vbox.pack_start(self.toolbar, False, True, 0)  #attach(self.toolbar, 0, 0, 1, 1)
+        vbox.pack_start(toolbar, False, True, 0)  #attach(self.toolbar, 0, 0, 1, 1)
         vbox.pack_end(hpane, True, True, 0)  #attach(hpane, 0, 1, 1, 1)
         vbox.show()
 
@@ -333,10 +333,11 @@ class ViewManager(CLIManager):
 
         self.__setup_navigator()
 
+        toolbar = self.uimanager.get_widget('ToolBar')
         if self.show_toolbar:
-            self.toolbar.show()
+            toolbar.show()
         else:
-            self.toolbar.hide()
+            toolbar.hide()
 
         if self.fullscreen:
             self.window.fullscreen()
@@ -374,9 +375,9 @@ class ViewManager(CLIManager):
             #_("Open an existing database")),
             ('Quit', self.quit),
             #('ViewMenu', None, _('_View')),
-            ('Navigator', self.navigator_toggle, True),
-            ('Toolbar', self.toolbar_toggle, True),
-            ('Fullscreen', self.fullscreen_toggle, True),
+            ('Navigator', self.navigator_toggle, self.show_navigator),
+            ('Toolbar', self.toolbar_toggle, self.show_toolbar),
+            ('Fullscreen', self.fullscreen_toggle, self.fullscreen),
             #('EditMenu', None, _('_Edit')),
             ('Preferences', self.preferences_activate),
             #('HelpMenu', None, _('_Help')),
@@ -701,7 +702,7 @@ class ViewManager(CLIManager):
 #             self.macapp.insert_app_menu_item(about_item, 0)
 #             self.macapp.insert_app_menu_item(prefs_item, 1)
 
-    def preferences_activate(self, obj):
+    def preferences_activate(self, *obj):
         """
         Open the preferences dialog.
         """
@@ -710,7 +711,7 @@ class ViewManager(CLIManager):
         except WindowActiveError:
             return
 
-    def tip_of_day_activate(self, obj):
+    def tip_of_day_activate(self, *obj):
         """
         Display Tip of the day
         """
@@ -748,11 +749,12 @@ class ViewManager(CLIManager):
         results in the configuration settings
         """
         action.set_state(value)
+        toolbar = self.uimanager.get_widget('ToolBar')
         if value.get_boolean():
-            self.toolbar.show()
+            toolbar.show_all()
             config.set('interface.toolbar-on', True)
         else:
-            self.toolbar.hide()
+            toolbar.hide()
             config.set('interface.toolbar-on', False)
         config.save()
 
@@ -946,7 +948,7 @@ class ViewManager(CLIManager):
         else:
             configaction.set_enabled(False)
 
-    def import_data(self, obj):
+    def import_data(self, *obj):
         """
         Imports a file
         """
@@ -1155,7 +1157,7 @@ class ViewManager(CLIManager):
             # Let it go: history window does not exist
             return
 
-    def quick_backup(self, obj):
+    def quick_backup(self, *obj):
         """
         Make a quick XML back with or without media.
         """
@@ -1195,7 +1197,7 @@ class ViewManager(CLIManager):
         filename = os.path.join(backup_path, backup_name)
         writer.write(filename)
 
-    def reports_clicked(self, obj):
+    def reports_clicked(self, *obj):
         """
         Displays the Reports dialog
         """
@@ -1204,7 +1206,7 @@ class ViewManager(CLIManager):
         except WindowActiveError:
             return
 
-    def tools_clicked(self, obj):
+    def tools_clicked(self, *obj):
         """
         Displays the Tools dialog
         """
@@ -1213,7 +1215,7 @@ class ViewManager(CLIManager):
         except WindowActiveError:
             return
 
-    def clipboard(self, obj):
+    def clipboard(self, *obj):
         """
         Displays the Clipboard
         """
@@ -1224,7 +1226,7 @@ class ViewManager(CLIManager):
             return
 
     # ---------------Add new xxx --------------------------------
-    def add_new_person(self, obj):
+    def add_new_person(self, *obj):
         """
         Add a new person to the database.  (Global keybinding)
         """
@@ -1238,7 +1240,7 @@ class ViewManager(CLIManager):
         except WindowActiveError:
             pass
 
-    def add_new_family(self, obj):
+    def add_new_family(self, *obj):
         """
         Add a new family to the database.  (Global keybinding)
         """
@@ -1248,7 +1250,7 @@ class ViewManager(CLIManager):
         except WindowActiveError:
             pass
 
-    def add_new_event(self, obj):
+    def add_new_event(self, *obj):
         """
         Add a new custom/unknown event (Note you type first letter of event)
         """
@@ -1259,28 +1261,28 @@ class ViewManager(CLIManager):
         except WindowActiveError:
             pass
 
-    def add_new_place(self, obj):
+    def add_new_place(self, *obj):
         """Add a new place to the place list"""
         try:
             EditPlace(self.dbstate, self.uistate, [], Place())
         except WindowActiveError:
             pass
 
-    def add_new_source(self, obj):
+    def add_new_source(self, *obj):
         """Add a new source to the source list"""
         try:
             EditSource(self.dbstate, self.uistate, [], Source())
         except WindowActiveError:
             pass
 
-    def add_new_repository(self, obj):
+    def add_new_repository(self, *obj):
         """Add a new repository to the repository list"""
         try:
             EditRepository(self.dbstate, self.uistate, [], Repository())
         except WindowActiveError:
             pass
 
-    def add_new_citation(self, obj):
+    def add_new_citation(self, *obj):
         """
         Add a new citation
         """
@@ -1289,14 +1291,14 @@ class ViewManager(CLIManager):
         except WindowActiveError:
             pass
 
-    def add_new_media(self, obj):
+    def add_new_media(self, *obj):
         """Add a new media object to the media list"""
         try:
             EditMedia(self.dbstate, self.uistate, [], Media())
         except WindowActiveError:
             pass
 
-    def add_new_note(self, obj):
+    def add_new_note(self, *obj):
         """Add a new note to the note list"""
         try:
             EditNote(self.dbstate, self.uistate, [], Note())
@@ -1304,13 +1306,13 @@ class ViewManager(CLIManager):
             pass
     # ------------------------------------------------------------------------
 
-    def config_view(self, obj):
+    def config_view(self, *obj):
         """
         Displays the configuration dialog for the active view
         """
         self.active_page.configure()
 
-    def undo(self, obj):
+    def undo(self, *obj):
         """
         Calls the undo function on the database
         """
@@ -1318,7 +1320,7 @@ class ViewManager(CLIManager):
         self.dbstate.db.undo()
         self.uistate.set_busy_cursor(False)
 
-    def redo(self, obj):
+    def redo(self, *obj):
         """
         Calls the redo function on the database
         """
@@ -1326,7 +1328,7 @@ class ViewManager(CLIManager):
         self.dbstate.db.redo()
         self.uistate.set_busy_cursor(False)
 
-    def undo_history(self, obj):
+    def undo_history(self, *obj):
         """
         Displays the Undo history window
         """
@@ -1335,7 +1337,7 @@ class ViewManager(CLIManager):
         except WindowActiveError:
             return
 
-    def export_data(self, obj):
+    def export_data(self, *obj):
         """
         Calls the ExportAssistant to export data
         """
@@ -1458,7 +1460,7 @@ class ViewManager(CLIManager):
         ofile.write('</section>\n')
         return ([ofile.getvalue()], actions)
 
-    def display_about_box(self, obj):
+    def display_about_box(self, *obj):
         """Display the About box."""
         about = GrampsAboutDialog(self.uistate.window)
         about.run()
@@ -1518,43 +1520,43 @@ class ViewManager(CLIManager):
                            if viewstoshow[cat] not in resultorder)
         return resultorder
 
-def key_bindings(obj):
+def key_bindings(*obj):
     """
     Display key bindings
     """
     display_help(webpage=WIKI_HELP_PAGE_KEY)
 
-def manual_activate(obj):
+def manual_activate(*obj):
     """
     Display the Gramps manual
     """
     display_help(webpage=WIKI_HELP_PAGE_MAN)
 
-def report_bug_activate(obj):
+def report_bug_activate(*obj):
     """
     Display the bug tracker web site
     """
     display_url(URL_BUGTRACKER)
 
-def home_page_activate(obj):
+def home_page_activate(*obj):
     """
     Display the Gramps home page
     """
     display_url(URL_HOMEPAGE)
 
-def mailing_lists_activate(obj):
+def mailing_lists_activate(*obj):
     """
     Display the mailing list web page
     """
     display_url(URL_MAILINGLIST)
 
-def extra_plugins_activate(obj):
+def extra_plugins_activate(*obj):
     """
     Display the wiki page with extra plugins
     """
     display_url(URL_WIKISTRING+WIKI_EXTRAPLUGINS)
 
-def faq_activate(obj):
+def faq_activate(*obj):
     """
     Display FAQ
     """

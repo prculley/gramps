@@ -175,8 +175,9 @@ class Bookmarks(metaclass=ABCMeta):
 
         self.action_group.add_actions(actions)
         self.uistate.uimanager.insert_action_group(self.action_group, 1)
-        self.active = self.uistate.uimanager.add_ui_from_string(text.getvalue())
-        self.uistate.uimanager.ensure_update()
+        self.active = self.uistate.uimanager.add_ui_from_string(
+            [text.getvalue()])
+        self.uistate.uimanager.update_menu()
         text.close()
 
     @abstractmethod

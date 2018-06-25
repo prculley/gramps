@@ -300,7 +300,7 @@ class NavigationView(PageView):
         self._add_action_group(self.fwd_action)
         self._add_action_group(self.other_action)
 
-    def set_default_person(self, obj):
+    def set_default_person(self, *obj):
         """
         Set the default person.
         """
@@ -308,7 +308,7 @@ class NavigationView(PageView):
         if active:
             self.dbstate.db.set_default_person_handle(active)
 
-    def home(self, obj):
+    def home(self, *obj):
         """
         Move to the default person.
         """
@@ -365,7 +365,7 @@ class NavigationView(PageView):
         """
         pass
 
-    def fwd_clicked(self, obj):
+    def fwd_clicked(self, *obj):
         """
         Move forward one object in the history.
         """
@@ -379,7 +379,7 @@ class NavigationView(PageView):
         self.uimanager.set_actions_sensitive(self.back_action, True)
         hobj.lock = False
 
-    def back_clicked(self, obj):
+    def back_clicked(self, *obj):
         """
         Move backward one object in the history.
         """
@@ -439,7 +439,7 @@ class NavigationView(PageView):
                                          items[index])
             menus += menuitem % (nav_type, index, name,
                                 ('ctrl' if is_quartz() else 'alt'), index)
-        self.mru_ui = MRU_TOP + menus + MRU_BTM
+        self.mru_ui = [MRU_TOP + menus + MRU_BTM]
 
         mitems = items[-MRU_SIZE - 1:-1] # Ignore current handle
         mitems.reverse()
