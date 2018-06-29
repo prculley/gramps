@@ -29,7 +29,7 @@ Provide the event view.
 #
 #-------------------------------------------------------------------------
 from gramps.gen.const import GRAMPS_LOCALE as glocale
-_ = glocale.translation.gettext
+_ = glocale.translation.sgettext
 import logging
 _LOG = logging.getLogger(".plugins.eventview")
 
@@ -57,6 +57,7 @@ from gramps.gui.editors import EditEvent, DeleteEventQuery
 from gramps.gui.filters.sidebar import EventSidebarFilter
 from gramps.gui.merge import MergeEvent
 from gramps.gen.plug import CATEGORY_QR_EVENT
+from gramps.gen.constfunc import is_quartz
 
 #-------------------------------------------------------------------------
 #
@@ -138,7 +139,7 @@ class EventView(ListView):
         uistate.connect('nameformat-changed', self.build_tree)
         uistate.connect('placeformat-changed', self.build_tree)
 
-        self.additional_uis.append(self.additional_ui())
+        self.additional_uis.append(self.additional_ui)
 
     def person_update(self, hndl_list):
         """ Deal with person updates thay may effect the Main Participants
@@ -180,71 +181,185 @@ class EventView(ListView):
         """
         return 'gramps-event'
 
-    def additional_ui(self):
-        """
-        Defines the UI string for UIManager
-        """
-        return '''<ui>
-          <menubar name="MenuBar">
-            <menu action="BookMenu">
-              <placeholder name="AddEditBook">
-                <menuitem action="AddBook"/>
-                <menuitem action="EditBook"/>
-              </placeholder>
-            </menu>
-            <menu action="GoMenu">
-              <placeholder name="CommonGo">
-                <menuitem action="Back"/>
-                <menuitem action="Forward"/>
-                <separator/>
-              </placeholder>
-            </menu>
-            <menu action="FileMenu">
-              <placeholder name="LocalExport">
-                <menuitem action="ExportTab"/>
-              </placeholder>
-            </menu>
-            <menu action="EditMenu">
-              <placeholder name="CommonEdit">
-                <menuitem action="Add"/>
-                <menuitem action="Edit"/>
-                <menuitem action="Remove"/>
-                <menuitem action="Merge"/>
-              </placeholder>
-              <menuitem action="FilterEdit"/>
-            </menu>
-          </menubar>
-          <toolbar name="ToolBar">
-            <placeholder name="CommonNavigation">
-              <toolitem action="Back"/>
-              <toolitem action="Forward"/>
-            </placeholder>
-            <placeholder name="CommonEdit">
-              <toolitem action="Add"/>
-              <toolitem action="Edit"/>
-              <toolitem action="Remove"/>
-              <toolitem action="Merge"/>
-            </placeholder>
-          </toolbar>
-          <popup name="Popup">
-            <menuitem action="Back"/>
-            <menuitem action="Forward"/>
-            <separator/>
-            <menuitem action="Add"/>
-            <menuitem action="Edit"/>
-            <menuitem action="Remove"/>
-            <menuitem action="Merge"/>
-            <separator/>
-            <menu name="QuickReport" action="QuickReport"/>
-          </popup>
-        </ui>'''
+    """
+    Defines the UI string for UIManager
+    """
+    additional_ui = ['''
+      <placeholder id="LocalExport">
+        <item>
+          <attribute name="action">win.ExportTab</attribute>
+          <attribute name="label" translatable="yes">Export View...</attribute>
+        </item>
+      </placeholder>
+    ''',
+    '''
+      <section id="AddEditBook">
+        <item>
+          <attribute name="action">win.AddBook</attribute>
+          <attribute name="label" translatable="yes">_Add Bookmark</attribute>
+          <attribute name="accel">&lt;Primary&gt;d</attribute>
+        </item>
+        <item>
+          <attribute name="action">win.EditBook</attribute>
+          <attribute name="label" translatable="no">%s...</attribute>
+          <attribute name="accel">&lt;shift&gt;&lt;Primary&gt;D</attribute>
+        </item>
+      </section>
+    ''' % _('Organize Bookmarks'),
+                     '''
+      <placeholder id="CommonGo">
+      <section>
+        <item>
+          <attribute name="action">win.Back</attribute>
+          <attribute name="label" translatable="yes">_Back</attribute>
+          <attribute name="accel">&lt;%s&gt;Left</attribute>
+        </item>
+        <item>
+          <attribute name="action">win.Forward</attribute>
+          <attribute name="label" translatable="yes">_Forward</attribute>
+          <attribute name="accel">&lt;%s&gt;Right</attribute>
+        </item>
+      </section>
+      </placeholder>
+    ''' % (('ctrl', 'ctrl') if is_quartz() else ('alt', 'alt')),
+                     '''
+      <section id='CommonEdit' groups='RW'>
+        <item>
+          <attribute name="action">win.Add</attribute>
+          <attribute name="label" translatable="yes">_Add...</attribute>
+          <attribute name="accel">&lt;Primary&gt;Insert</attribute>
+        </item>
+        <item>
+          <attribute name="action">win.Edit</attribute>
+          <attribute name="label" translatable="yes">%s</attribute>
+          <attribute name="accel">&lt;Primary&gt;Return</attribute>
+        </item>
+        <item>
+          <attribute name="action">win.Remove</attribute>
+          <attribute name="label" translatable="yes">_Delete</attribute>
+          <attribute name="accel">&lt;Primary&gt;Delete</attribute>
+        </item>
+        <item>
+          <attribute name="action">win.Merge</attribute>
+          <attribute name="label" translatable="yes">_Merge...</attribute>
+        </item>
+      </section>
+    ''' % _("action|_Edit..."),  # to use sgettext()
+    '''
+        <placeholder id='otheredit'>
+        <item>
+          <attribute name="action">win.FilterEdit</attribute>
+          <attribute name="label" translatable="yes">Event Filter Editor</attribute>
+        </item>
+        </placeholder>
+    ''',  # Following are the Toolbar items
+    '''
+    <placeholder id='CommonNavigation'>
+    <child groups='RO'>
+      <object class="GtkToolButton">
+        <property name="icon-name">go-previous</property>
+        <property name="action-name">win.Back</property>
+        <property name="tooltip_text" translatable="yes">Go to the previous object in the history</property>
+        <property name="label" translatable="yes">_Back</property>
+        <property name="use-underline">True</property>
+      </object>
+    </child>
+    <child groups='RO'>
+      <object class="GtkToolButton">
+        <property name="icon-name">go-next</property>
+        <property name="action-name">win.Forward</property>
+        <property name="tooltip_text" translatable="yes">Go to the next object in the history</property>
+        <property name="label" translatable="yes">_Forward</property>
+        <property name="use-underline">True</property>
+      </object>
+    </child>
+    </placeholder>
+    ''',
+    '''
+    <placeholder id='BarCommonEdit'>
+    <child groups='RW'>
+      <object class="GtkToolButton">
+        <property name="icon-name">list-add</property>
+        <property name="action-name">win.Add</property>
+        <property name="tooltip_text" translatable="yes">%s</property>
+        <property name="label" translatable="yes">_Add...</property>
+        <property name="use-underline">True</property>
+      </object>
+    </child>
+    <child groups='RW'>
+      <object class="GtkToolButton">
+        <property name="icon-name">gtk-edit</property>
+        <property name="action-name">win.Edit</property>
+        <property name="tooltip_text" translatable="yes">%s</property>
+        <property name="label" translatable="yes">Edit...</property>
+        <property name="use-underline">True</property>
+      </object>
+    </child>
+    <child groups='RW'>
+      <object class="GtkToolButton">
+        <property name="icon-name">list-remove</property>
+        <property name="action-name">win.Remove</property>
+        <property name="tooltip_text" translatable="yes">%s</property>
+        <property name="label" translatable="yes">_Delete</property>
+        <property name="use-underline">True</property>
+      </object>
+    </child>
+    <child groups='RW'>
+      <object class="GtkToolButton">
+        <property name="icon-name">gramps-merge</property>
+        <property name="action-name">win.Merge</property>
+        <property name="tooltip_text" translatable="yes">%s</property>
+        <property name="label" translatable="yes">_Merge...</property>
+        <property name="use-underline">True</property>
+      </object>
+    </child>
+   </placeholder>
+''' % (ADD_MSG, EDIT_MSG, DEL_MSG, MERGE_MSG),
+'''
+    <menu id="Popup">
+      <section>
+        <item>
+          <attribute name="action">win.Back</attribute>
+          <attribute name="label" translatable="yes">_Back</attribute>
+        </item>
+        <item>
+          <attribute name="action">win.Forward</attribute>
+          <attribute name="label" translatable="yes">Forward</attribute>
+        </item>
+      </section>
+      <section id="PopUpTree">
+      </section>
+      <section>
+        <item>
+          <attribute name="action">win.Add</attribute>
+          <attribute name="label" translatable="yes">_Add...</attribute>
+        </item>
+        <item>
+          <attribute name="action">win.Edit</attribute>
+          <attribute name="label" translatable="yes">%s</attribute>
+        </item>
+        <item>
+          <attribute name="action">win.Remove</attribute>
+          <attribute name="label" translatable="yes">_Delete</attribute>
+        </item>
+        <item>
+          <attribute name="action">win.Merge</attribute>
+          <attribute name="label" translatable="yes">_Merge...</attribute>
+        </item>
+      </section>
+      <section>
+        <submenu id='QuickReport'>
+          <attribute name="label" translatable="yes">Quick View</attribute>
+          <attribute name="dummy"/>
+        </submenu>
+      </section>
+    </menu>
+    ''' % _('action|_Edit...')  # to use sgettext()
+    ]
 
     def define_actions(self):
         ListView.define_actions(self)
-        self._add_action('FilterEdit', None, _('Event Filter Editor'),
-                        callback=self.filter_editor,)
-        self._add_action('QuickReport', None,
-                         _("Quick View"), None, None, None)
+        self._add_action('FilterEdit', self.filter_editor,)
 
     def get_handle_from_gramps_id(self, gid):
         obj = self.dbstate.db.get_event_from_gramps_id(gid)
@@ -253,13 +368,13 @@ class EventView(ListView):
         else:
             return None
 
-    def add(self, obj):
+    def add(self, *obj):
         try:
             EditEvent(self.dbstate, self.uistate, [], Event())
         except WindowActiveError:
             pass
 
-    def remove(self, obj):
+    def remove(self, *obj):
         self.remove_selected_objects()
 
     def remove_object_from_handle(self, handle):
@@ -278,7 +393,7 @@ class EventView(ListView):
         is_used = len(person_list) + len(family_list) > 0
         return (query, is_used, object)
 
-    def edit(self, obj):
+    def edit(self, *obj):
         for handle in self.selected_handles():
             event = self.dbstate.db.get_event_from_handle(handle)
             try:
@@ -286,7 +401,7 @@ class EventView(ListView):
             except WindowActiveError:
                 pass
 
-    def merge(self, obj):
+    def merge(self, *obj):
         """
         Merge the selected events.
         """

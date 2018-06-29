@@ -256,9 +256,7 @@ _RCT_MENU = '''
 _RCT_BTM = '\n          </placeholder>\n'
 _RCT_BAR_TOP = ('<object class="GtkMenu"  id="OpenBtnMenu">\n'
                 '<property name="visible">True</property>\n'
-                '<property name="can_focus">False</property>\n'
-                '<property name="tooltip_text" translatable="yes">'
-                '"Connect to a recent database"</property>')
+                '<property name="can_focus">False</property>')
 _RCT_BAR = '''
 <child>
     <object class="GtkMenuItem">

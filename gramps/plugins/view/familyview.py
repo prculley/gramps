@@ -29,7 +29,7 @@ Family View.
 #
 #-------------------------------------------------------------------------
 from gramps.gen.const import GRAMPS_LOCALE as glocale
-_ = glocale.translation.gettext
+_ = glocale.translation.sgettext
 import logging
 _LOG = logging.getLogger(".plugins.eventview")
 #-------------------------------------------------------------------------
@@ -51,11 +51,13 @@ from gramps.gui.editors import EditFamily
 from gramps.gui.views.bookmarks import FamilyBookmarks
 from gramps.gen.errors import WindowActiveError
 from gramps.gen.config import config
+from gramps.gen.constfunc import is_quartz
 from gramps.gui.dialog import ErrorDialog
 from gramps.gui.filters.sidebar import FamilySidebarFilter
 from gramps.gui.merge import MergeFamily
 from gramps.gen.plug import CATEGORY_QR_FAMILY
 from gramps.gui.ddtargets import DdTargets
+from gramps.gui.uimanager import ActionGroup
 
 #-------------------------------------------------------------------------
 #
@@ -127,7 +129,7 @@ class FamilyView(ListView):
 
         uistate.connect('nameformat-changed', self.build_tree)
 
-        self.additional_uis.append(self.additional_ui())
+        self.additional_uis.append(self.additional_ui)
 
     def navigation_type(self):
         return 'Family'
@@ -135,84 +137,203 @@ class FamilyView(ListView):
     def get_stock(self):
         return 'gramps-family'
 
-    def additional_ui(self):
-        return '''<ui>
-          <menubar name="MenuBar">
-            <menu action="FileMenu">
-              <placeholder name="LocalExport">
-                <menuitem action="ExportTab"/>
-              </placeholder>
-            </menu>
-            <menu action="GoMenu">
-              <placeholder name="CommonGo">
-                <menuitem action="Back"/>
-                <menuitem action="Forward"/>
-                <separator/>
-              </placeholder>
-            </menu>
-            <menu action="EditMenu">
-              <placeholder name="CommonEdit">
-                <menuitem action="Add"/>
-                <menuitem action="Edit"/>
-                <menuitem action="Remove"/>
-                <menuitem action="Merge"/>
-              </placeholder>
-              <menuitem action="FilterEdit"/>
-            </menu>
-           <menu action="BookMenu">
-              <placeholder name="AddEditBook">
-                <menuitem action="AddBook"/>
-                <menuitem action="EditBook"/>
-              </placeholder>
-           </menu>
-          </menubar>
-          <toolbar name="ToolBar">
-            <placeholder name="CommonNavigation">
-              <toolitem action="Back"/>
-              <toolitem action="Forward"/>
-            </placeholder>
-            <placeholder name="CommonEdit">
-              <toolitem action="Add"/>
-              <toolitem action="Edit"/>
-              <toolitem action="Remove"/>
-              <toolitem action="Merge"/>
-            </placeholder>
-          </toolbar>
-          <popup name="Popup">
-            <menuitem action="Back"/>
-            <menuitem action="Forward"/>
-            <separator/>
-            <menuitem action="Add"/>
-            <menuitem action="Edit"/>
-            <menuitem action="Remove"/>
-            <menuitem action="Merge"/>
-            <separator/>
-            <menuitem action="MakeFatherActive"/>
-            <menuitem action="MakeMotherActive"/>
-            <separator/>
-            <menu name="QuickReport" action="QuickReport"/>
-          </popup>
-        </ui>'''
+    additional_ui = ['''
+      <placeholder id="LocalExport">
+        <item>
+          <attribute name="action">win.ExportTab</attribute>
+          <attribute name="label" translatable="yes">Export View...</attribute>
+        </item>
+      </placeholder>
+    ''',
+    '''
+      <section id="AddEditBook">
+        <item>
+          <attribute name="action">win.AddBook</attribute>
+          <attribute name="label" translatable="yes">_Add Bookmark</attribute>
+          <attribute name="accel">&lt;Primary&gt;d</attribute>
+        </item>
+        <item>
+          <attribute name="action">win.EditBook</attribute>
+          <attribute name="label" translatable="no">%s...</attribute>
+          <attribute name="accel">&lt;shift&gt;&lt;Primary&gt;D</attribute>
+        </item>
+      </section>
+    ''' % _('Organize Bookmarks'),
+    '''
+      <placeholder id="CommonGo">
+      <section>
+        <item>
+          <attribute name="action">win.Back</attribute>
+          <attribute name="label" translatable="yes">_Back</attribute>
+          <attribute name="accel">&lt;%s&gt;Left</attribute>
+        </item>
+        <item>
+          <attribute name="action">win.Forward</attribute>
+          <attribute name="label" translatable="yes">_Forward</attribute>
+          <attribute name="accel">&lt;%s&gt;Right</attribute>
+        </item>
+      </section>
+      </placeholder>
+    ''' % (('ctrl', 'ctrl') if is_quartz() else ('alt', 'alt')),
+    '''
+      <section id='CommonEdit' groups='RW'>
+        <item>
+          <attribute name="action">win.Add</attribute>
+          <attribute name="label" translatable="yes">_Add...</attribute>
+          <attribute name="accel">&lt;Primary&gt;Insert</attribute>
+        </item>
+        <item>
+          <attribute name="action">win.Edit</attribute>
+          <attribute name="label" translatable="yes">%s</attribute>
+          <attribute name="accel">&lt;Primary&gt;Return</attribute>
+        </item>
+        <item>
+          <attribute name="action">win.Remove</attribute>
+          <attribute name="label" translatable="yes">_Delete</attribute>
+          <attribute name="accel">&lt;Primary&gt;Delete</attribute>
+        </item>
+        <item>
+          <attribute name="action">win.Merge</attribute>
+          <attribute name="label" translatable="yes">_Merge...</attribute>
+        </item>
+      </section>
+    ''' % _("action|_Edit..."),  # to use sgettext()
+    '''
+        <placeholder id='otheredit'>
+        <item>
+          <attribute name="action">win.FilterEdit</attribute>
+          <attribute name="label" translatable="yes">Family Filter Editor</attribute>
+        </item>
+        </placeholder>
+    ''',  # Following are the Toolbar items
+    '''
+    <placeholder id='CommonNavigation'>
+    <child groups='RO'>
+      <object class="GtkToolButton">
+        <property name="icon-name">go-previous</property>
+        <property name="action-name">win.Back</property>
+        <property name="tooltip_text" translatable="yes">Go to the previous object in the history</property>
+        <property name="label" translatable="yes">_Back</property>
+        <property name="use-underline">True</property>
+      </object>
+    </child>
+    <child groups='RO'>
+      <object class="GtkToolButton">
+        <property name="icon-name">go-next</property>
+        <property name="action-name">win.Forward</property>
+        <property name="tooltip_text" translatable="yes">Go to the next object in the history</property>
+        <property name="label" translatable="yes">_Forward</property>
+        <property name="use-underline">True</property>
+      </object>
+    </child>
+    </placeholder>
+    ''',
+    '''
+    <placeholder id='BarCommonEdit'>
+    <child groups='RW'>
+      <object class="GtkToolButton">
+        <property name="icon-name">list-add</property>
+        <property name="action-name">win.Add</property>
+        <property name="tooltip_text" translatable="yes">%s</property>
+        <property name="label" translatable="yes">_Add...</property>
+        <property name="use-underline">True</property>
+      </object>
+    </child>
+    <child groups='RW'>
+      <object class="GtkToolButton">
+        <property name="icon-name">gtk-edit</property>
+        <property name="action-name">win.Edit</property>
+        <property name="tooltip_text" translatable="yes">%s</property>
+        <property name="label" translatable="yes">Edit...</property>
+        <property name="use-underline">True</property>
+      </object>
+    </child>
+    <child groups='RW'>
+      <object class="GtkToolButton">
+        <property name="icon-name">list-remove</property>
+        <property name="action-name">win.Remove</property>
+        <property name="tooltip_text" translatable="yes">%s</property>
+        <property name="label" translatable="yes">_Delete</property>
+        <property name="use-underline">True</property>
+      </object>
+    </child>
+    <child groups='RW'>
+      <object class="GtkToolButton">
+        <property name="icon-name">gramps-merge</property>
+        <property name="action-name">win.Merge</property>
+        <property name="tooltip_text" translatable="yes">%s</property>
+        <property name="label" translatable="yes">_Merge...</property>
+        <property name="use-underline">True</property>
+      </object>
+    </child>
+    </placeholder>
+    ''' % (ADD_MSG, EDIT_MSG, DEL_MSG, MERGE_MSG),
+    '''
+    <menu id="Popup">
+      <section>
+        <item>
+          <attribute name="action">win.Back</attribute>
+          <attribute name="label" translatable="yes">_Back</attribute>
+        </item>
+        <item>
+          <attribute name="action">win.Forward</attribute>
+          <attribute name="label" translatable="yes">Forward</attribute>
+        </item>
+      </section>
+      <section id="PopUpTree">
+      </section>
+      <section>
+        <item>
+          <attribute name="action">win.Add</attribute>
+          <attribute name="label" translatable="yes">_Add...</attribute>
+        </item>
+        <item>
+          <attribute name="action">win.Edit</attribute>
+          <attribute name="label" translatable="yes">%s</attribute>
+        </item>
+        <item>
+          <attribute name="action">win.Remove</attribute>
+          <attribute name="label" translatable="yes">_Delete</attribute>
+        </item>
+        <item>
+          <attribute name="action">win.Merge</attribute>
+          <attribute name="label" translatable="yes">_Merge...</attribute>
+        </item>
+      </section>
+      <section>
+        <item>
+          <attribute name="action">win.MakeFatherActive</attribute>
+          <attribute name="label" translatable="yes">Make Father Active Person</attribute>
+        </item>
+        <item>
+          <attribute name="action">win.MakeMotherActive</attribute>
+          <attribute name="label" translatable="yes">Make Mother Active Person</attribute>
+        </item>
+      </section>
+      <section>
+        <submenu id='QuickReport'>
+          <attribute name="label" translatable="yes">Quick View</attribute>
+          <attribute name="dummy"/>
+        </submenu>
+      </section>
+    </menu>
+    ''' % _('action|_Edit...')  # to use sgettext()
+    ]
 
     def define_actions(self):
         """Add the Forward action group to handle the Forward button."""
 
         ListView.define_actions(self)
 
-        self._add_action('FilterEdit', None, _('Family Filter Editor'),
-                        callback=self.filter_editor,)
+        self._add_action('FilterEdit', callback=self.filter_editor,)
 
-        self.all_action = Gtk.ActionGroup(name=self.title + "/FamilyAll")
+        self.all_action = ActionGroup(name=self.title + "/FamilyAll")
         self.all_action.add_actions([
-                ('MakeFatherActive', None, _("Make Father Active Person"),
-                 None, None, self._make_father_active),
-                ('MakeMotherActive', None, _("Make Mother Active Person"),
-                 None, None, self._make_mother_active),
-                ('QuickReport', None, _("Quick View"), None, None, None),
-                ])
+            ('MakeFatherActive', self._make_father_active),
+            ('MakeMotherActive', self._make_mother_active), ])
         self._add_action_group(self.all_action)
 
-    def add_bookmark(self, obj):
+    def add_bookmark(self, *obj):
         mlist = self.selected_handles()
         if mlist:
             self.bookmarks.add(mlist[0])
@@ -223,14 +344,14 @@ class FamilyView(ListView):
                 _("A bookmark could not be set because "
                   "no one was selected."), parent=self.uistate.window)
 
-    def add(self, obj):
+    def add(self, *obj):
         family = Family()
         try:
             EditFamily(self.dbstate, self.uistate, [], family)
         except WindowActiveError:
             pass
 
-    def remove(self, obj):
+    def remove(self, *obj):
         """
         Method called when deleting a family from a family view.
         """
@@ -289,7 +410,7 @@ class FamilyView(ListView):
         """
         pass
 
-    def edit(self, obj):
+    def edit(self, *obj):
         for handle in self.selected_handles():
             family = self.dbstate.db.get_family_from_handle(handle)
             try:
@@ -297,7 +418,7 @@ class FamilyView(ListView):
             except WindowActiveError:
                 pass
 
-    def merge(self, obj):
+    def merge(self, *obj):
         """
         Merge the selected families.
         """
@@ -312,7 +433,7 @@ class FamilyView(ListView):
         else:
             MergeFamily(self.dbstate, self.uistate, [], mlist[0], mlist[1])
 
-    def _make_father_active(self, obj):
+    def _make_father_active(self, *obj):
         """
         Make the father of the family the active person.
         """
@@ -322,7 +443,7 @@ class FamilyView(ListView):
             if family:
                 self.uistate.set_active(family.father_handle, 'Person')
 
-    def _make_mother_active(self, obj):
+    def _make_mother_active(self, *obj):
         """
         Make the mother of the family the active person.
         """

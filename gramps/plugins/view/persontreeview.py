@@ -83,10 +83,10 @@ class PersonTreeView(BasePersonView):
                 ('CloseAllNodes', self.close_all_nodes),
                 ])
 
-        """
-        Defines the UI string for UIManager
-        """
-    additional_ui = BasePersonView.additional_ui
+    """
+    Defines the UI string for UIManager
+    """
+    additional_ui = BasePersonView.additional_ui[:]
     additional_ui.append('''
       <section id="PopUpTree">
         <item>

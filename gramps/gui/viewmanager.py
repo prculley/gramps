@@ -413,10 +413,10 @@ class ViewManager(CLIManager):
             ('F9', self.__keypress, ACCEL),
             ('F11', self.__keypress, ACCEL),
             ('F12', self.__keypress, ACCEL),
-            ('<PRIMARY>BackSpace', self.__keypress, ACCEL),
-            ('<PRIMARY>Delete', self.__keypress, ACCEL),
-            ('<PRIMARY>Insert', self.__keypress, ACCEL),
-            ('<PRIMARY>J', self.__keypress, ACCEL),
+            #('<PRIMARY>BackSpace', self.__keypress, ACCEL),
+            #('<PRIMARY>Delete', self.__keypress, ACCEL),
+            #('<PRIMARY>Insert', self.__keypress, ACCEL),
+            #('<PRIMARY>J', self.__keypress, ACCEL),
             ('<PRIMARY>1', self.__gocat, ACCEL),
             ('<PRIMARY>2', self.__gocat, ACCEL),
             ('<PRIMARY>3', self.__gocat, ACCEL),
@@ -478,6 +478,7 @@ class ViewManager(CLIManager):
         (current view) so that it can take the associated action.
         """
         name = action.get_name()
+        print("*** Action: %s" % name)
         try:
             self.active_page.call_function(name)
         except Exception:

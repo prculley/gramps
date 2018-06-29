@@ -34,7 +34,7 @@ from gi.repository import Gdk
 from gi.repository import Gtk
 import cairo
 from gramps.gen.const import GRAMPS_LOCALE as glocale
-_ = glocale.translation.gettext
+_ = glocale.translation.sgettext
 
 #-------------------------------------------------------------------------
 #
@@ -45,6 +45,7 @@ import gramps.gui.widgets.fanchart as fanchart
 from gramps.gui.views.navigationview import NavigationView
 from gramps.gui.views.bookmarks import PersonBookmarks
 from gramps.gui.utils import SystemFonts
+from gramps.gen.constfunc import is_quartz
 
 # the print settings to remember between print sessions
 PRINT_SETTINGS = None
@@ -93,7 +94,7 @@ class FanChartView(fanchart.FanChartGrampsGUI, NavigationView):
         dbstate.connect('active-changed', self.active_changed)
         dbstate.connect('database-changed', self.change_db)
 
-        self.additional_uis.append(self.additional_ui())
+        self.additional_uis.append(self.additional_ui)
         self.allfonts = [x for x in enumerate(SystemFonts().get_system_fonts())]
 
         self.func_list.update({
@@ -135,42 +136,99 @@ class FanChartView(fanchart.FanChartGrampsGUI, NavigationView):
         """
         return 'gramps-fanchart'
 
-    def additional_ui(self):
-        return '''<ui>
-          <menubar name="MenuBar">
-            <menu action="GoMenu">
-              <placeholder name="CommonGo">
-                <menuitem action="Back"/>
-                <menuitem action="Forward"/>
-                <separator/>
-                <menuitem action="HomePerson"/>
-                <separator/>
-              </placeholder>
-            </menu>
-            <menu action="EditMenu">
-              <placeholder name="CommonEdit">
-                <menuitem action="PrintView"/>
-              </placeholder>
-            </menu>
-            <menu action="BookMenu">
-              <placeholder name="AddEditBook">
-                <menuitem action="AddBook"/>
-                <menuitem action="EditBook"/>
-              </placeholder>
-            </menu>
-          </menubar>
-          <toolbar name="ToolBar">
-            <placeholder name="CommonNavigation">
-              <toolitem action="Back"/>
-              <toolitem action="Forward"/>
-              <toolitem action="HomePerson"/>
-            </placeholder>
-            <placeholder name="CommonEdit">
-              <toolitem action="PrintView"/>
-            </placeholder>
-          </toolbar>
-        </ui>
-        '''
+    """
+    Defines the UI string for UIManager
+    """
+    additional_ui = ['''
+      <placeholder id="CommonGo">
+      <section>
+        <item>
+          <attribute name="action">win.Back</attribute>
+          <attribute name="label" translatable="yes">_Back</attribute>
+          <attribute name="accel">&lt;%s&gt;Left</attribute>
+        </item>
+        <item>
+          <attribute name="action">win.Forward</attribute>
+          <attribute name="label" translatable="yes">_Forward</attribute>
+          <attribute name="accel">&lt;%s&gt;Right</attribute>
+        </item>
+      </section>
+      <section>
+        <item>
+          <attribute name="action">win.HomePerson</attribute>
+          <attribute name="label" translatable="yes">_Home</attribute>
+          <attribute name="accel">&lt;%s&gt;Home</attribute>
+        </item>
+      </section>
+      </placeholder>
+    ''' % (('ctrl', 'ctrl', 'ctrl') if is_quartz() else ('alt', 'alt', 'alt')),
+    '''
+      <section id='CommonEdit' groups='RW'>
+        <item>
+          <attribute name="action">win.PrintView</attribute>
+          <attribute name="label" translatable="yes">_Print...</attribute>
+          <attribute name="accel">&lt;Primary&gt;P</attribute>
+        </item>
+      </section>
+    ''',
+    '''
+      <section id="AddEditBook">
+        <item>
+          <attribute name="action">win.AddBook</attribute>
+          <attribute name="label" translatable="yes">_Add Bookmark</attribute>
+          <attribute name="accel">&lt;Primary&gt;d</attribute>
+        </item>
+        <item>
+          <attribute name="action">win.EditBook</attribute>
+          <attribute name="label" translatable="no">%s...</attribute>
+          <attribute name="accel">&lt;shift&gt;&lt;Primary&gt;D</attribute>
+        </item>
+      </section>
+    ''' % _('Organize Bookmarks'),  # Following are the Toolbar items
+    '''
+    <placeholder id='CommonNavigation'>
+    <child groups='RO'>
+      <object class="GtkToolButton">
+        <property name="icon-name">go-previous</property>
+        <property name="action-name">win.Back</property>
+        <property name="tooltip_text" translatable="yes">Go to the previous object in the history</property>
+        <property name="label" translatable="yes">_Back</property>
+        <property name="use-underline">True</property>
+      </object>
+    </child>
+    <child groups='RO'>
+      <object class="GtkToolButton">
+        <property name="icon-name">go-next</property>
+        <property name="action-name">win.Forward</property>
+        <property name="tooltip_text" translatable="yes">Go to the next object in the history</property>
+        <property name="label" translatable="yes">_Forward</property>
+        <property name="use-underline">True</property>
+      </object>
+    </child>
+    <child groups='RO'>
+      <object class="GtkToolButton">
+        <property name="icon-name">go-home</property>
+        <property name="action-name">win.HomePerson</property>
+        <property name="tooltip_text" translatable="yes">Go to the default person</property>
+        <property name="label" translatable="yes">_Home</property>
+        <property name="use-underline">True</property>
+      </object>
+    </child>
+    </placeholder>
+    ''',
+    '''
+    <placeholder id='BarCommonEdit'>
+    <child groups='RO'>
+      <object class="GtkToolButton">
+        <property name="icon-name">document-print</property>
+        <property name="action-name">win.PrintView</property>
+        <property name="tooltip_text" translatable="yes">Print or save the Fan Chart View</property>
+        <property name="label" translatable="yes">_Print...</property>
+        <property name="use-underline">True</property>
+      </object>
+    </child>
+    </placeholder>
+    ''']
 
     def define_actions(self):
         """
@@ -179,10 +237,8 @@ class FanChartView(fanchart.FanChartGrampsGUI, NavigationView):
         """
         NavigationView.define_actions(self)
 
-        self._add_action('PrintView', 'document-print', _("_Print..."),
-                         accel="<PRIMARY>P",
-                         tip=_("Print or save the Fan Chart View"),
-                         callback=self.printview)
+        self._add_action('PrintView', self.printview)
+
     def build_tree(self):
         """
         Generic method called by PageView to construct the view.
@@ -240,7 +296,7 @@ class FanChartView(fanchart.FanChartGrampsGUI, NavigationView):
         if self.active:
             self.bookmarks.redraw()
 
-    def printview(self, obj):
+    def printview(self, *obj):
         """
         Print or save the view that is currently shown
         """

@@ -60,7 +60,7 @@ from gramps.gen.lib import (ChildRef, EventRoleType, EventType, Family,
 from gramps.gen.lib.date import Today
 from gramps.gen.db import DbTxn
 from gramps.gui.views.navigationview import NavigationView
-from gramps.gui.actiongroup import ActionGroup
+from gramps.gui.uimanager import ActionGroup
 from gramps.gui.editors import EditPerson, EditFamily
 from gramps.gui.editors import FilterEditor
 from gramps.gen.display.name import displayer as name_displayer
@@ -77,6 +77,7 @@ from gramps.gui.selectors import SelectorFactory
 from gramps.gen.errors import WindowActiveError
 from gramps.gui.views.bookmarks import PersonBookmarks
 from gramps.gen.const import CUSTOM_FILTERS
+from gramps.gen.constfunc import is_quartz
 from gramps.gen.utils.db import (get_birth_or_fallback, get_death_or_fallback,
                           preset_name)
 from gramps.gui.ddtargets import DdTargets
@@ -153,7 +154,7 @@ class RelationshipView(NavigationView):
         self.reorder_sensitive = False
         self.collapsed_items = {}
 
-        self.additional_uis.append(self.additional_ui())
+        self.additional_uis.append(self.additional_ui)
 
         self.show_siblings = self._config.get('preferences.family-siblings')
         self.show_details = self._config.get('preferences.family-details')
@@ -335,93 +336,170 @@ class RelationshipView(NavigationView):
         container.show_all()
         return container
 
-    def additional_ui(self):
         """
         Specifies the UIManager XML code that defines the menus and buttons
         associated with the interface.
         """
-        return '''<ui>
-          <menubar name="MenuBar">
-            <menu action="GoMenu">
-              <placeholder name="CommonGo">
-                <menuitem action="Back"/>
-                <menuitem action="Forward"/>
-                <separator/>
-                <menuitem action="HomePerson"/>
-                <separator/>
-              </placeholder>
-            </menu>
-            <menu action="EditMenu">
-              <menuitem action="Edit"/>
-              <menuitem action="AddParentsMenu"/>
-              <menuitem action="ShareFamilyMenu"/>
-              <menuitem action="AddSpouseMenu"/>
-              <menuitem action="ChangeOrder"/>
-              <menuitem action="FilterEdit"/>
-            </menu>
-            <menu action="BookMenu">
-              <placeholder name="AddEditBook">
-                <menuitem action="AddBook"/>
-                <menuitem action="EditBook"/>
-              </placeholder>
-            </menu>
-            <menu action="ViewMenu">
-            </menu>
-          </menubar>
-          <toolbar name="ToolBar">
-            <placeholder name="CommonNavigation">
-              <toolitem action="Back"/>
-              <toolitem action="Forward"/>
-              <toolitem action="HomePerson"/>
-            </placeholder>
-            <placeholder name="CommonEdit">
-              <toolitem action="Edit"/>
-              <toolitem action="AddParents"/>
-              <toolitem action="ShareFamily"/>
-              <toolitem action="AddSpouse"/>
-              <toolitem action="ChangeOrder"/>
-            </placeholder>
-          </toolbar>
-          <popup name="Popup">
-            <menuitem action="Back"/>
-            <menuitem action="Forward"/>
-            <menuitem action="HomePerson"/>
-            <separator/>
-          </popup>
-        </ui>'''
+    additional_ui = ['''
+      <placeholder id="CommonGo">
+      <section>
+        <item>
+          <attribute name="action">win.Back</attribute>
+          <attribute name="label" translatable="yes">_Add Bookmark</attribute>
+          <attribute name="accel">&lt;%s&gt;d</attribute>
+        </item>
+        <item>
+          <attribute name="action">win.Forward</attribute>
+          <attribute name="label" translatable="yes">Organize Bookmarks...</attribute>
+          <attribute name="accel">&lt;%s&gt;D</attribute>
+        </item>
+      </section>
+      <section>
+        <item>
+          <attribute name="action">win.HomePerson</attribute>
+          <attribute name="label" translatable="yes">_Home</attribute>
+          <attribute name="accel">&lt;%s&gt;Home</attribute>
+        </item>
+      </section>
+      </placeholder>
+    ''' % (('ctrl', 'ctrl', 'ctrl') if is_quartz() else ('alt', 'alt', 'alt')),
+    '''
+        <placeholder id='otheredit'>
+        <item>
+          <attribute name="action">win.Edit</attribute>
+          <attribute name="label" translatable="yes">Edit...</attribute>
+          <attribute name="accel">&lt;Primary&gt;Return</attribute>
+        </item>
+        <item>
+          <attribute name="action">win.AddParents</attribute>
+          <attribute name="label" translatable="yes">Add New Parents...</attribute>
+        </item>
+        <item>
+          <attribute name="action">win.ShareFamily</attribute>
+          <attribute name="label" translatable="yes">Add Existing Parents...</attribute>
+        </item>
+        <item>
+          <attribute name="action">win.AddSpouse</attribute>
+          <attribute name="label" translatable="yes">Add Partner...</attribute>
+        </item>
+        <item>
+          <attribute name="action">win.ChangeOrder</attribute>
+          <attribute name="label" translatable="yes">_Reorder</attribute>
+        </item>
+        <item>
+          <attribute name="action">win.FilterEdit</attribute>
+          <attribute name="label" translatable="yes">Person Filter Editor</attribute>
+        </item>
+        </placeholder>
+     ''',
+     '''
+      <section id="AddEditBook">
+        <item>
+          <attribute name="action">win.AddBook</attribute>
+          <attribute name="label" translatable="yes">_Add Bookmark</attribute>
+          <attribute name="accel">&lt;Primary&gt;d</attribute>
+        </item>
+        <item>
+          <attribute name="action">win.EditBook</attribute>
+          <attribute name="label" translatable="no">%s...</attribute>
+          <attribute name="accel">&lt;shift&gt;&lt;Primary&gt;D</attribute>
+        </item>
+      </section>
+''',  # Following are the Toolbar items
+'''
+    <placeholder id='CommonNavigation'>
+    <child groups='RO'>
+      <object class="GtkToolButton">
+        <property name="icon-name">go-previous</property>
+        <property name="action-name">win.Back</property>
+        <property name="tooltip_text" translatable="yes">Go to the previous object in the history</property>
+        <property name="label" translatable="yes">_Back</property>
+        <property name="use-underline">True</property>
+      </object>
+    </child>
+    <child groups='RO'>
+      <object class="GtkToolButton">
+        <property name="icon-name">go-next</property>
+        <property name="action-name">win.Forward</property>
+        <property name="tooltip_text" translatable="yes">Go to the next object in the history</property>
+        <property name="label" translatable="yes">_Forward</property>
+        <property name="use-underline">True</property>
+      </object>
+    </child>
+    <child groups='RO'>
+      <object class="GtkToolButton">
+        <property name="icon-name">go-home</property>
+        <property name="action-name">win.HomePerson</property>
+        <property name="tooltip_text" translatable="yes">Go to the default person</property>
+        <property name="label" translatable="yes">_Home</property>
+        <property name="use-underline">True</property>
+      </object>
+    </child>
+    </placeholder>
+''',
+'''
+    <placeholder id='BarCommonEdit'>
+    <child groups='RW'>
+      <object class="GtkToolButton">
+        <property name="icon-name">gtk-edit</property>
+        <property name="action-name">win.Edit</property>
+        <property name="tooltip_text" translatable="yes">Edit the active person</property>
+        <property name="label" translatable="yes">Edit...</property>
+      </object>
+    </child>
+    <child groups='RW'>
+      <object class="GtkToolButton">
+        <property name="icon-name">gramps-parents-add</property>
+        <property name="action-name">win.AddParents</property>
+        <property name="tooltip_text" translatable="yes">Add a new set of parents</property>
+        <property name="label" translatable="yes">Add</property>
+      </object>
+    </child>
+    <child groups='RW'>
+      <object class="GtkToolButton">
+        <property name="icon-name">gramps-parents-open</property>
+        <property name="action-name">win.ShareFamily</property>
+        <property name="tooltip_text" translatable="yes">Add person as child to an existing family</property>
+        <property name="label" translatable="yes">Share</property>
+      </object>
+    </child>
+    <child groups='RW'>
+      <object class="GtkToolButton">
+        <property name="icon-name">gramps-spouse</property>
+        <property name="action-name">win.AddSpouse</property>
+        <property name="tooltip_text" translatable="yes">Add a new family with person as parent</property>
+        <property name="label" translatable="yes">Partner</property>
+      </object>
+    </child>
+    <child groups='RW'>
+      <object class="GtkToolButton">
+        <property name="icon-name">view-sort-ascending</property>
+        <property name="action-name">win.ChangeOrder</property>
+        <property name="tooltip_text" translatable="yes">Change order of parents and families</property>
+        <property name="label" translatable="yes">_Reorder</property>
+        <property name="use-underline">True</property>
+      </object>
+    </child>
+    </placeholder>
+     ''']
 
     def define_actions(self):
         NavigationView.define_actions(self)
 
         self.order_action = ActionGroup(name=self.title + '/ChangeOrder')
         self.order_action.add_actions([
-            ('ChangeOrder', 'view-sort-ascending', _('_Reorder'), None ,
-            _("Change order of parents and families"), self.reorder),
+            ('ChangeOrder', self.reorder),
             ])
 
         self.family_action = ActionGroup(name=self.title + '/Family')
         self.family_action.add_actions([
-            ('Edit', 'gtk-edit', _('Edit...'), "<PRIMARY>Return",
-                _("Edit the active person"), self.edit_active),
-            ('AddSpouse', 'gramps-spouse', _('Partner'), None ,
-                _("Add a new family with person as parent"), self.add_spouse),
-            ('AddSpouseMenu', 'gramps-spouse', _('Add Partner...'), None ,
-                _("Add a new family with person as parent"), self.add_spouse),
-            ('AddParents', 'gramps-parents-add', _('Add'), None ,
-                _("Add a new set of parents"), self.add_parents),
-            ('AddParentsMenu', 'gramps-parents-add', _('Add New Parents...'),
-                None, _("Add a new set of parents"), self.add_parents),
-            ('ShareFamily', 'gramps-parents-open', _('Share'),
-                None , _("Add person as child to an existing family"),
-                self.select_parents),
-            ('ShareFamilyMenu', 'gramps-parents-open',
-                _('Add Existing Parents...'), None ,
-                _("Add person as child to an existing family"),
-                self.select_parents),
+            ('Edit', self.edit_active),
+            ('AddSpouse', self.add_spouse),
+            ('AddParents', self.add_parents),
+            ('ShareFamily', self.select_parents),
             ])
 
-        self._add_action('FilterEdit',  None, _('Person Filter Editor'),
-                        callback=self.filter_editor)
+        self._add_action('FilterEdit', callback=self.filter_editor)
 
         self._add_action_group(self.order_action)
         self._add_action_group(self.family_action)
@@ -430,7 +508,7 @@ class RelationshipView(NavigationView):
                                              self.reorder_sensitive)
         self.uimanager.set_actions_sensitive(self.family_action, False)
 
-    def filter_editor(self, obj):
+    def filter_editor(self, *obj):
         try:
             FilterEditor('Person', CUSTOM_FILTERS,
                          self.dbstate, self.uistate)
@@ -1489,7 +1567,7 @@ class RelationshipView(NavigationView):
             except WindowActiveError:
                 pass
 
-    def add_spouse(self, obj):
+    def add_spouse(self, *obj):
         family = Family()
         person = self.dbstate.db.get_person_from_handle(self.get_active())
 
@@ -1506,7 +1584,7 @@ class RelationshipView(NavigationView):
         except WindowActiveError:
             pass
 
-    def edit_active(self, obj):
+    def edit_active(self, obj, value):
         phandle = self.get_active()
         self.edit_person(obj, phandle)
 
@@ -1577,7 +1655,7 @@ class RelationshipView(NavigationView):
 
                 self.dbstate.db.add_child_to_family(family, child)
 
-    def select_parents(self, obj):
+    def select_parents(self, *obj):
         SelectFamily = SelectorFactory('Family')
 
         phandle = self.get_active()
@@ -1593,7 +1671,7 @@ class RelationshipView(NavigationView):
 
             self.dbstate.db.add_child_to_family(family, child)
 
-    def add_parents(self, obj):
+    def add_parents(self, *obj):
         family = Family()
         person = self.dbstate.db.get_person_from_handle(self.get_active())
 
@@ -1638,7 +1716,7 @@ class RelationshipView(NavigationView):
         if button_activated(event, _LEFT_BUTTON):
             self.reorder(obj)
 
-    def reorder(self, obj, dumm1=None, dummy2=None):
+    def reorder(self, *obj):
         if self.get_active():
             try:
                 Reorder(self.dbstate, self.uistate, [], self.get_active())

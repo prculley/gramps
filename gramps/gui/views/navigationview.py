@@ -236,7 +236,7 @@ class NavigationView(PageView):
     ####################################################################
     # BOOKMARKS
     ####################################################################
-    def add_bookmark(self, obj):
+    def add_bookmark(self, *obj):
         """
         Add a bookmark to the list.
         """
@@ -257,7 +257,7 @@ class NavigationView(PageView):
                   "no one was selected."),
                 parent=self.uistate.window)
 
-    def edit_bookmarks(self, obj):
+    def edit_bookmarks(self, *obj):
         """
         Call the bookmark editor.
         """
@@ -324,7 +324,7 @@ class NavigationView(PageView):
                   "via the menu Edit ->Set Home Person."),
                 parent=self.uistate.window)
 
-    def jump(self):
+    def jump(self, *obj):
         """
         A dialog to move to a Gramps ID entered by the user.
         """
@@ -422,7 +422,7 @@ class NavigationView(PageView):
         menuitem = '''        <item>
               <attribute name="action">win.%s%02d</attribute>
               <attribute name="label" translatable="yes">%s</attribute>
-              <attribute name="accel">&lt;%s&gt;%2d</attribute>
+              <attribute name="accel">&lt;%s&gt;%d</attribute>
             </item>
             '''
         menus = ''

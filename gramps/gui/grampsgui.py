@@ -123,7 +123,7 @@ UIDEFAULT = '''<?xml version="1.0" encoding="UTF-8"?>
       </section>
       <section>
         <item>
-          <attribute name="action">win.FamilyEventAdd</attribute>
+          <attribute name="action">win.EventAdd</attribute>
           <attribute name="label" translatable="yes">Event</attribute>
           <attribute name="accel">&lt;Shift&gt;&lt;Alt&gt;e</attribute>
         </item>
@@ -309,18 +309,33 @@ UIDEFAULT = '''<?xml version="1.0" encoding="UTF-8"?>
     </submenu>
   </menu>
 
+  <object class="GtkMenu"  id="OpenBtnMenu">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+  </object>
+
   <object class="GtkToolbar" id="ToolBar">
     <property name="hexpand">1</property>
+    <property name="toolbar-style">GTK_TOOLBAR_BOTH</property>
     <style>
       <class name="primary-toolbar"/>
     </style>
     <child>
-      <object class="GtkMenuToolButton">
+      <object class="GtkToolButton">
         <property name="icon-name">gramps</property>
         <property name="action-name">win.Open</property>
         <property name="tooltip_text" translatable="yes">"Manage databases"</property>
-        <child type="menu">
-          <object class="GtkMenu"  id="OpenBtnMenu">
+        <property name="label" translatable="yes">_Family Trees</property>
+        <property name="use-underline">True</property>
+      </object>
+    </child>
+    <child>
+      <object class="GtkToolItem">
+        <child>
+          <object class="GtkMenuButton">
+            <property name="tooltip_text" translatable="yes">"Connect to a recent database"</property>
+            <property name="popup">OpenBtnMenu</property>
+            <property name="relief">GTK_RELIEF_NONE</property>
           </object>
         </child>
       </object>
@@ -336,6 +351,8 @@ UIDEFAULT = '''<?xml version="1.0" encoding="UTF-8"?>
         <property name="icon-name">edit-paste</property>
         <property name="action-name">win.Clipboard</property>
         <property name="tooltip_text" translatable="yes">Open the Clipboard dialog</property>
+        <property name="label" translatable="yes">Clip_board</property>
+        <property name="use-underline">True</property>
       </object>
     </child>
     <child>
@@ -346,6 +363,8 @@ UIDEFAULT = '''<?xml version="1.0" encoding="UTF-8"?>
         <property name="icon-name">gramps-config</property>
         <property name="action-name">win.ConfigView</property>
         <property name="tooltip_text" translatable="yes">Configure the active view</property>
+        <property name="label" translatable="yes">_Configure...</property>
+        <property name="use-underline">True</property>
       </object>
     </child>
     <placeholder id='ViewsInCategoryBar'>
@@ -360,6 +379,8 @@ UIDEFAULT = '''<?xml version="1.0" encoding="UTF-8"?>
         <property name="icon-name">gramps-reports</property>
         <property name="action-name">win.Reports</property>
         <property name="tooltip_text" translatable="yes">Open the reports dialog</property>
+        <property name="label" translatable="yes">_Reports</property>
+        <property name="use-underline">True</property>
       </object>
     </child>
     <child groups='RW'>
@@ -367,8 +388,12 @@ UIDEFAULT = '''<?xml version="1.0" encoding="UTF-8"?>
         <property name="icon-name">gramps-tools</property>
         <property name="action-name">win.Tools</property>
         <property name="tooltip_text" translatable="yes">Open the tools dialog</property>
+        <property name="label" translatable="yes">_Tools</property>
+        <property name="use-underline">True</property>
       </object>
     </child>
+    <placeholder id='AfterTools'>
+    </placeholder>
   </object>
 
   <menu id="Popup">

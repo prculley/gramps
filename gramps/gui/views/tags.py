@@ -58,8 +58,12 @@ from ..managedwindow import ManagedWindow
 # Constants
 #
 #-------------------------------------------------------------------------
-TAG_1 = '''      <section id='TagMenu' groups='RW'>
+TAG_1 = '''
+      <section id='TagMenu' groups='RW'>
+        <submenu>
+        <attribute name="label" translatable="yes">Tag</attribute>
         %s
+        </submenu>
       </section>
     '''
 
@@ -69,16 +73,19 @@ TAG_2 = '''    <placeholder id='TagTool' groups='RW'>
         <property name="icon-name">gramps-tag</property>
         <property name="action-name">win.TagButton</property>
         <property name="tooltip_text" translatable="yes">Tag selected rows</property>
+        <property name="label" translatable="yes">Tag</property>
       </object>
     </child>
     </placeholder>
     '''
 
-TAG_3 = '''      <menu id='TagPopup' groups='RW'>
+TAG_3 = '''
+      <menu id='TagPopup' groups='RW'>
         %s
       </menu>'''
 
-TAG_MENU = '''        <item>
+TAG_MENU = '''<section>
+        <item>
           <attribute name="action">win.NewTag</attribute>
           <attribute name="label" translatable="yes">New Tag...</attribute>
         </item>
@@ -86,6 +93,7 @@ TAG_MENU = '''        <item>
           <attribute name="action">win.OrganizeTags</attribute>
           <attribute name="label" translatable="yes">Organize Tags...</attribute>
         </item>
+        </section>
         <section>
         %s
         </section>
@@ -223,7 +231,8 @@ class Tags(DbGUIElement):
             return
 
         tag_menu = ''
-        menuitem = '''        <item>
+        menuitem = '''
+        <item>
           <attribute name="action">win.TAG_%s</attribute>
           <attribute name="label" translatable="yes">%s</attribute>
         </item>'''
@@ -250,9 +259,18 @@ class Tags(DbGUIElement):
         """
         menu = self.uistate.uimanager.get_widget('TagPopup')
         button = self.uistate.uimanager.get_widget('TagButton')
-        #menu.popup(None, None, cb_menu_position, button, 0, 0)
-        self.popover = Gtk.Popover.new_from_model(button, menu)
-        self.popover.show()
+        popup_menu = Gtk.Menu.new_from_model(menu)
+        popup_menu.attach_to_widget(button, None)
+        popup_menu.show_all()
+        if Gtk.MINOR_VERSION < 22:
+            # ToDo The following is reported to work poorly with Wayland
+            #menu.popup(None, None, cb_menu_position, button, 0, 0)
+            popup_menu.popup(None, None, cb_menu_position, button, 0, 0)
+        else:
+            popup_menu.popup_at_widget(button, Gdk.Gravity.SOUTH,
+                                       Gdk.Gravity.NORTH_WEST, None)
+        # self.popover = Gtk.Popover.new_from_model(button, menu)
+        # self.popover.show()
 
     def cb_organize_tags(self, *action):
         """

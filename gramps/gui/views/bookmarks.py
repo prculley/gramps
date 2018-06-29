@@ -540,4 +540,4 @@ def make_callback(handle, function):
     """
     Build a unique call to the function with the associated handle.
     """
-    return lambda x: function(handle)
+    return lambda x, y: function(handle)

@@ -132,7 +132,14 @@ class UIManager():
             while indx < len(parents):
                 child = parents[indx]
                 if len(child) >= 1:
+                    # Recurse until we have a stand-alone child
                     iterator(child)
+                if ((len(child) == 1 and child.tag == "submenu") or
+                    (len(child) == 0 and child.tag == "section")):
+                    # remove empty submenus and sections
+                    # print('del', child.tag, child.attrib)
+                    del parents[indx]
+                    continue
                 # print(child.attrib)
                 groups = child.get('groups')
                 if not groups:
@@ -144,7 +151,7 @@ class UIManager():
                         indx += 1
                         break
                     else:
-                        print('del', child.tag, child.attrib, parents.tag, parents.attrib)
+                        #print('del', child.tag, child.attrib, parents.tag, parents.attrib)
                         del parents[indx]
                         break
             # The following looks for 'placeholder' elements and if found,
@@ -154,7 +161,7 @@ class UIManager():
             while indx < len(parents):
                 if parents[indx].tag == "placeholder":
                     subtree = parents[indx]
-                    print('placholder del', parents[indx].tag, parents[indx].attrib, parents.tag, parents.attrib)
+                    #print('placholder del', parents[indx].tag, parents[indx].attrib, parents.tag, parents.attrib)
                     del parents[indx]
                     for child in subtree:
                         parents.insert(indx, child)
@@ -162,13 +169,14 @@ class UIManager():
                 else:
                     indx += 1
 
+
         if self.builder:
             toolbar = self.builder.get_object("ToolBar")  # previous toolbar
         # need to copy the tree so we can preserve original for later edits.
         editable = copy.deepcopy(self.et_xml)
         iterator(editable)  # clean up tree to builder specifications
         xml_str = ET.tostring(editable, encoding="unicode")
-        print(xml_str)
+        #print(xml_str)
         self.builder = Gtk.Builder.new_from_string(xml_str, -1)
         if init:
             self.app.menubar = self.builder.get_object("menubar")
@@ -202,6 +210,7 @@ class UIManager():
             toolbar.show_all()
         else:
             toolbar.hide()
+        print('*** Update ui')
 
     def add_ui_from_string(self, changexml):
         """ This performs a merge operation on the xml elements that have
@@ -216,6 +225,8 @@ class UIManager():
         """
         try:
             for xml in changexml:
+                if not xml:
+                    continue
                 update = ET.fromstring(xml)
                 el_id = update.attrib['id']
                 parent = self.et_xml.find(".//*[@id='%s'].." % el_id)
@@ -227,7 +238,8 @@ class UIManager():
                 else:
                     self.et_xml.append(update)
             results = ET.tostring(self.et_xml, encoding="unicode")
-            print(results)
+            #print(results)
+            print ('*** Add ui')
             return changexml
         except:
             print('*****', sys.exc_info())
@@ -244,6 +256,8 @@ class UIManager():
         @type changexml: list
         """
         for xml in change_xml:
+            if not xml:
+                continue
             update = ET.fromstring(xml)
             el_id = update.attrib['id']
             element = self.et_xml.find(".//*[@id='%s']" % el_id)
@@ -251,7 +265,8 @@ class UIManager():
                 for dummy in range(len(element)):
                     del element[0]
         results = ET.tostring(self.et_xml, encoding="unicode")
-        print(results)
+        print ('*** Remove ui')
+        #print(results)
         return results
 
     def get_widget(self, obj):
@@ -275,21 +290,29 @@ class UIManager():
         try:
             for item in group.actionlist:
                 if len(item) == 2 or item[ACTION_ST] is None:
+                    # Normal stateless actions
                     action = Gio.SimpleAction.new(item[ACTION_NAME], None)
                     action.connect("activate", item[ACTION_CB])
                 elif isinstance(item[ACTION_ST], str):
+                    # Radio Actions
                     action = Gio.SimpleAction.new_stateful(
                         item[ACTION_NAME], GLib.VariantType.new("s"),
                         GLib.Variant("s", item[ACTION_ST]))
                     action.connect("change-state", item[ACTION_CB])
                 elif isinstance(item[ACTION_ST], bool):
+                    # Checkbox actions
                     action = Gio.SimpleAction.new_stateful(
                         item[ACTION_NAME], None,
                         GLib.Variant.new_boolean(item[ACTION_ST]))
                     action.connect("change-state", item[ACTION_CB])
                 elif isinstance(item[ACTION_ST], int):
-                    action = Gio.SimpleAction.new(item[ACTION_NAME], None)
-                    action.connect("activate", item[ACTION_CB])
+                    # Accelerators
+                    if self.app.get_actions_for_accel(item[ACTION_NAME]):
+                        print('**Duplicate Accelerator %s' % item[ACTION_NAME])
+                    action = self.app.window.lookup_action(item[ACTION_NAME])
+                    if not action:
+                        action = Gio.SimpleAction.new(item[ACTION_NAME], None)
+                        action.connect("activate", item[ACTION_CB])
                     self.app.set_accels_for_action('win.' + item[ACTION_NAME],
                                                    [item[ACTION_NAME]])
                 self.app.window.add_action(action)

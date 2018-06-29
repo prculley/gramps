@@ -199,7 +199,7 @@ class BasePersonView(ListView):
         </item>
       </placeholder>
     ''',
-                     '''
+    '''
       <section id="AddEditBook">
         <item>
           <attribute name="action">win.AddBook</attribute>
@@ -213,18 +213,18 @@ class BasePersonView(ListView):
         </item>
       </section>
     ''' % _('Organize Bookmarks'),
-                     '''
+    '''
       <placeholder id="CommonGo">
       <section>
         <item>
           <attribute name="action">win.Back</attribute>
-          <attribute name="label" translatable="yes">_Add Bookmark</attribute>
-          <attribute name="accel">&lt;%s&gt;d</attribute>
+          <attribute name="label" translatable="yes">_Back</attribute>
+          <attribute name="accel">&lt;%s&gt;Left</attribute>
         </item>
         <item>
           <attribute name="action">win.Forward</attribute>
-          <attribute name="label" translatable="yes">Organize Bookmarks...</attribute>
-          <attribute name="accel">&lt;%s&gt;D</attribute>
+          <attribute name="label" translatable="yes">_Forward</attribute>
+          <attribute name="accel">&lt;%s&gt;Right</attribute>
         </item>
       </section>
       <section>
@@ -236,7 +236,7 @@ class BasePersonView(ListView):
       </section>
       </placeholder>
     ''' % (('ctrl', 'ctrl', 'ctrl') if is_quartz() else ('alt', 'alt', 'alt')),
-                     '''
+    '''
       <section id='CommonEdit' groups='RW'>
         <item>
           <attribute name="action">win.Add</attribute>
@@ -258,8 +258,8 @@ class BasePersonView(ListView):
           <attribute name="label" translatable="yes">_Merge...</attribute>
         </item>
       </section>
-''' % _("action|_Edit..."),  # to use sgettext()
-'''
+    ''' % _("action|_Edit..."),  # to use sgettext()
+    '''
         <placeholder id='otheredit'>
         <item>
           <attribute name="action">win.SetActive</attribute>
@@ -268,17 +268,18 @@ class BasePersonView(ListView):
         <item>
           <attribute name="action">win.FilterEdit</attribute>
           <attribute name="label" translatable="yes">Person Filter Editor</attribute>
-          <attribute name="accel">&lt;Primary&gt;Return</attribute>
         </item>
         </placeholder>
-''',  # Following are the Toolbar items
-'''
+    ''',  # Following are the Toolbar items
+    '''
     <placeholder id='CommonNavigation'>
     <child groups='RO'>
       <object class="GtkToolButton">
         <property name="icon-name">go-previous</property>
         <property name="action-name">win.Back</property>
         <property name="tooltip_text" translatable="yes">Go to the previous object in the history</property>
+        <property name="label" translatable="yes">_Back</property>
+        <property name="use-underline">True</property>
       </object>
     </child>
     <child groups='RO'>
@@ -286,6 +287,8 @@ class BasePersonView(ListView):
         <property name="icon-name">go-next</property>
         <property name="action-name">win.Forward</property>
         <property name="tooltip_text" translatable="yes">Go to the next object in the history</property>
+        <property name="label" translatable="yes">_Forward</property>
+        <property name="use-underline">True</property>
       </object>
     </child>
     <child groups='RO'>
@@ -293,17 +296,21 @@ class BasePersonView(ListView):
         <property name="icon-name">go-home</property>
         <property name="action-name">win.HomePerson</property>
         <property name="tooltip_text" translatable="yes">Go to the default person</property>
+        <property name="label" translatable="yes">_Home</property>
+        <property name="use-underline">True</property>
       </object>
     </child>
     </placeholder>
-''',
-'''
+    ''',
+    '''
     <placeholder id='BarCommonEdit'>
     <child groups='RW'>
       <object class="GtkToolButton">
         <property name="icon-name">list-add</property>
         <property name="action-name">win.Add</property>
         <property name="tooltip_text" translatable="yes">%s</property>
+        <property name="label" translatable="yes">_Add...</property>
+        <property name="use-underline">True</property>
       </object>
     </child>
     <child groups='RW'>
@@ -311,6 +318,8 @@ class BasePersonView(ListView):
         <property name="icon-name">gtk-edit</property>
         <property name="action-name">win.Edit</property>
         <property name="tooltip_text" translatable="yes">%s</property>
+        <property name="label" translatable="yes">Edit...</property>
+        <property name="use-underline">True</property>
       </object>
     </child>
     <child groups='RW'>
@@ -318,6 +327,8 @@ class BasePersonView(ListView):
         <property name="icon-name">list-remove</property>
         <property name="action-name">win.Remove</property>
         <property name="tooltip_text" translatable="yes">%s</property>
+        <property name="label" translatable="yes">_Delete</property>
+        <property name="use-underline">True</property>
       </object>
     </child>
     <child groups='RW'>
@@ -325,11 +336,13 @@ class BasePersonView(ListView):
         <property name="icon-name">gramps-merge</property>
         <property name="action-name">win.Merge</property>
         <property name="tooltip_text" translatable="yes">%s</property>
+        <property name="label" translatable="yes">_Merge...</property>
+        <property name="use-underline">True</property>
       </object>
     </child>
     </placeholder>
-''' % (ADD_MSG, EDIT_MSG, DEL_MSG, MERGE_MSG),
-'''
+    ''' % (ADD_MSG, EDIT_MSG, DEL_MSG, MERGE_MSG),
+    '''
     <menu id="Popup">
       <section>
         <item>
@@ -372,74 +385,16 @@ class BasePersonView(ListView):
       <section>
         <submenu id='QuickReport'>
           <attribute name="label" translatable="yes">Quick View</attribute>
+          <attribute name="dummy"/>
         </submenu>
         <submenu id='WebConnect'>
           <attribute name="label" translatable="yes">Web Connection</attribute>
+          <attribute name="dummy"/>
         </submenu>
       </section>
     </menu>
-''' % _('action|_Edit...')  # to use sgettext()
-]
-    tmp = '''<ui>
-          <menubar name="MenuBar">
-            <menu action="FileMenu">
-              <placeholder name="LocalExport">
-                <menuitem action="ExportTab"/>
-              </placeholder>
-            </menu>
-            <menu action="BookMenu">
-              <placeholder name="AddEditBook">
-                <menuitem action="AddBook"/>
-                <menuitem action="EditBook"/>
-              </placeholder>
-            </menu>
-            <menu action="GoMenu">
-              <placeholder name="CommonGo">
-                <menuitem action="Back"/>
-                <menuitem action="Forward"/>
-                <separator/>
-                <menuitem action="HomePerson"/>
-                <separator/>
-              </placeholder>
-            </menu>
-            <menu action="EditMenu">
-              <placeholder name="CommonEdit">
-                <menuitem action="Add"/>
-                <menuitem action="Edit"/>
-                <menuitem action="Remove"/>
-                <menuitem action="Merge"/>
-              </placeholder>
-              <menuitem action="SetActive"/>
-              <menuitem action="FilterEdit"/>
-            </menu>
-          </menubar>
-          <toolbar name="ToolBar">
-            <placeholder name="CommonNavigation">
-              <toolitem action="Back"/>
-              <toolitem action="Forward"/>
-              <toolitem action="HomePerson"/>
-            </placeholder>
-            <placeholder name="CommonEdit">
-              <toolitem action="Add"/>
-              <toolitem action="Edit"/>
-              <toolitem action="Remove"/>
-              <toolitem action="Merge"/>
-            </placeholder>
-          </toolbar>
-          <popup name="Popup">
-            <menuitem action="Back"/>
-            <menuitem action="Forward"/>
-            <menuitem action="HomePerson"/>
-            <separator/>
-            <menuitem action="Add"/>
-            <menuitem action="Edit"/>
-            <menuitem action="Remove"/>
-            <menuitem action="Merge"/>
-            <separator/>
-            <menu name="QuickReport" action="QuickReport"/>
-            <menu name="WebConnect" action="WebConnect"/>
-          </popup>
-        </ui>'''
+    ''' % _('action|_Edit...')  # to use sgettext()
+    ]
 
     def get_handle_from_gramps_id(self, gid):
         """

@@ -436,7 +436,7 @@ class ListView(NavigationView):
             self.uistate.push_message(self.dbstate,
                                       _("Active object not visible"))
 
-    def add_bookmark(self, obj):
+    def add_bookmark(self, *obj):
         mlist = []
         self.selection.selected_foreach(self.blist, mlist)
 
@@ -1022,8 +1022,8 @@ class ListView(NavigationView):
             return True
         return False
 
-    def key_delete(self):
-        self.remove(None)
+    #def key_delete(self):
+    #    self.remove(None)
 
     def change_page(self):
         """
@@ -1161,25 +1161,25 @@ class ListView(NavigationView):
     # Template functions
     ####################################################################
     @abstractmethod
-    def edit(self, obj, data=None):
+    def edit(self, *obj):
         """
         Template function to allow the editing of the selected object
         """
 
     @abstractmethod
-    def remove(self, handle, data=None):
+    def remove(self, *obj):
         """
         Template function to allow the removal of an object by its handle
         """
 
     @abstractmethod
-    def add(self, obj, data=None):
+    def add(self, *obj):
         """
         Template function to allow the adding of a new object
         """
 
     @abstractmethod
-    def merge(self, obj, data=None):
+    def merge(self, *obj):
         """
         Template function to allow the merger of two objects.
         """
@@ -1210,7 +1210,7 @@ class ListView(NavigationView):
         """
         self.list.collapse_all()
 
-    def open_branch(self, obj):
+    def open_branch(self, *obj):
         """
         Expand the selected branches and all children.
         obj: for use of method in event callback
@@ -1225,7 +1225,7 @@ class ListView(NavigationView):
         self.uistate.set_busy_cursor(False)
         self.uistate.modify_statusbar(self.dbstate)
 
-    def close_branch(self, obj):
+    def close_branch(self, *obj):
         """
         Collapse the selected branches.
         :param obj: not used, present only to allow the use of the method in

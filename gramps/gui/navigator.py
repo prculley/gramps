@@ -142,17 +142,18 @@ class Navigator:
             <item>
               <attribute name="action">win.ViewInCatagory</attribute>
               <attribute name="label" translatable="yes">%s</attribute>
-              <attribute name="target">%d</attribute>
+              <attribute name="target">%d %d</attribute>
               %s
             </item>
             '''
         baritem = '''
             <child>
-              <object class="GtkToolButton">
+              <object class="GtkToggleToolButton" id="bar%d">
                 <property name="action-name">win.ViewInCatagory</property>
-                <property name="action-target">%d</property>
+                <property name="action-target">'%d %d'</property>
                 <property name="icon-name">%s</property>
                 <property name="tooltip_text" translatable="yes">%s</property>
+                <property name="label" translatable="yes">%s</property>
               </object>
             </child>
             '''
@@ -176,14 +177,15 @@ class Navigator:
                         cat_icon = 'gramps-view'
                     categories.append([cat_num, cat_name, cat_icon])
 
-                pageid = 'page_%i_%i' % (cat_num, view_num)
+                #pageid = 'page_%i_%i' % (cat_num, view_num)
                 #uimenuitems += '\n<menuitem action="%s"/>' % pageid
                 # id, stock, button text, UI, tooltip, page
                 if view_num < 9:
                     modifier = accel % ((view_num % 9) + 1)
                 else:
                     modifier = ""
-                uimenuitems += menuitem % (page[0].name, view_num, modifier)
+                uimenuitems += menuitem % (page[0].name, cat_num, view_num,
+                                           modifier)
 
                 stock_icon = page[0].stock_icon
                 if stock_icon is None:
@@ -191,7 +193,8 @@ class Navigator:
                 # self.view_toggle_actions[cat_num].append((pageid,
                             # stock_icon,
                             # page[0].name, modifier, page[0].name, view_num))
-                uibaritems += baritem % (view_num, stock_icon, page[0].name)
+                uibaritems += baritem % (view_num, cat_num, view_num, stock_icon,
+                                         page[0].name, page[0].name)
 
                 views[cat_num].append((view_num, page[0].name, stock_icon))
 
@@ -252,7 +255,8 @@ class Navigator:
             list(map(uimanager.remove_ui, self.merge_ids))
 
         if cat_num in self.ui_category:
-            action = ('ViewInCatagory', self.cb_view_clicked, view_num)
+            action = ('ViewInCatagory', self.cb_view_clicked,
+                      str(cat_num) + ' ' + str(view_num))
             self.cat_view_group = ActionGroup('viewmenu', [action])
             # self.cat_view_group.add_actions(
                     # self.view_toggle_actions[cat_num], value=view_num,
@@ -269,12 +273,12 @@ class Navigator:
             return
         sidebar.view_changed(cat_num, view_num)
 
-    def cb_view_clicked(self, radioaction, current, cat_num):
+    def cb_view_clicked(self, radioaction, value):
         """
         Called when a view is selected from the menu.
         """
-        view_num = radioaction.get_current_value()
-        self.viewmanager.goto_page(cat_num, view_num)
+        cat_num, view_num = value.get_string().split()
+        self.viewmanager.goto_page(int(cat_num), int(view_num))
 
     def __menu_button_pressed(self, button, event):
         """

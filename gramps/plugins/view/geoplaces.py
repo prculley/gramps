@@ -58,6 +58,7 @@ from gramps.gui.views.bookmarks import PlaceBookmarks
 from gramps.plugins.lib.maps.geography import GeoGraphyView
 from gramps.plugins.lib.maps import constants
 from gramps.gui.utils import ProgressMeter
+from gramps.gen.constfunc import is_quartz
 
 #-------------------------------------------------------------------------
 #
@@ -65,39 +66,80 @@ from gramps.gui.utils import ProgressMeter
 #
 #-------------------------------------------------------------------------
 
-_UI_DEF = '''\
-<ui>
-<menubar name="MenuBar">
-<menu action="GoMenu">
-  <placeholder name="CommonGo">
-    <menuitem action="Back"/>
-    <menuitem action="Forward"/>
-    <separator/>
-  </placeholder>
-</menu>
-<menu action="EditMenu">
-  <placeholder name="CommonEdit">
-    <menuitem action="PrintView"/>
-  </placeholder>
-</menu>
-<menu action="BookMenu">
-  <placeholder name="AddEditBook">
-    <menuitem action="AddBook"/>
-    <menuitem action="EditBook"/>
-  </placeholder>
-</menu>
-</menubar>
-<toolbar name="ToolBar">
-<placeholder name="CommonNavigation">
-  <toolitem action="Back"/>
-  <toolitem action="Forward"/>
-</placeholder>
-<placeholder name="CommonEdit">
-  <toolitem action="PrintView"/>
-</placeholder>
-</toolbar>
-</ui>
-'''
+_UI_DEF = ['''
+      <placeholder id="CommonGo">
+      <section>
+        <item>
+          <attribute name="action">win.Back</attribute>
+          <attribute name="label" translatable="yes">_Back</attribute>
+          <attribute name="accel">&lt;%s&gt;Left</attribute>
+        </item>
+        <item>
+          <attribute name="action">win.Forward</attribute>
+          <attribute name="label" translatable="yes">_Forward</attribute>
+          <attribute name="accel">&lt;%s&gt;Right</attribute>
+        </item>
+      </section>
+      </placeholder>
+    ''' % (('ctrl', 'ctrl') if is_quartz() else ('alt', 'alt')),
+    '''
+      <section id='CommonEdit' groups='RW'>
+        <item>
+          <attribute name="action">win.PrintView</attribute>
+          <attribute name="label" translatable="yes">_Print...</attribute>
+          <attribute name="accel">&lt;Primary&gt;P</attribute>
+        </item>
+      </section>
+    ''',
+    '''
+      <section id="AddEditBook">
+        <item>
+          <attribute name="action">win.AddBook</attribute>
+          <attribute name="label" translatable="yes">_Add Bookmark</attribute>
+          <attribute name="accel">&lt;Primary&gt;d</attribute>
+        </item>
+        <item>
+          <attribute name="action">win.EditBook</attribute>
+          <attribute name="label" translatable="no">%s...</attribute>
+          <attribute name="accel">&lt;shift&gt;&lt;Primary&gt;D</attribute>
+        </item>
+      </section>
+    ''' % _('Organize Bookmarks'),  # Following are the Toolbar items
+    '''
+    <placeholder id='CommonNavigation'>
+    <child groups='RO'>
+      <object class="GtkToolButton">
+        <property name="icon-name">go-previous</property>
+        <property name="action-name">win.Back</property>
+        <property name="tooltip_text" translatable="yes">Go to the previous object in the history</property>
+        <property name="label" translatable="yes">_Back</property>
+        <property name="use-underline">True</property>
+      </object>
+    </child>
+    <child groups='RO'>
+      <object class="GtkToolButton">
+        <property name="icon-name">go-next</property>
+        <property name="action-name">win.Forward</property>
+        <property name="tooltip_text" translatable="yes">Go to the next object in the history</property>
+        <property name="label" translatable="yes">_Forward</property>
+        <property name="use-underline">True</property>
+      </object>
+    </child>
+    </placeholder>
+    ''',
+    '''
+    <placeholder id='BarCommonEdit'>
+    <child groups='RO'>
+      <object class="GtkToolButton">
+        <property name="icon-name">document-print</property>
+        <property name="action-name">win.PrintView</property>
+        <property name="tooltip_text" translatable="yes">Print or save the Map</property>
+        <property name="label" translatable="yes">_Print...</property>
+        <property name="use-underline">True</property>
+       </object>
+    </child>
+    </placeholder>
+    ''']
 
 # pylint: disable=no-member
 # pylint: disable=maybe-no-member
