@@ -133,11 +133,6 @@ class RepositoryView(ListView):
             multiple=True,
             filter_class=RepoSidebarFilter)
 
-        self.func_list.update({
-            '<PRIMARY>J' : self.jump,
-            '<PRIMARY>BackSpace' : self.key_delete,
-            })
-
         self.additional_uis.append(self.additional_ui)
 
     def navigation_type(self):
@@ -146,9 +141,9 @@ class RepositoryView(ListView):
     def drag_info(self):
         return DdTargets.REPO_LINK
 
-    def define_actions(self):
-        ListView.define_actions(self)
-        self._add_action('FilterEdit', self.filter_editor,)
+    # def define_actions(self):
+        # ListView.define_actions(self)
+        # self._add_action('FilterEdit', self.filter_editor,)
 
     def get_stock(self):
         return 'gramps-repository'
@@ -166,12 +161,10 @@ class RepositoryView(ListView):
         <item>
           <attribute name="action">win.AddBook</attribute>
           <attribute name="label" translatable="yes">_Add Bookmark</attribute>
-          <attribute name="accel">&lt;Primary&gt;d</attribute>
         </item>
         <item>
           <attribute name="action">win.EditBook</attribute>
           <attribute name="label" translatable="no">%s...</attribute>
-          <attribute name="accel">&lt;shift&gt;&lt;Primary&gt;D</attribute>
         </item>
       </section>
     ''' % _('Organize Bookmarks'),
@@ -181,32 +174,27 @@ class RepositoryView(ListView):
         <item>
           <attribute name="action">win.Back</attribute>
           <attribute name="label" translatable="yes">_Back</attribute>
-          <attribute name="accel">&lt;%s&gt;Left</attribute>
         </item>
         <item>
           <attribute name="action">win.Forward</attribute>
           <attribute name="label" translatable="yes">_Forward</attribute>
-          <attribute name="accel">&lt;%s&gt;Right</attribute>
         </item>
       </section>
       </placeholder>
-    ''' % (('ctrl', 'ctrl') if is_quartz() else ('alt', 'alt')),
+    ''',
     '''
       <section id='CommonEdit' groups='RW'>
         <item>
           <attribute name="action">win.Add</attribute>
           <attribute name="label" translatable="yes">_Add...</attribute>
-          <attribute name="accel">&lt;Primary&gt;Insert</attribute>
         </item>
         <item>
           <attribute name="action">win.Edit</attribute>
           <attribute name="label" translatable="yes">%s</attribute>
-          <attribute name="accel">&lt;Primary&gt;Return</attribute>
         </item>
         <item>
           <attribute name="action">win.Remove</attribute>
           <attribute name="label" translatable="yes">_Delete</attribute>
-          <attribute name="accel">&lt;Primary&gt;Delete</attribute>
         </item>
         <item>
           <attribute name="action">win.Merge</attribute>

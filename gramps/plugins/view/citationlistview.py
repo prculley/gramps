@@ -56,7 +56,6 @@ from gramps.gui.editors import EditCitation, DeleteCitationQuery
 from gramps.gui.filters.sidebar import CitationSidebarFilter
 from gramps.gui.merge import MergeCitation
 from gramps.gui.uimanager import ActionGroup
-from gramps.gen.constfunc import is_quartz
 
 #-------------------------------------------------------------------------
 #
@@ -148,11 +147,6 @@ class CitationListView(ListView):
             multiple=True,
             filter_class=CitationSidebarFilter)
 
-        self.func_list.update({
-            '<PRIMARY>J' : self.jump,
-            '<PRIMARY>BackSpace' : self.key_delete,
-            })
-
         self.additional_uis.append(self.additional_ui)
 
     def navigation_type(self):
@@ -161,29 +155,27 @@ class CitationListView(ListView):
     def drag_info(self):
         return DdTargets.CITATION_LINK
 
-    def define_actions(self):
-        """
-        This defines the possible actions for the citation views.
-        Possible actions are:
-        add:        Add a new citation and a new source (this can also be done
-                      by source view add a source, then citation view add a new
-                      citation to an existing source)
-        edit:       Edit a citation.
-        merge:      Merge the selected citations.
-        remove:     Delete the selected citations.
+    # def define_actions(self):
+        # """
+        # This defines the possible actions for the citation views.
+        # Possible actions are:
+        # add:        Add a new citation and a new source (this can also be done
+                      # by source view add a source, then citation view add a new
+                      # citation to an existing source)
+        # edit:       Edit a citation.
+        # merge:      Merge the selected citations.
+        # remove:     Delete the selected citations.
 
 
-        """
-        ListView.define_actions(self)
+        # """
+        # ListView.define_actions(self)
 
-        self.all_action = ActionGroup(name=self.title + "/CitationAll")
-        self.edit_action = ActionGroup(name=self.title + "/CitationEdit")
+        # self.all_action = ActionGroup(name=self.title + "/CitationAll")
+        # self.edit_action = ActionGroup(name=self.title + "/CitationEdit")
 
-        self._add_action('FilterEdit', callback=self.filter_editor,)
-        #self._add_action('QuickReport', None, _("Quick View"), None, None, None)
-
-        self._add_action_group(self.edit_action)
-        self._add_action_group(self.all_action)
+        # self.all_action.add_actions([
+            # ('FilterEdit', self.filter_editor)])
+        # self._add_action_group(self.all_action)
 
     def get_stock(self):
         return 'gramps-citation'
@@ -196,52 +188,45 @@ class CitationListView(ListView):
         </item>
       </placeholder>
     ''',
-                     '''
+    '''
       <section id="AddEditBook">
         <item>
           <attribute name="action">win.AddBook</attribute>
           <attribute name="label" translatable="yes">_Add Bookmark</attribute>
-          <attribute name="accel">&lt;Primary&gt;d</attribute>
         </item>
         <item>
           <attribute name="action">win.EditBook</attribute>
           <attribute name="label" translatable="no">%s...</attribute>
-          <attribute name="accel">&lt;shift&gt;&lt;Primary&gt;D</attribute>
         </item>
       </section>
     ''' % _('Organize Bookmarks'),
-                     '''
+    '''
       <placeholder id="CommonGo">
       <section>
         <item>
           <attribute name="action">win.Back</attribute>
           <attribute name="label" translatable="yes">_Back</attribute>
-          <attribute name="accel">&lt;%s&gt;Left</attribute>
         </item>
         <item>
           <attribute name="action">win.Forward</attribute>
           <attribute name="label" translatable="yes">_Forward</attribute>
-          <attribute name="accel">&lt;%s&gt;Right</attribute>
         </item>
       </section>
       </placeholder>
-    ''' % (('ctrl', 'ctrl') if is_quartz() else ('alt', 'alt')),
-                     '''
+    ''',
+    '''
       <section id='CommonEdit' groups='RW'>
         <item>
           <attribute name="action">win.Add</attribute>
           <attribute name="label" translatable="yes">_Add...</attribute>
-          <attribute name="accel">&lt;Primary&gt;Insert</attribute>
         </item>
         <item>
           <attribute name="action">win.Edit</attribute>
           <attribute name="label" translatable="yes">%s</attribute>
-          <attribute name="accel">&lt;Primary&gt;Return</attribute>
         </item>
         <item>
           <attribute name="action">win.Remove</attribute>
           <attribute name="label" translatable="yes">_Delete</attribute>
-          <attribute name="accel">&lt;Primary&gt;Delete</attribute>
         </item>
         <item>
           <attribute name="action">win.Merge</attribute>

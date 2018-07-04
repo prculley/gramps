@@ -208,17 +208,20 @@ class ListView(NavigationView):
 
         NavigationView.define_actions(self)
 
-        self.edit_action = ActionGroup(name=self.title + '/ChangeOrder')
+        self.edit_action = ActionGroup(name=self.title + '/Edits')
         self.edit_action.add_actions([
-                ('Add', self.add),
-                ('Remove', self.remove),
-                ('Merge', self.merge),
-                ('ExportTab', self.export),
-                ])
+            ('Add', self.add, '<Primary>Insert'),
+            ('Remove', self.remove, '<Primary>Delete'),
+            ('PRIMARY-BackSpace', self.remove, '<PRIMARY>BackSpace'),
+            ('Merge', self.merge),
+            ('ExportTab', self.export),
+            ])
 
         self._add_action_group(self.edit_action)
 
-        self._add_action('Edit', self.edit)
+        self._add_action('Edit', self.edit, '<Primary>Return')
+        self._add_action('PRIMARY-J', self.jump, '<PRIMARY>J')
+        self._add_action('FilterEdit', self.filter_editor)
 
     def build_columns(self):
         list(map(self.list.remove_column, self.columns))
@@ -286,7 +289,7 @@ class ListView(NavigationView):
         Called when the page is displayed.
         """
         NavigationView.set_active(self)
-        self.uistate.viewmanager.tags.tag_enable()
+        self.uistate.viewmanager.tags.tag_enable(update_menu=False)
         self.uistate.show_filter_results(self.dbstate,
                                          self.model.displayed(),
                                          self.model.total())

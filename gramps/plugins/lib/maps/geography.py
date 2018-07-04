@@ -300,7 +300,7 @@ class GeoGraphyView(OsmGps, NavigationView):
         another method.
         """
         NavigationView.define_actions(self)
-        self._add_action('PrintView', self.printview)
+        self._add_action('PrintView', self.printview, '<Primary>P')
 
     def config_connect(self):
         """

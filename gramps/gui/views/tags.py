@@ -136,13 +136,14 @@ class Tags(DbGUIElement):
 
         self._build_tag_menu()
 
-    def tag_enable(self):
+    def tag_enable(self, update_menu=True):
         """
         Enables the UI and action groups for the tag menu.
         """
         self.uistate.uimanager.insert_action_group(self.tag_action, 1)
         self.tag_id = self.uistate.uimanager.add_ui_from_string(self.tag_ui)
-        self.uistate.uimanager.update_menu()
+        if update_menu:
+            self.uistate.uimanager.update_menu()
 
     def tag_disable(self):
         """

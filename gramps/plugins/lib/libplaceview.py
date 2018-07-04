@@ -51,7 +51,6 @@ from gramps.gui.filters.sidebar import PlaceSidebarFilter
 from gramps.gui.merge import MergePlace
 from gramps.gen.plug import CATEGORY_QR_PLACE
 from gramps.gen.utils.location import located_in
-from gramps.gen.constfunc import is_quartz
 from gramps.gui.uimanager import ActionGroup
 
 #-------------------------------------------------------------------------
@@ -128,10 +127,10 @@ class PlaceBaseView(ListView):
             multiple=True,
             filter_class=PlaceSidebarFilter)
 
-        self.func_list.update({
-            '<PRIMARY>J' : self.jump,
-            '<PRIMARY>BackSpace' : self.key_delete,
-            })
+        # self.func_list.update({
+            # '<PRIMARY>J' : self.jump,
+            # '<PRIMARY>BackSpace' : self.key_delete,
+            # })
         #self.maptoolbtn = None
 
         uistate.connect('placeformat-changed', self.build_tree)
@@ -145,7 +144,6 @@ class PlaceBaseView(ListView):
     def define_actions(self):
         ListView.define_actions(self)
         self._add_action('GotoMap', self.gotomap)
-        self._add_action('FilterEdit', self.filter_editor)
 
 #     def set_inactive(self):
 #         """called by viewmanager when moving away from the page
@@ -337,12 +335,10 @@ class PlaceBaseView(ListView):
         <item>
           <attribute name="action">win.AddBook</attribute>
           <attribute name="label" translatable="yes">_Add Bookmark</attribute>
-          <attribute name="accel">&lt;Primary&gt;d</attribute>
         </item>
         <item>
           <attribute name="action">win.EditBook</attribute>
           <attribute name="label" translatable="no">%s...</attribute>
-          <attribute name="accel">&lt;shift&gt;&lt;Primary&gt;D</attribute>
         </item>
       </section>
     ''' % _('Organize Bookmarks'),
@@ -352,32 +348,27 @@ class PlaceBaseView(ListView):
         <item>
           <attribute name="action">win.Back</attribute>
           <attribute name="label" translatable="yes">_Back</attribute>
-          <attribute name="accel">&lt;%s&gt;Left</attribute>
         </item>
         <item>
           <attribute name="action">win.Forward</attribute>
           <attribute name="label" translatable="yes">_Forward</attribute>
-          <attribute name="accel">&lt;%s&gt;Right</attribute>
         </item>
       </section>
       </placeholder>
-    ''' % (('ctrl', 'ctrl') if is_quartz() else ('alt', 'alt')),
+    ''',
     '''
       <section id='CommonEdit' groups='RW'>
         <item>
           <attribute name="action">win.Add</attribute>
           <attribute name="label" translatable="yes">_Add...</attribute>
-          <attribute name="accel">&lt;Primary&gt;Insert</attribute>
         </item>
         <item>
           <attribute name="action">win.Edit</attribute>
           <attribute name="label" translatable="yes">%s</attribute>
-          <attribute name="accel">&lt;Primary&gt;Return</attribute>
         </item>
         <item>
           <attribute name="action">win.Remove</attribute>
           <attribute name="label" translatable="yes">_Delete</attribute>
-          <attribute name="accel">&lt;Primary&gt;Delete</attribute>
         </item>
         <item>
           <attribute name="action">win.Merge</attribute>

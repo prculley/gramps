@@ -51,7 +51,7 @@ _ = glocale.translation.sgettext
 from .pageview import PageView
 from ..uimanager import ActionGroup
 from gramps.gen.utils.db import navigation_label
-from gramps.gen.constfunc import is_quartz
+from gramps.gen.constfunc import mod_key
 from ..utils import get_primary_mask
 
 DISABLED = -1
@@ -155,7 +155,7 @@ class NavigationView(PageView):
         hobj = self.get_history()
         self.active_signal = hobj.connect('active-changed', self.goto_active)
         self.mru_signal = hobj.connect('mru-changed', self.update_mru_menu)
-        self.update_mru_menu(hobj.mru)
+        self.update_mru_menu(hobj.mru, update_menu=False)
 
         self.goto_active(None)
 
@@ -269,8 +269,8 @@ class NavigationView(PageView):
         """
         self.book_action = ActionGroup(name=self.title + '/Bookmark')
         self.book_action.add_actions([
-            ('AddBook', self.add_bookmark),
-            ('EditBook', self.edit_bookmarks),
+            ('AddBook', self.add_bookmark, '<PRIMARY>d'),
+            ('EditBook', self.edit_bookmarks, '<shift><PRIMARY>D'),
             ])
 
         self._add_action_group(self.book_action)
@@ -284,17 +284,19 @@ class NavigationView(PageView):
         """
         # add the Forward action group to handle the Forward button
         self.fwd_action = ActionGroup(name=self.title + '/Forward')
-        self.fwd_action.add_actions([('Forward', self.fwd_clicked)])
+        self.fwd_action.add_actions([('Forward', self.fwd_clicked,
+                                      "%sRight" % mod_key())])
 
         # add the Backward action group to handle the Forward button
         self.back_action = ActionGroup(name=self.title + '/Backward')
-        self.back_action.add_actions([('Back', self.back_clicked)])
+        self.back_action.add_actions([('Back', self.back_clicked,
+                                       "%sLeft" % mod_key())])
 
-        self._add_action('HomePerson', callback=self.home)
+        self._add_action('HomePerson', self.home, "%sHome" % mod_key())
 
         self.other_action = ActionGroup(name=self.title + '/PersonOther')
         self.other_action.add_actions([
-            ('SetActive', self.set_default_person),])
+            ('SetActive', self.set_default_person)])
 
         self._add_action_group(self.back_action)
         self._add_action_group(self.fwd_action)
@@ -406,23 +408,23 @@ class NavigationView(PageView):
             self.uimanager.remove_action_group(self.mru_action)
             self.mru_active = DISABLED
 
-    def mru_enable(self):
+    def mru_enable(self, update_menu=False):
         """
         Enables the UI and action groups for the MRU list.
         """
         if self.mru_active == DISABLED:
             self.uimanager.insert_action_group(self.mru_action, 1)
             self.mru_active = self.uimanager.add_ui_from_string(self.mru_ui)
-            self.uimanager.update_menu()
+            if update_menu:
+                self.uimanager.update_menu()
 
-    def update_mru_menu(self, items):
+    def update_mru_menu(self, items, update_menu=True):
         """
         Builds the UI and action group for the MRU list.
         """
         menuitem = '''        <item>
               <attribute name="action">win.%s%02d</attribute>
               <attribute name="label" translatable="yes">%s</attribute>
-              <attribute name="accel">&lt;%s&gt;%d</attribute>
             </item>
             '''
         menus = ''
@@ -437,8 +439,7 @@ class NavigationView(PageView):
         for index in range(0, menu_len):
             name, obj = navigation_label(self.dbstate.db, nav_type,
                                          items[index])
-            menus += menuitem % (nav_type, index, name,
-                                ('ctrl' if is_quartz() else 'alt'), index)
+            menus += menuitem % (nav_type, index, name)
         self.mru_ui = [MRU_TOP + menus + MRU_BTM]
 
         mitems = items[-MRU_SIZE - 1:-1] # Ignore current handle
@@ -450,11 +451,12 @@ class NavigationView(PageView):
                          # "%s%d" % (mod_key(), index), None,
                          # make_callback(hobj.push, handle)))
             data.append(('%s%02d'%(nav_type, index),
-                         make_callback(hobj.push, handle)))
+                         make_callback(hobj.push, handle),
+                         "%s%d" % (mod_key(), index)))
 
         self.mru_action = ActionGroup(name=self.title + '/MRU')
         self.mru_action.add_actions(data)
-        self.mru_enable()
+        self.mru_enable(update_menu)
 
     ####################################################################
     # Template functions
@@ -502,4 +504,4 @@ def make_callback(func, handle):
     """
     Generates a callback function based off the passed arguments
     """
-    return lambda x: func(handle)
+    return lambda x, y: func(handle)

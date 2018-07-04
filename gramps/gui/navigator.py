@@ -143,7 +143,6 @@ class Navigator:
               <attribute name="action">win.ViewInCatagory</attribute>
               <attribute name="label" translatable="yes">%s</attribute>
               <attribute name="target">%d %d</attribute>
-              %s
             </item>
             '''
         baritem = '''
@@ -158,7 +157,6 @@ class Navigator:
             </child>
             '''
 
-        accel = '<attribute name="accel">&lt;Primary&gt;&lt;ALT&gt;%d</attribute>'
         plugman = GuiPluginManager.get_instance()
 
         categories = []
@@ -181,16 +179,16 @@ class Navigator:
                 #uimenuitems += '\n<menuitem action="%s"/>' % pageid
                 # id, stock, button text, UI, tooltip, page
                 if view_num < 9:
-                    modifier = accel % ((view_num % 9) + 1)
-                else:
-                    modifier = ""
-                uimenuitems += menuitem % (page[0].name, cat_num, view_num,
-                                           modifier)
+                    accel = "<PRIMARY><ALT>%d" % ((view_num % 9) + 1)
+                    self.viewmanager.uimanager.app.set_accels_for_action(
+                        "win.ViewInCatagory('%d %d')" % (cat_num, view_num),
+                        [accel])
+                uimenuitems += menuitem % (page[0].name, cat_num, view_num)
 
                 stock_icon = page[0].stock_icon
                 if stock_icon is None:
                     stock_icon = cat_icon
-                # self.view_toggle_actions[cat_num].append((pageid,
+                #self.view_toggle_actions[cat_num].append((pageid,
                             # stock_icon,
                             # page[0].name, modifier, page[0].name, view_num))
                 uibaritems += baritem % (view_num, cat_num, view_num, stock_icon,
@@ -255,7 +253,7 @@ class Navigator:
             list(map(uimanager.remove_ui, self.merge_ids))
 
         if cat_num in self.ui_category:
-            action = ('ViewInCatagory', self.cb_view_clicked,
+            action = ('ViewInCatagory', self.cb_view_clicked, '',
                       str(cat_num) + ' ' + str(view_num))
             self.cat_view_group = ActionGroup('viewmenu', [action])
             # self.cat_view_group.add_actions(

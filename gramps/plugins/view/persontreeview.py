@@ -78,7 +78,7 @@ class PersonTreeView(BasePersonView):
         """
         BasePersonView.define_actions(self)
 
-        self.all_action.add_actions([
+        self.action_list.extend([
                 ('OpenAllNodes', self.open_all_nodes),
                 ('CloseAllNodes', self.close_all_nodes),
                 ])

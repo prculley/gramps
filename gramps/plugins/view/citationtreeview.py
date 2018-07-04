@@ -59,7 +59,6 @@ from gramps.gui.editors import EditCitation, DeleteCitationQuery, EditSource, \
 from gramps.gui.filters.sidebar import SourceSidebarFilter
 from gramps.gui.merge import MergeCitation, MergeSource
 from gramps.gui.uimanager import ActionGroup
-from gramps.gen.constfunc import is_quartz
 
 #-------------------------------------------------------------------------
 #
@@ -148,11 +147,6 @@ class CitationTreeView(ListView):
             CitationBookmarks, nav_group,
             multiple=True,
             filter_class=SourceSidebarFilter)
-
-        self.func_list.update({
-            '<PRIMARY>J' : self.jump,
-            '<PRIMARY>BackSpace' : self.key_delete,
-            })
 
         self.additional_uis.append(self.additional_ui)
 
@@ -303,19 +297,14 @@ class CitationTreeView(ListView):
         self._add_action('Add source', self.add_source)
         self._add_action('Add citation', self.share)
 
-        self.all_action = ActionGroup(name=self.title + "/CitationAll")
-        self.edit_action = ActionGroup(name=self.title + "/CitationEdit")
+        # self.all_action = ActionGroup(name=self.title + "/CitationAll")
+        # self.edit_action = ActionGroup(name=self.title + "/CitationEdit")
 
-        self._add_action('FilterEdit', self.filter_editor,)
-        #self._add_action('QuickReport', None, _("Quick View"), None, None, None)
-
-        self._add_action_group(self.edit_action)
-        self._add_action_group(self.all_action)
-
-        self.all_action.add_actions([
-                ('OpenAllNodes', self.open_all_nodes),
-                ('CloseAllNodes', self.close_all_nodes),
-                ])
+        self.actiongroup.add_actions([
+            ('OpenAllNodes', self.open_all_nodes),
+            ('CloseAllNodes', self.close_all_nodes),
+            ])
+        #self._add_action_group(self.all_action)
 
     """
     Defines the UI string for UIManager
@@ -333,12 +322,10 @@ class CitationTreeView(ListView):
         <item>
           <attribute name="action">win.AddBook</attribute>
           <attribute name="label" translatable="yes">_Add Bookmark</attribute>
-          <attribute name="accel">&lt;Primary&gt;d</attribute>
         </item>
         <item>
           <attribute name="action">win.EditBook</attribute>
           <attribute name="label" translatable="no">%s...</attribute>
-          <attribute name="accel">&lt;shift&gt;&lt;Primary&gt;D</attribute>
         </item>
       </section>
     ''' % _('Organize Bookmarks'),
@@ -348,26 +335,22 @@ class CitationTreeView(ListView):
         <item>
           <attribute name="action">win.Back</attribute>
           <attribute name="label" translatable="yes">_Back</attribute>
-          <attribute name="accel">&lt;%s&gt;Left</attribute>
         </item>
         <item>
           <attribute name="action">win.Forward</attribute>
           <attribute name="label" translatable="yes">_Forward</attribute>
-          <attribute name="accel">&lt;%s&gt;Right</attribute>
         </item>
       </section>
       </placeholder>
-    ''' % (('ctrl', 'ctrl') if is_quartz() else ('alt', 'alt')),
+    ''',
     '''
       <section id='CommonEdit' groups='RW'>
         <item>
           <attribute name="action">win.Add</attribute>
           <attribute name="label" translatable="yes">_Add...</attribute>
-          <attribute name="accel">&lt;Primary&gt;Insert</attribute>
         </item>
         <item>
           <attribute name="action">win.Add source</attribute>
-          <attribute name="label" translatable="yes">Add source...</attribute>
         </item>
         <item>
           <attribute name="action">win.Add citation</attribute>
@@ -376,28 +359,26 @@ class CitationTreeView(ListView):
         <item>
           <attribute name="action">win.Edit</attribute>
           <attribute name="label" translatable="yes">%s</attribute>
-          <attribute name="accel">&lt;Primary&gt;Return</attribute>
         </item>
         <item>
           <attribute name="action">win.Remove</attribute>
           <attribute name="label" translatable="yes">_Delete</attribute>
-          <attribute name="accel">&lt;Primary&gt;Delete</attribute>
         </item>
         <item>
           <attribute name="action">win.Merge</attribute>
           <attribute name="label" translatable="yes">_Merge...</attribute>
         </item>
       </section>
-''' % _("action|_Edit..."),  # to use sgettext()
-'''
+    ''' % _("action|_Edit..."),  # to use sgettext()
+    '''
         <placeholder id='otheredit'>
         <item>
           <attribute name="action">win.FilterEdit</attribute>
           <attribute name="label" translatable="yes">Citation Filter Editor</attribute>
         </item>
         </placeholder>
-''',  # Following are the Toolbar items
-'''
+    ''',  # Following are the Toolbar items
+    '''
     <placeholder id='CommonNavigation'>
     <child groups='RO'>
       <object class="GtkToolButton">
@@ -414,8 +395,8 @@ class CitationTreeView(ListView):
       </object>
     </child>
     </placeholder>
-''',
-'''
+    ''',
+    '''
     <placeholder id='BarCommonEdit'>
     <child groups='RW'>
       <object class="GtkToolButton">
@@ -470,8 +451,9 @@ class CitationTreeView(ListView):
       </object>
     </child>
     </placeholder>
-''' % (ADD_MSG, ADD_SOURCE_MSG, ADD_CITATION_MSG, EDIT_MSG, DEL_MSG, MERGE_MSG),
-'''
+    ''' % (ADD_MSG, ADD_SOURCE_MSG, ADD_CITATION_MSG, EDIT_MSG, DEL_MSG,
+           MERGE_MSG),
+    '''
     <menu id="Popup">
       <section>
         <item>

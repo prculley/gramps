@@ -61,7 +61,6 @@ UIDEFAULT = '''<?xml version="1.0" encoding="UTF-8"?>
         <item>
           <attribute name="action">win.Open</attribute>
           <attribute name="label" translatable="yes">_Manage Family Trees</attribute>
-          <attribute name="accel">&lt;Primary&gt;o</attribute>
         </item>
         <submenu>
           <attribute name="action">win.OpenRecent</attribute>
@@ -72,19 +71,16 @@ UIDEFAULT = '''<?xml version="1.0" encoding="UTF-8"?>
         <item groups='RO'>
           <attribute name="action">win.Close</attribute>
           <attribute name="label" translatable="yes">_Close</attribute>
-          <attribute name="accel">&lt;Primary&gt;w</attribute>
         </item>
       </section>
       <section groups='RO RW'>
         <item groups='RW'>
           <attribute name="action">win.Import</attribute>
           <attribute name="label" translatable="yes">_Import...</attribute>
-          <attribute name="accel">&lt;Primary&gt;i</attribute>
         </item>
         <item>
           <attribute name="action">win.Export</attribute>
           <attribute name="label" translatable="yes">_Export...</attribute>
-          <attribute name="accel">&lt;Primary&gt;e</attribute>
         </item>
         <placeholder id="LocalExport">
         </placeholder>
@@ -101,7 +97,6 @@ UIDEFAULT = '''<?xml version="1.0" encoding="UTF-8"?>
         <item>
           <attribute name="action">win.Quit</attribute>
           <attribute name="label" translatable="yes">_Quit</attribute>
-          <attribute name="accel">&lt;Primary&gt;q</attribute>
         </item>
       </section>
     </submenu>
@@ -111,53 +106,44 @@ UIDEFAULT = '''<?xml version="1.0" encoding="UTF-8"?>
         <item>
           <attribute name="action">win.PersonAdd</attribute>
           <attribute name="label" translatable="yes">Person</attribute>
-          <attribute name="accel">&lt;Shift&gt;&lt;Alt&gt;p</attribute>
         </item>
       </section>
       <section>
         <item>
           <attribute name="action">win.FamilyAdd</attribute>
           <attribute name="label" translatable="yes">Family</attribute>
-          <attribute name="accel">&lt;Shift&gt;&lt;Alt&gt;f</attribute>
         </item>
       </section>
       <section>
         <item>
           <attribute name="action">win.EventAdd</attribute>
           <attribute name="label" translatable="yes">Event</attribute>
-          <attribute name="accel">&lt;Shift&gt;&lt;Alt&gt;e</attribute>
         </item>
       </section>
       <section>
         <item>
           <attribute name="action">win.PlaceAdd</attribute>
           <attribute name="label" translatable="yes">Place</attribute>
-          <attribute name="accel">&lt;Shift&gt;&lt;Alt&gt;l</attribute>
         </item>
         <item>
           <attribute name="action">win.SourceAdd</attribute>
           <attribute name="label" translatable="yes">Source</attribute>
-          <attribute name="accel">&lt;Shift&gt;&lt;Alt&gt;s</attribute>
         </item>
         <item>
           <attribute name="action">win.CitationAdd</attribute>
           <attribute name="label" translatable="yes">Citation</attribute>
-          <attribute name="accel">&lt;Shift&gt;&lt;Alt&gt;c</attribute>
         </item>
         <item>
           <attribute name="action">win.RepositoryAdd</attribute>
           <attribute name="label" translatable="yes">Repository</attribute>
-          <attribute name="accel">&lt;Shift&gt;&lt;Alt&gt;r</attribute>
         </item>
         <item>
           <attribute name="action">win.MediaAdd</attribute>
           <attribute name="label" translatable="yes">Media</attribute>
-          <attribute name="accel">&lt;Shift&gt;&lt;Alt&gt;m</attribute>
         </item>
         <item>
           <attribute name="action">win.NoteAdd</attribute>
           <attribute name="label" translatable="yes">Note</attribute>
-          <attribute name="accel">&lt;Shift&gt;&lt;Alt&gt;n</attribute>
         </item>
       </section>
     </submenu>
@@ -171,7 +157,6 @@ UIDEFAULT = '''<?xml version="1.0" encoding="UTF-8"?>
         <item>
           <attribute name="action">win.UndoHistory</attribute>
           <attribute name="label" translatable="yes">Undo History</attribute>
-          <attribute name="accel">&lt;Primary&gt;h</attribute>
         </item>
       </section>
       <section id='CommonEdit' groups='RW'>
@@ -182,7 +167,6 @@ UIDEFAULT = '''<?xml version="1.0" encoding="UTF-8"?>
         <item>
           <attribute name="action">win.Clipboard</attribute>
           <attribute name="label" translatable="yes">Clip_board</attribute>
-          <attribute name="accel">&lt;Primary&gt;b</attribute>
         </item>
       </section>
       <section>
@@ -200,12 +184,10 @@ UIDEFAULT = '''<?xml version="1.0" encoding="UTF-8"?>
         <item>
           <attribute name="action">win.ConfigView</attribute>
           <attribute name="label" translatable="yes">_Configure...</attribute>
-          <attribute name="accel">&lt;Shift&gt;&lt;Primary&gt;c</attribute>
         </item>
         <item>
           <attribute name="action">win.Navigator</attribute>
           <attribute name="label" translatable="yes">_Navigator</attribute>
-          <attribute name="accel">&lt;Primary&gt;m</attribute>
         </item>
         <item>
           <attribute name="action">win.Toolbar</attribute>
@@ -216,7 +198,6 @@ UIDEFAULT = '''<?xml version="1.0" encoding="UTF-8"?>
         <item>
           <attribute name="action">win.Fullscreen</attribute>
           <attribute name="label" translatable="yes">F_ull Screen</attribute>
-          <attribute name="accel">F11</attribute>
         </item>
       </section>
       <section id="ViewsInCatagory">
@@ -263,7 +244,6 @@ UIDEFAULT = '''<?xml version="1.0" encoding="UTF-8"?>
         <item>
           <attribute name="action">win.UserManual</attribute>
           <attribute name="label" translatable="yes">_User Manual</attribute>
-          <attribute name="accel">F1</attribute>
         </item>
         <item>
           <attribute name="action">win.FAQ</attribute>

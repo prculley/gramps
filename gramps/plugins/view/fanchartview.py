@@ -45,7 +45,6 @@ import gramps.gui.widgets.fanchart as fanchart
 from gramps.gui.views.navigationview import NavigationView
 from gramps.gui.views.bookmarks import PersonBookmarks
 from gramps.gui.utils import SystemFonts
-from gramps.gen.constfunc import is_quartz
 
 # the print settings to remember between print sessions
 PRINT_SETTINGS = None
@@ -97,10 +96,6 @@ class FanChartView(fanchart.FanChartGrampsGUI, NavigationView):
         self.additional_uis.append(self.additional_ui)
         self.allfonts = [x for x in enumerate(SystemFonts().get_system_fonts())]
 
-        self.func_list.update({
-            '<PRIMARY>J' : self.jump,
-            })
-
     def navigation_type(self):
         return 'Person'
 
@@ -145,29 +140,25 @@ class FanChartView(fanchart.FanChartGrampsGUI, NavigationView):
         <item>
           <attribute name="action">win.Back</attribute>
           <attribute name="label" translatable="yes">_Back</attribute>
-          <attribute name="accel">&lt;%s&gt;Left</attribute>
         </item>
         <item>
           <attribute name="action">win.Forward</attribute>
           <attribute name="label" translatable="yes">_Forward</attribute>
-          <attribute name="accel">&lt;%s&gt;Right</attribute>
         </item>
       </section>
       <section>
         <item>
           <attribute name="action">win.HomePerson</attribute>
           <attribute name="label" translatable="yes">_Home</attribute>
-          <attribute name="accel">&lt;%s&gt;Home</attribute>
         </item>
       </section>
       </placeholder>
-    ''' % (('ctrl', 'ctrl', 'ctrl') if is_quartz() else ('alt', 'alt', 'alt')),
+    ''',
     '''
       <section id='CommonEdit' groups='RW'>
         <item>
           <attribute name="action">win.PrintView</attribute>
           <attribute name="label" translatable="yes">_Print...</attribute>
-          <attribute name="accel">&lt;Primary&gt;P</attribute>
         </item>
       </section>
     ''',
@@ -176,12 +167,10 @@ class FanChartView(fanchart.FanChartGrampsGUI, NavigationView):
         <item>
           <attribute name="action">win.AddBook</attribute>
           <attribute name="label" translatable="yes">_Add Bookmark</attribute>
-          <attribute name="accel">&lt;Primary&gt;d</attribute>
         </item>
         <item>
           <attribute name="action">win.EditBook</attribute>
           <attribute name="label" translatable="no">%s...</attribute>
-          <attribute name="accel">&lt;shift&gt;&lt;Primary&gt;D</attribute>
         </item>
       </section>
     ''' % _('Organize Bookmarks'),  # Following are the Toolbar items
@@ -237,7 +226,8 @@ class FanChartView(fanchart.FanChartGrampsGUI, NavigationView):
         """
         NavigationView.define_actions(self)
 
-        self._add_action('PrintView', self.printview)
+        self._add_action('PrintView', self.printview, "<PRIMARY>P")
+        self._add_action('PRIMARY-J', self.jump, '<PRIMARY>J')
 
     def build_tree(self):
         """

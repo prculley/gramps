@@ -120,7 +120,6 @@ else:
     _GTKOSXAPPLICATION = False
 
 _UNSUPPORTED = ("Unsupported", _("Unsupported"))
-ACCEL = 0  # constant used to indicate an action is an accellerator
 
 WIKI_HELP_PAGE_FAQ = '%s_-_FAQ' % URL_MANUAL_PAGE
 WIKI_HELP_PAGE_KEY = '%s_-_Keybindings' % URL_MANUAL_PAGE
@@ -370,14 +369,15 @@ class ViewManager(CLIManager):
         """
         self._file_action_list = [
             #('FileMenu', None, _('_Family Trees')),
-            ('Open', self.__open_activate),
+            ('Open', self.__open_activate, "<PRIMARY>o"),
             #('OpenRecent', None, _('Open _Recent'), None,
             #_("Open an existing database")),
-            ('Quit', self.quit),
+            ('Quit', self.quit, "<PRIMARY>q"),
             #('ViewMenu', None, _('_View')),
-            ('Navigator', self.navigator_toggle, self.show_navigator),
-            ('Toolbar', self.toolbar_toggle, self.show_toolbar),
-            ('Fullscreen', self.fullscreen_toggle, self.fullscreen),
+            ('Navigator', self.navigator_toggle, "<PRIMARY>m",
+             self.show_navigator),
+            ('Toolbar', self.toolbar_toggle, '', self.show_toolbar),
+            ('Fullscreen', self.fullscreen_toggle, "F11", self.fullscreen),
             #('EditMenu', None, _('_Edit')),
             ('Preferences', self.preferences_activate),
             #('HelpMenu', None, _('_Help')),
@@ -389,13 +389,13 @@ class ViewManager(CLIManager):
             ('PluginStatus', self.__plugin_status),
             ('FAQ', faq_activate),
             ('KeyBindings', key_bindings),
-            ('UserManual', manual_activate),
+            ('UserManual', manual_activate, 'F1'),
             ('TipOfDay', self.tip_of_day_activate),
             ]
 
         self._readonly_action_list = [
-            ('Close', self.close_database),
-            ('Export', self.export_data),
+            ('Close', self.close_database, "<control>w"),
+            ('Export', self.export_data, "<PRIMARY>e"),
             ('Backup', self.quick_backup),
             ('Abandon', self.abort),
             ('Reports', self.reports_clicked),
@@ -403,63 +403,63 @@ class ViewManager(CLIManager):
             #('ReportsMenu', None, _('_Reports')),
             ('Books', self.run_book),
             #('WindowsMenu', None, _('_Windows')),
-            ('F2', self.__keypress, ACCEL),
-            ('F3', self.__keypress, ACCEL),
-            ('F4', self.__keypress, ACCEL),
-            ('F5', self.__keypress, ACCEL),
-            ('F6', self.__keypress, ACCEL),
-            ('F7', self.__keypress, ACCEL),
-            ('F8', self.__keypress, ACCEL),
-            ('F9', self.__keypress, ACCEL),
-            ('F11', self.__keypress, ACCEL),
-            ('F12', self.__keypress, ACCEL),
-            #('<PRIMARY>BackSpace', self.__keypress, ACCEL),
-            #('<PRIMARY>Delete', self.__keypress, ACCEL),
-            #('<PRIMARY>Insert', self.__keypress, ACCEL),
-            #('<PRIMARY>J', self.__keypress, ACCEL),
-            ('<PRIMARY>1', self.__gocat, ACCEL),
-            ('<PRIMARY>2', self.__gocat, ACCEL),
-            ('<PRIMARY>3', self.__gocat, ACCEL),
-            ('<PRIMARY>4', self.__gocat, ACCEL),
-            ('<PRIMARY>5', self.__gocat, ACCEL),
-            ('<PRIMARY>6', self.__gocat, ACCEL),
-            ('<PRIMARY>7', self.__gocat, ACCEL),
-            ('<PRIMARY>8', self.__gocat, ACCEL),
-            ('<PRIMARY>9', self.__gocat, ACCEL),
-            ('<PRIMARY>0', self.__gocat, ACCEL),
+            #('F2', self.__keypress, 'F2'),   #pedigreeview
+            ('F3', self.__keypress, 'F3'),
+            ('F4', self.__keypress, 'F4'),
+            ('F5', self.__keypress, 'F5'),
+            ('F6', self.__keypress, 'F6'),
+            ('F7', self.__keypress, 'F7'),
+            ('F8', self.__keypress, 'F8'),
+            ('F9', self.__keypress, 'F9'),
+            #('F11', self.__keypress, 'F11'),  # used to go full screen
+            ('F12', self.__keypress, 'F12'),
+            #('<PRIMARY>BackSpace', self.__keypress, '<PRIMARY>BackSpace'),
+            #('<PRIMARY>Delete', self.__keypress, '<PRIMARY>Delete'),
+            #('<PRIMARY>Insert', self.__keypress, '<PRIMARY>Insert'),
+            #('<PRIMARY>J', self.__keypress, '<PRIMARY>J'),
+            ('PRIMARY-1', self.__gocat, '<PRIMARY>1'),
+            ('PRIMARY-2', self.__gocat, '<PRIMARY>2'),
+            ('PRIMARY-3', self.__gocat, '<PRIMARY>3'),
+            ('PRIMARY-4', self.__gocat, '<PRIMARY>4'),
+            ('PRIMARY-5', self.__gocat, '<PRIMARY>5'),
+            ('PRIMARY-6', self.__gocat, '<PRIMARY>6'),
+            ('PRIMARY-7', self.__gocat, '<PRIMARY>7'),
+            ('PRIMARY-8', self.__gocat, '<PRIMARY>8'),
+            ('PRIMARY-9', self.__gocat, '<PRIMARY>9'),
+            ('PRIMARY-0', self.__gocat, '<PRIMARY>0'),
             # NOTE: CTRL+ALT+NUMBER is set in gramps.gui.navigator
-            ('<PRIMARY>N', self.__next_view, ACCEL),
-            ('<PRIMARY>P', self.__prev_view, ACCEL),
+            ('PRIMARY-N', self.__next_view, '<PRIMARY>N'),
+            ('PRIMARY-P', self.__prev_view, '<PRIMARY>P'),
             ]
 
         self._action_action_list = [
-            ('Clipboard', self.clipboard),
+            ('Clipboard', self.clipboard, "<PRIMARY>b"),
             #('AddMenu', None, _('_Add')),
             #('AddNewMenu', None, _('New')),
-            ('PersonAdd', self.add_new_person),
-            ('FamilyAdd', self.add_new_family),
-            ('EventAdd', self.add_new_event),
-            ('PlaceAdd', self.add_new_place),
-            ('SourceAdd', self.add_new_source),
-            ('CitationAdd', self.add_new_citation),
-            ('RepositoryAdd', self.add_new_repository),
-            ('MediaAdd', self.add_new_media),
-            ('NoteAdd', self.add_new_note),
-            ('UndoHistory', self.undo_history),
+            ('PersonAdd', self.add_new_person, "<shift><Alt>p"),
+            ('FamilyAdd', self.add_new_family, "<shift><Alt>f"),
+            ('EventAdd', self.add_new_event, "<shift><Alt>e"),
+            ('PlaceAdd', self.add_new_place, "<shift><Alt>l"),
+            ('SourceAdd', self.add_new_source, "<shift><Alt>s"),
+            ('CitationAdd', self.add_new_citation, "<shift><Alt>c"),
+            ('RepositoryAdd', self.add_new_repository, "<shift><Alt>r"),
+            ('MediaAdd', self.add_new_media, "<shift><Alt>m"),
+            ('NoteAdd', self.add_new_note, "<shift><Alt>n"),
+            ('UndoHistory', self.undo_history, "<PRIMARY>H"),
             #--------------------------------------
-            ('Import', self.import_data),
+            ('Import', self.import_data, "<PRIMARY>i"),
             ('Tools', self.tools_clicked),
             #('BookMenu', None, _('_Bookmarks')),
             #('ToolsMenu', None, _('_Tools')),
-            ('ConfigView', self.config_view),
+            ('ConfigView', self.config_view,'<shift><PRIMARY>c'),
             ]
 
         self._undo_action_list = [
-            ('Undo', self.undo),
+            ('Undo', self.undo, '<PRIMARY>z'),
             ]
 
         self._redo_action_list = [
-            ('Redo', self.redo),
+            ('Redo', self.redo, '<shift><PRIMARY>z'),
             ]
 
     def run_book(self, action):
@@ -999,8 +999,8 @@ class ViewManager(CLIManager):
         """
         self.dbstate.db.undo_callback = self.__change_undo_label
         self.dbstate.db.redo_callback = self.__change_redo_label
-        self.__change_undo_label(None)
-        self.__change_redo_label(None)
+        self.__change_undo_label(None, update_menu=False)
+        self.__change_redo_label(None, update_menu=False)
         self.dbstate.db.undo_history_callback = self.undo_history_update
         self.undo_history_close()
 
@@ -1093,7 +1093,7 @@ class ViewManager(CLIManager):
             self.uimanager.set_actions_sensitive(self.reportactions, self.action_st[6])
             self.uimanager.set_actions_sensitive(self.recent_manager.action_group, self.action_st[7])
 
-    def __change_undo_label(self, label):
+    def __change_undo_label(self, label, update_menu=True):
         """
         Change the UNDO label
         """
@@ -1101,7 +1101,6 @@ class ViewManager(CLIManager):
         <item>
           <attribute name="action">win.Undo</attribute>
           <attribute name="label" translatable="yes">%s</attribute>
-          <attribute name="accel">&lt;Primary&gt;z</attribute>
         </item>
         </placeholder>
         '''
@@ -1111,9 +1110,10 @@ class ViewManager(CLIManager):
         else:
             self.uimanager.set_actions_sensitive(self.undoactions, True)
         self.uimanager.add_ui_from_string([_menu % label])
-        self.uimanager.update_menu()
+        if update_menu:
+            self.uimanager.update_menu()
 
-    def __change_redo_label(self, label):
+    def __change_redo_label(self, label, update_menu=True):
         """
         Change the REDO label
         """
@@ -1121,7 +1121,6 @@ class ViewManager(CLIManager):
         <item>
           <attribute name="action">win.Redo</attribute>
           <attribute name="label" translatable="yes">%s</attribute>
-          <attribute name="accel">&lt;Shift&gt;&lt;Primary&gt;z</attribute>
         </item>
         </placeholder>
         '''
@@ -1131,7 +1130,8 @@ class ViewManager(CLIManager):
         else:
             self.uimanager.set_actions_sensitive(self.redoactions, True)
         self.uimanager.add_ui_from_string([_menu % label])
-        self.uimanager.update_menu()
+        if update_menu:
+            self.uimanager.update_menu()
 
     def undo_history_update(self):
         """
@@ -1371,7 +1371,7 @@ class ViewManager(CLIManager):
         self.toolactions.add_actions(actions)
         self.tool_menu_ui_id = self.uistate.uimanager.add_ui_from_string(uidef)
         self.uimanager.insert_action_group(self.toolactions, 1)
-        self.uistate.uimanager.update_menu()
+        #self.uistate.uimanager.update_menu()
 
     def __build_report_menu(self, report_menu_list):
         """
@@ -1387,7 +1387,7 @@ class ViewManager(CLIManager):
         self.reportactions.add_actions(actions)
         self.report_menu_ui_id = self.uistate.uimanager.add_ui_from_string(udef)
         self.uimanager.insert_action_group(self.reportactions, 1)
-        self.uistate.uimanager.update_menu()
+        #self.uistate.uimanager.update_menu()
 
     def build_plugin_menu(self, text, item_list, categories, func):
         """

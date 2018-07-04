@@ -107,12 +107,10 @@ class PageView(DbGUIElement, metaclass=ABCMeta):
             <item>
               <attribute name="action">win.Sidebar</attribute>
               <attribute name="label" translatable="yes">_Sidebar</attribute>
-              <attribute name="accel">&lt;Shift&gt;&lt;Primary&gt;R</attribute>
             </item>
              <item>
               <attribute name="action">win.Bottombar</attribute>
               <attribute name="label" translatable="yes">_Bottombar</attribute>
-              <attribute name="accel">&lt;Shift&gt;&lt;Primary&gt;B</attribute>
             </item>
           </placeholder>
             ''']
@@ -374,14 +372,14 @@ class PageView(DbGUIElement, metaclass=ABCMeta):
         Turns off the visibility of the View's action group, if defined
         """
         if self.action_group:
-            self.action_group.set_visible(False)
+            self.uistate.uimanager.set_actions_visible(False)
 
     def enable_action_group(self, obj):
         """
         Turns on the visibility of the View's action group, if defined
         """
         if self.action_group:
-            self.action_group.set_visible(True)
+            self.uistate.uimanager.set_actions_visible(True)
 
     def get_stock(self):
         """
@@ -439,9 +437,9 @@ class PageView(DbGUIElement, metaclass=ABCMeta):
         View. The user typically defines self.action_list and
         self.action_toggle_list in this function.
         """
-        self._add_toggle_action('Sidebar', self.__sidebar_toggled,
+        self._add_toggle_action('Sidebar', self.__sidebar_toggled, '',
              self.sidebar.get_property('visible'))
-        self._add_toggle_action('Bottombar', self.__bottombar_toggled,
+        self._add_toggle_action('Bottombar', self.__bottombar_toggled, '',
              self.bottombar.get_property('visible'))
 
     def __build_action_group(self):
@@ -456,17 +454,17 @@ class PageView(DbGUIElement, metaclass=ABCMeta):
         if len(self.action_toggle_list) > 0:
             self.action_group.add_actions(self.action_toggle_list)
 
-    def _add_action(self, name, callback=None):
+    def _add_action(self, name, callback=None, accel=None):
         """
         Add an action to the action list for the current view.
         """
-        self.action_list.append((name, callback))
+        self.action_list.append((name, callback, accel))
 
-    def _add_toggle_action(self, name, callback=None, value=False):
+    def _add_toggle_action(self, name, callback=None, accel= None, value=False):
         """
         Add a toggle action to the action list for the current view.
         """
-        self.action_toggle_list.append((name, callback, value))
+        self.action_toggle_list.append((name, callback, accel, value))
 
     # def _add_toolmenu_action(self, name, label, tooltip, callback,
                              # arrowtooltip):

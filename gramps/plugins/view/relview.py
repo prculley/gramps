@@ -139,10 +139,6 @@ class RelationshipView(NavigationView):
                                       PersonBookmarks,
                                       nav_group)
 
-        self.func_list.update({
-            '<PRIMARY>J' : self.jump,
-            })
-
         dbstate.connect('database-changed', self.change_db)
         uistate.connect('nameformat-changed', self.build_tree)
         uistate.connect('placeformat-changed', self.build_tree)
@@ -346,29 +342,25 @@ class RelationshipView(NavigationView):
         <item>
           <attribute name="action">win.Back</attribute>
           <attribute name="label" translatable="yes">_Add Bookmark</attribute>
-          <attribute name="accel">&lt;%s&gt;d</attribute>
         </item>
         <item>
           <attribute name="action">win.Forward</attribute>
           <attribute name="label" translatable="yes">Organize Bookmarks...</attribute>
-          <attribute name="accel">&lt;%s&gt;D</attribute>
         </item>
       </section>
       <section>
         <item>
           <attribute name="action">win.HomePerson</attribute>
           <attribute name="label" translatable="yes">_Home</attribute>
-          <attribute name="accel">&lt;%s&gt;Home</attribute>
         </item>
       </section>
       </placeholder>
-    ''' % (('ctrl', 'ctrl', 'ctrl') if is_quartz() else ('alt', 'alt', 'alt')),
+    ''',
     '''
         <placeholder id='otheredit'>
         <item>
           <attribute name="action">win.Edit</attribute>
           <attribute name="label" translatable="yes">Edit...</attribute>
-          <attribute name="accel">&lt;Primary&gt;Return</attribute>
         </item>
         <item>
           <attribute name="action">win.AddParents</attribute>
@@ -397,12 +389,10 @@ class RelationshipView(NavigationView):
         <item>
           <attribute name="action">win.AddBook</attribute>
           <attribute name="label" translatable="yes">_Add Bookmark</attribute>
-          <attribute name="accel">&lt;Primary&gt;d</attribute>
         </item>
         <item>
           <attribute name="action">win.EditBook</attribute>
           <attribute name="label" translatable="no">%s...</attribute>
-          <attribute name="accel">&lt;shift&gt;&lt;Primary&gt;D</attribute>
         </item>
       </section>
 ''',  # Following are the Toolbar items
@@ -493,13 +483,14 @@ class RelationshipView(NavigationView):
 
         self.family_action = ActionGroup(name=self.title + '/Family')
         self.family_action.add_actions([
-            ('Edit', self.edit_active),
+            ('Edit', self.edit_active, "<PRIMARY>Return"),
             ('AddSpouse', self.add_spouse),
             ('AddParents', self.add_parents),
             ('ShareFamily', self.select_parents),
             ])
 
         self._add_action('FilterEdit', callback=self.filter_editor)
+        self._add_action('PRIMARY-J', self.jump, '<PRIMARY>J')
 
         self._add_action_group(self.order_action)
         self._add_action_group(self.family_action)

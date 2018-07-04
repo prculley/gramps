@@ -55,7 +55,6 @@ from gramps.gui.dialog import ErrorDialog, MultiSelectDialog, QuestionDialog
 from gramps.gen.errors import WindowActiveError
 from gramps.gui.views.bookmarks import PersonBookmarks
 from gramps.gen.config import config
-from gramps.gen.constfunc import is_quartz
 from gramps.gui.ddtargets import DdTargets
 from gramps.gui.editors import EditPerson
 from gramps.gui.filters.sidebar import PersonSidebarFilter
@@ -153,11 +152,6 @@ class BasePersonView(ListView):
             multiple=True,
             filter_class=PersonSidebarFilter)
 
-        self.func_list.update({
-            '<PRIMARY>J' : self.jump,
-            '<PRIMARY>BackSpace' : self.key_delete,
-            })
-
         uistate.connect('nameformat-changed', self.build_tree)
         uistate.connect('placeformat-changed', self.build_tree)
 
@@ -204,12 +198,10 @@ class BasePersonView(ListView):
         <item>
           <attribute name="action">win.AddBook</attribute>
           <attribute name="label" translatable="yes">_Add Bookmark</attribute>
-          <attribute name="accel">&lt;Primary&gt;d</attribute>
         </item>
         <item>
           <attribute name="action">win.EditBook</attribute>
           <attribute name="label" translatable="no">%s...</attribute>
-          <attribute name="accel">&lt;shift&gt;&lt;Primary&gt;D</attribute>
         </item>
       </section>
     ''' % _('Organize Bookmarks'),
@@ -219,39 +211,33 @@ class BasePersonView(ListView):
         <item>
           <attribute name="action">win.Back</attribute>
           <attribute name="label" translatable="yes">_Back</attribute>
-          <attribute name="accel">&lt;%s&gt;Left</attribute>
         </item>
         <item>
           <attribute name="action">win.Forward</attribute>
           <attribute name="label" translatable="yes">_Forward</attribute>
-          <attribute name="accel">&lt;%s&gt;Right</attribute>
         </item>
       </section>
       <section>
         <item>
           <attribute name="action">win.HomePerson</attribute>
           <attribute name="label" translatable="yes">_Home</attribute>
-          <attribute name="accel">&lt;%s&gt;Home</attribute>
         </item>
       </section>
       </placeholder>
-    ''' % (('ctrl', 'ctrl', 'ctrl') if is_quartz() else ('alt', 'alt', 'alt')),
+    ''',
     '''
       <section id='CommonEdit' groups='RW'>
         <item>
           <attribute name="action">win.Add</attribute>
           <attribute name="label" translatable="yes">_Add...</attribute>
-          <attribute name="accel">&lt;Primary&gt;Insert</attribute>
         </item>
         <item>
           <attribute name="action">win.Edit</attribute>
           <attribute name="label" translatable="yes">%s</attribute>
-          <attribute name="accel">&lt;Primary&gt;Return</attribute>
         </item>
         <item>
           <attribute name="action">win.Remove</attribute>
           <attribute name="label" translatable="yes">_Delete</attribute>
-          <attribute name="accel">&lt;Primary&gt;Delete</attribute>
         </item>
         <item>
           <attribute name="action">win.Merge</attribute>
@@ -517,46 +503,31 @@ class BasePersonView(ListView):
 
         ListView.define_actions(self)
 
-        self.all_action = ActionGroup(name=self.title + "/PersonAll")
-        self.edit_action = ActionGroup(name=self.title + "/PersonEdit")
+        # self.all_action = ActionGroup(name=self.title + "/PersonAll")
+        # self.edit_action = ActionGroup(name=self.title + "/PersonEdit")
 
-        self.all_action.add_actions([
-                ('FilterEdit', self.filter_editor),
-                ('Edit', self.edit),
-                #('QuickReport', None, _("Quick View"), None, None, None),
-                #('WebConnect', None, _("Web Connection"), None, None, None),
-                ])
+        # self.all_action.add_actions([
+            # ('FilterEdit', self.filter_editor)])
+        # self._add_action_group(self.all_action)
 
+    # def enable_action_group(self, obj):
+        # """
+        # Turns on the visibility of the View's action group.
+        # """
+        # ListView.enable_action_group(self, obj)
+        # self.uimanager.set_actions_visible(self.all_action, True)
+        # self.uimanager.set_actions_visible(self.edit_action, True)
+        # self.uimanager.set_actions_sensitive(self.edit_action,
+                                             # not self.dbstate.db.readonly)
 
-        self.edit_action.add_actions(
-            [
-                ('Add', self.add),
-                ('Remove', self.remove),
-                ('Merge', self.merge),
-                ('ExportTab', self.export),
-                ])
+    # def disable_action_group(self):
+        # """
+        # Turns off the visibility of the View's action group.
+        # """
+        # ListView.disable_action_group(self)
 
-        self._add_action_group(self.edit_action)
-        self._add_action_group(self.all_action)
-
-    def enable_action_group(self, obj):
-        """
-        Turns on the visibility of the View's action group.
-        """
-        ListView.enable_action_group(self, obj)
-        self.uimanager.set_actions_visible(self.all_action, True)
-        self.uimanager.set_actions_visible(self.edit_action, True)
-        self.uimanager.set_actions_sensitive(self.edit_action,
-                                             not self.dbstate.db.readonly)
-
-    def disable_action_group(self):
-        """
-        Turns off the visibility of the View's action group.
-        """
-        ListView.disable_action_group(self)
-
-        self.uimanager.set_actions_visible(self.all_action, False)
-        self.uimanager.set_actions_visible(self.edit_action, False)
+        # self.uimanager.set_actions_visible(self.all_action, False)
+        # self.uimanager.set_actions_visible(self.edit_action, False)
 
     def merge(self, *obj):
         """

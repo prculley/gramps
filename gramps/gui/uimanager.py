@@ -28,7 +28,8 @@ import copy, sys
 
 ACTION_NAME = 0  # tuple index for action name
 ACTION_CB = 1    # tuple index for action callback
-ACTION_ST = 2    # tuple index for action state
+ACTION_ACC = 2   # tuple index for action accelerator
+ACTION_ST = 3    # tuple index for action state
 
 
 class ActionGroup():
@@ -44,13 +45,14 @@ class ActionGroup():
         @param actionlist: the list of actions to add
             The list contains tuples with the following contents:
             string: Action Name
-            method: signal callback function
+            method: signal callback function.
+                    None if just adding an accelerator
+            string: accelerator ex: '<Primary>Enter' or '' for no accelerator.
+                    optional for non-stateful actions.
             state: initial state for stateful actions.
                 'True' or 'False': the action is interpreted as a checkbox.
                 'None': non stateful action (optional)
                 'string': the action is interpreted as a Radio button
-                '0': the int '0' the action is non stateful but is an
-                     accelerator (the name is also the accelerator value)
         """
         self.name = name
         self.actionlist = actionlist if actionlist else []
@@ -288,11 +290,18 @@ class UIManager():
         @type pos: int
         """
         try:
+            assert(isinstance(group.actionlist, list))
             for item in group.actionlist:
-                if len(item) == 2 or item[ACTION_ST] is None:
+                if len(item) > 2 and item[ACTION_ACC]:
+                    if self.app.get_actions_for_accel(item[ACTION_ACC]):
+                        print('**Duplicate Accelerator %s' % item[ACTION_ACC])
+                    self.app.set_accels_for_action('win.' + item[ACTION_NAME],
+                                                   [item[ACTION_ACC]])
+                if len(item) <= 3:
                     # Normal stateless actions
                     action = Gio.SimpleAction.new(item[ACTION_NAME], None)
-                    action.connect("activate", item[ACTION_CB])
+                    if item[ACTION_CB]:  # in case we have only accelerator
+                        action.connect("activate", item[ACTION_CB])
                 elif isinstance(item[ACTION_ST], str):
                     # Radio Actions
                     action = Gio.SimpleAction.new_stateful(
@@ -305,16 +314,6 @@ class UIManager():
                         item[ACTION_NAME], None,
                         GLib.Variant.new_boolean(item[ACTION_ST]))
                     action.connect("change-state", item[ACTION_CB])
-                elif isinstance(item[ACTION_ST], int):
-                    # Accelerators
-                    if self.app.get_actions_for_accel(item[ACTION_NAME]):
-                        print('**Duplicate Accelerator %s' % item[ACTION_NAME])
-                    action = self.app.window.lookup_action(item[ACTION_NAME])
-                    if not action:
-                        action = Gio.SimpleAction.new(item[ACTION_NAME], None)
-                        action.connect("activate", item[ACTION_CB])
-                    self.app.set_accels_for_action('win.' + item[ACTION_NAME],
-                                                   [item[ACTION_NAME]])
                 self.app.window.add_action(action)
             self.action_groups.append(group)
         except:
@@ -329,6 +328,7 @@ class UIManager():
         """
         for item in group.actionlist:
             self.app.window.remove_action(item[ACTION_NAME])
+            self.app.set_accels_for_action('win.' + item[ACTION_NAME], [])
         self.action_groups.remove(group)
 
     def get_action_groups(self):

@@ -100,10 +100,6 @@ class FanChartDescView(fanchartdesc.FanChartDescGrampsGUI, NavigationView):
         self.additional_uis.append(FanChartView.additional_ui)
         self.allfonts = [x for x in enumerate(SystemFonts().get_system_fonts())]
 
-        self.func_list.update({
-            '<PRIMARY>J' : self.jump,
-            })
-
     def navigation_type(self):
         return 'Person'
 
@@ -147,7 +143,8 @@ class FanChartDescView(fanchartdesc.FanChartDescGrampsGUI, NavigationView):
         """
         NavigationView.define_actions(self)
 
-        self._add_action('PrintView', self.printview)
+        self._add_action('PrintView', self.printview, "<PRIMARY>P")
+        self._add_action('PRIMARY-J', self.jump, '<PRIMARY>J')
 
     def build_tree(self):
         """

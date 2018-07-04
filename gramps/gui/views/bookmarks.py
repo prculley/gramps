@@ -127,7 +127,8 @@ class Bookmarks(metaclass=ABCMeta):
         """
         Redraw the display.
         """
-        self.redraw()
+        # used by navigationview; other updates follow
+        self.redraw(update_menu=False)
 
     def undisplay(self):
         """
@@ -137,7 +138,7 @@ class Bookmarks(metaclass=ABCMeta):
             self.uistate.uimanager.remove_ui(self.active)
             self.uistate.uimanager.remove_action_group(self.action_group)
             self.action_group = ActionGroup(name='Bookmarks')
-            self.uistate.uimanager.update_menu()
+            #self.uistate.uimanager.update_menu()
             self.active = DISABLED
 
     def redraw_and_report_change(self):
@@ -145,7 +146,7 @@ class Bookmarks(metaclass=ABCMeta):
         self.dbstate.db.report_bm_change()
         self.redraw()
 
-    def redraw(self):
+    def redraw(self, update_menu=True):
         """Create the pulldown menu."""
         menuitem = ('<item>\n'
                     '<attribute name="action">win.%s</attribute>\n'
@@ -165,7 +166,7 @@ class Bookmarks(metaclass=ABCMeta):
                 try:
                     label, dummy_obj = self.make_label(item)
                     func = self.callback(item)
-                    action_id = "BM:%s" % item
+                    action_id = "BM.%s" % item
                     actions.append((action_id, func))
                     text.write(menuitem % (action_id, label))
                     count += 1
@@ -177,7 +178,8 @@ class Bookmarks(metaclass=ABCMeta):
         self.uistate.uimanager.insert_action_group(self.action_group, 1)
         self.active = self.uistate.uimanager.add_ui_from_string(
             [text.getvalue()])
-        self.uistate.uimanager.update_menu()
+        if update_menu:
+            self.uistate.uimanager.update_menu()
         text.close()
 
     @abstractmethod

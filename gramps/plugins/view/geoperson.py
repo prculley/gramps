@@ -72,29 +72,25 @@ _UI_DEF = ['''
         <item>
           <attribute name="action">win.Back</attribute>
           <attribute name="label" translatable="yes">_Back</attribute>
-          <attribute name="accel">&lt;%s&gt;Left</attribute>
         </item>
         <item>
           <attribute name="action">win.Forward</attribute>
           <attribute name="label" translatable="yes">_Forward</attribute>
-          <attribute name="accel">&lt;%s&gt;Right</attribute>
         </item>
       </section>
       <section>
         <item>
           <attribute name="action">win.HomePerson</attribute>
           <attribute name="label" translatable="yes">_Home</attribute>
-          <attribute name="accel">&lt;%s&gt;Home</attribute>
         </item>
       </section>
       </placeholder>
-    ''' % (('ctrl', 'ctrl', 'ctrl') if is_quartz() else ('alt', 'alt', 'alt')),
+    ''',
     '''
       <section id='CommonEdit' groups='RW'>
         <item>
           <attribute name="action">win.PrintView</attribute>
           <attribute name="label" translatable="yes">_Print...</attribute>
-          <attribute name="accel">&lt;Primary&gt;P</attribute>
         </item>
       </section>
     ''',
@@ -103,12 +99,10 @@ _UI_DEF = ['''
         <item>
           <attribute name="action">win.AddBook</attribute>
           <attribute name="label" translatable="yes">_Add Bookmark</attribute>
-          <attribute name="accel">&lt;Primary&gt;d</attribute>
         </item>
         <item>
           <attribute name="action">win.EditBook</attribute>
           <attribute name="label" translatable="no">%s...</attribute>
-          <attribute name="accel">&lt;shift&gt;&lt;Primary&gt;D</attribute>
         </item>
       </section>
     ''' % _('Organize Bookmarks'),  # Following are the Toolbar items
