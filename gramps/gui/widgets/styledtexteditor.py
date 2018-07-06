@@ -43,6 +43,8 @@ from gi.repository import GObject
 from gi.repository import Gdk
 from gi.repository import Gtk
 from gi.repository import Pango
+from gi.repository.Gio import SimpleActionGroup
+from gi.repository.GLib import Variant
 
 #-------------------------------------------------------------------------
 #
@@ -55,9 +57,6 @@ from .styledtextbuffer import (ALLOWED_STYLES,
                                           MATCH_FLAVOR, MATCH_STRING,
                                           LinkTag)
 from .undoablestyledbuffer import UndoableStyledBuffer
-#from .valueaction import ValueAction
-#from .toolcomboentry import ToolComboEntry
-#from .springseparator import SpringSeparatorAction
 from ..spell import Spell
 from ..display import display_url
 from ..utils import SystemFonts, get_primary_mask, get_link_color
@@ -78,7 +77,7 @@ if has_display():
 FORMAT_TOOLBAR = '''<?xml version="1.0" encoding="UTF-8"?>
 <interface>
   <object class="GtkToolbar" id="ToolBar">
-    <property name="hexpand">1</property>
+    <property name="hexpand">True</property>
     <property name="toolbar-style">GTK_TOOLBAR_ICONS</property>
     <style>
       <class name="primary-toolbar"/>
@@ -86,21 +85,21 @@ FORMAT_TOOLBAR = '''<?xml version="1.0" encoding="UTF-8"?>
     <child>
       <object class="GtkToggleToolButton">
         <property name="icon-name">format-text-italic</property>
-        <property name="action-name">win.ITALIC</property>
+        <property name="action-name">ste.ITALIC</property>
         <property name="tooltip_text" translatable="yes">Italic</property>
       </object>
     </child>
     <child>
       <object class="GtkToggleToolButton">
         <property name="icon-name">format-text-bold</property>
-        <property name="action-name">win.BOLD</property>
+        <property name="action-name">ste.BOLD</property>
         <property name="tooltip_text" translatable="yes">Bold</property>
       </object>
     </child>
     <child>
       <object class="GtkToggleToolButton">
         <property name="icon-name">format-text-underline</property>
-        <property name="action-name">win.UNDERLINE</property>
+        <property name="action-name">ste.UNDERLINE</property>
         <property name="tooltip_text" translatable="yes">Underline</property>
       </object>
     </child>
@@ -123,49 +122,58 @@ FORMAT_TOOLBAR = '''<?xml version="1.0" encoding="UTF-8"?>
     <child>
       <object class="GtkToolButton">
         <property name="icon-name">edit-undo</property>
-        <property name="action-name">win.STUndo</property>
+        <property name="action-name">ste.STUndo</property>
         <property name="tooltip_text" translatable="yes">Undo</property>
+        <property name="label" translatable="yes">Undo</property>
       </object>
     </child>
     <child>
       <object class="GtkToolButton">
         <property name="icon-name">edit-redo</property>
-        <property name="action-name">win.STRedo</property>
+        <property name="action-name">ste.STRedo</property>
         <property name="tooltip_text" translatable="yes">Redo</property>
+        <property name="label" translatable="yes">Redo</property>
       </object>
     </child>
     <child>
       <object class="GtkToolButton">
         <property name="icon-name">gramps-font-color</property>
-        <property name="action-name">win.FONTCOLOR</property>
+        <property name="action-name">ste.FONTCOLOR</property>
         <property name="tooltip_text" translatable="yes">Font Color</property>
+        <property name="label" translatable="yes">Font Color</property>
       </object>
     </child>
     <child>
       <object class="GtkToolButton">
         <property name="icon-name">gramps-font-bgcolor</property>
-        <property name="action-name">win.HIGHLIGHT</property>
+        <property name="action-name">ste.HIGHLIGHT</property>
         <property name="tooltip_text" translatable="yes">Background Color</property>
+        <property name="label" translatable="yes">Background Color</property>
       </object>
     </child>
     <child>
       <object class="GtkToolButton">
         <property name="icon-name">go-jump</property>
-        <property name="action-name">win.LINK</property>
+        <property name="action-name">ste.LINK</property>
         <property name="tooltip_text" translatable="yes">Link</property>
+        <property name="label" translatable="yes">Link</property>
       </object>
     </child>
     <child>
       <object class="GtkSeparatorToolItem">
         <property name="draw">False</property>
-        <property name="expand">True</property>
+        <property name="hexpand">True</property>
       </object>
+      <packing>
+        <property name="expand">True</property>
+      </packing>
     </child>
     <child>
       <object class="GtkToolButton">
         <property name="icon-name">edit-clear</property>
-        <property name="action-name">win.CLEAR</property>
+        <property name="action-name">ste.CLEAR</property>
         <property name="tooltip_text" translatable="yes">Clear Markup</property>
+        <property name="label" translatable="yes">Clear Markup</property>
       </object>
     </child>
   </object>
@@ -249,8 +257,9 @@ class StyledTextEditor(Gtk.TextView):
         """Setup initial instance variable values."""
         self.textbuffer = UndoableStyledBuffer()
         self.undo_disabled = self.textbuffer.undo_disabled # see bug 7097
-        #self.textbuffer.connect('style-changed', self._on_buffer_style_changed)
-        #self.textbuffer.connect('changed', self._on_buffer_changed)
+        self.textbuffer.connect('style-changed', self._on_buffer_style_changed)
+        self.textbuffer.connect('changed', self._on_buffer_changed)
+        self.undo_action = self.redo_action = None
         Gtk.TextView.__init__(self)
         self.set_buffer(self.textbuffer)
 
@@ -263,9 +272,9 @@ class StyledTextEditor(Gtk.TextView):
         self._init_url_match()
         self.url_match = None
 
-        #self.toolbar = self._create_toolbar()
         self.spellcheck = Spell(self)
         self._internal_style_change = False
+        self.uimanager = None
 
         self._connect_signals()
 
@@ -304,31 +313,6 @@ class StyledTextEditor(Gtk.TextView):
         else:
             window.set_cursor(REGULAR_CURSOR)
             self.url_match = None
-
-#     def on_key_press_event(self, widget, event):
-#         """Signal handler.
-# 
-#         Handle formatting shortcuts.
-# 
-#         """
-#         if ((Gdk.keyval_name(event.keyval) == 'Z') and
-#             (event.get_state() &
-#              get_primary_mask(Gdk.ModifierType.SHIFT_MASK))):
-#             self.redo()
-#             return True
-#         elif ((Gdk.keyval_name(event.keyval) == 'z') and
-#               (event.get_state() & get_primary_mask())):
-#             self.undo()
-#             return True
-#         else:
-#             for accel, accel_name in self.action_accels.items():
-#                 key, mod = Gtk.accelerator_parse(accel)
-#                 if ((event.keyval == key) and (event.get_state() & mod)):
-#                     action_name = accel_name
-#                     action = self.action_group.get_action(action_name)
-#                     action.activate()
-#                     return True
-#         return False
 
     def on_insert_at_cursor(self, widget, string):
         """Signal handler. for debugging only."""
@@ -493,14 +477,13 @@ class StyledTextEditor(Gtk.TextView):
         Reset the undoable buffer
         """
         self.textbuffer.reset()
-        self.undo_action.set_sensitive(False)
-        self.redo_action.set_sensitive(False)
+        self.undo_action.set_enabled(False)
+        self.redo_action.set_enabled(False)
 
     # private methods
 
     def _connect_signals(self):
         """Connect to several signals of the super class Gtk.TextView."""
-        #self.connect('key-press-event', self.on_key_press_event)
         self.connect('insert-at-cursor', self.on_insert_at_cursor)
         self.connect('delete-from-cursor', self.on_delete_from_cursor)
         self.connect('paste-clipboard', self.on_paste_clipboard)
@@ -509,17 +492,17 @@ class StyledTextEditor(Gtk.TextView):
         self.connect('button-release-event', self.on_button_release_event)
         self.connect('populate-popup', self.on_populate_popup)
 
-    def create_toolbar(self, uimanager):
+    def create_toolbar(self, uimanager, window):
         """
         Create a formatting toolbar.
 
         :returns: toolbar containing text formatting toolitems.
         :rtype: Gtk.Toolbar
         """
+        self.uimanager = uimanager
         # build the toolbar
         builder = Gtk.Builder.new_from_string(FORMAT_TOOLBAR, -1)
         # define the actions...
-        # ...first the toggle actions, which have a ToggleToolButton as proxy
         _actions = [
             ('ITALIC', self._on_toggle_action_activate, '<PRIMARY>i', False),
             ('BOLD', self._on_toggle_action_activate, '<PRIMARY>b', False),
@@ -532,77 +515,48 @@ class StyledTextEditor(Gtk.TextView):
             ('STRedo', self.redo, '<primary><shift>z'),
         ]
 
-        # ...last the custom actions, which have custom proxies
-        default = StyledTextTagType.STYLE_DEFAULT[StyledTextTagType.FONTFACE]
+        # the following are done manually rather than using actions
         fonts = SystemFonts()
-        # fontface_action = ValueAction(str(StyledTextTagType.FONTFACE),
-                                      # _("Font family"),
-                                      # default,
-                                      # ToolComboEntry,
-                                      # fonts.get_system_fonts(),
-                                      # False, #editable
-                                      # True, #shortlist
-                                      # None) # validator
         fontface = builder.get_object('Fontface')
         fontface.init(fonts.get_system_fonts(), shortlist=True, validator=None)
         fontface.set_entry_editable(False)
-        fontface.connect('changed', self._on_valueaction_changed)
-        fontface.get_child().set_active_data(default)
+        fontface.connect('changed', make_cb(
+            self._on_valueaction_changed, StyledTextTagType.FONTFACE))
+        # set initial value
+        default = StyledTextTagType.STYLE_DEFAULT[StyledTextTagType.FONTFACE]
+        self.fontface = fontface.get_child()
+        self.fontface.set_text(str(default))
+        fontface.show()
 
         items = FONT_SIZES
-        default = StyledTextTagType.STYLE_DEFAULT[StyledTextTagType.FONTSIZE]
-        # fontsize_action = ValueAction(str(StyledTextTagType.FONTSIZE),
-                                      # _("Font size"),
-                                      # default,
-                                      # ToolComboEntry,
-                                      # items,
-                                      # True, #editable
-                                      # False, #shortlist
-                                      # is_valid_fontsize) #validator
         fontsize = builder.get_object('Fontsize')
         fontsize.init(items, shortlist=False, validator=is_valid_fontsize)
         fontsize.set_entry_editable(True)
-        fontsize.connect('changed', self._on_valueaction_changed)
-        fontsize.get_child().set_active_data(default)
-
-        # spring = SpringSeparatorAction("spring", "", "", None)
-
-        # action accelerators
-        # self.action_accels = {
-            # '<PRIMARY>i': str(StyledTextTagType.ITALIC),
-            # '<PRIMARY>b': str(StyledTextTagType.BOLD),
-            # '<PRIMARY>u': str(StyledTextTagType.UNDERLINE),
-        # }
+        fontsize.connect('changed', make_cb(
+            self._on_valueaction_changed, StyledTextTagType.FONTSIZE))
+        # set initial value
+        default = StyledTextTagType.STYLE_DEFAULT[StyledTextTagType.FONTSIZE]
+        self.fontsize = fontsize.get_child()
+        self.fontsize.set_text(str(default))
+        fontsize.show()
 
         # create the action group and insert all the actions
-        self.action_group = ActionGroup('Format', _actions)
-        # self.action_group.add_toggle_actions(format_toggle_actions)
-        self.undo_action = uimanager.get_action("STUndo")
-        # self.undo_action.set_icon_name('edit-undo')
-        # self.undo_action.connect('activate', self.undo)
-        self.redo_action = uimanager.get_action("STRedo")
+        self.action_group = ActionGroup('Format', _actions, 'ste')
+        act_grp = SimpleActionGroup()
+        window.insert_action_group('ste', act_grp)
+        window.set_application(uimanager.app)
+        uimanager.insert_action_group(self.action_group, act_grp)
+
+        self.undo_action = uimanager.get_action(self.action_group, "STUndo")
+        self.redo_action = uimanager.get_action(self.action_group, "STRedo")
         # allow undo/redo to see actions if editable.
         self.textbuffer.connect('changed', self._on_buffer_changed)
-        # self.redo_action.set_icon_name('edit-redo')
-        # self.redo_action.connect('activate', self.redo)
-        # self.action_group.add_action(self.undo_action)
-        # self.action_group.add_action(self.redo_action)
-        # self.action_group.add_actions(format_actions)
-        # self.action_group.add_action(fontface_action)
-        # self.action_group.add_action(fontsize_action)
-        # self.action_group.add_action(spring)
-
-        # define the toolbar and create the proxies via ensure_update()
-        # uimanager = Gtk.UIManager()
-        uimanager.insert_action_group(self.action_group, 0)
-        # uimanager.add_ui_from_string(FORMAT_TOOLBAR)
-        # uimanager.ensure_update()
+        # undo/redo are initially greyed out, until something is changed
+        self.undo_action.set_enabled(False)
+        self.redo_action.set_enabled(False)
 
         # get the toolbar and set it's style
-        toolbar = uimanager.get_widget('ToolBar')
-        # toolbar.set_style(Gtk.ToolbarStyle.ICONS)
-        self.undo_action.set_sensitive(False)
-        self.redo_action.set_sensitive(False)
+        toolbar = builder.get_object('ToolBar')
 
         return toolbar
 
@@ -650,21 +604,22 @@ class StyledTextEditor(Gtk.TextView):
 
     # Callback functions
 
-    def _on_toggle_action_activate(self, action):
+    def _on_toggle_action_activate(self, action, value):
         """
         Toggle a style.
 
         Toggle styles are e.g. 'bold', 'italic', 'underline'.
         """
+        action.set_state(value)
         if self._internal_style_change:
             return
 
-        style = int(action.get_name())
-        value = action.get_active()
-        _LOG.debug("applying style '%d' with value '%s'" % (style, str(value)))
-        self.textbuffer.apply_style(style, value)
+        style = action.get_name()
+        value = value.get_boolean()
+        _LOG.debug("applying style '%s' with value '%s'" % (style, str(value)))
+        self.textbuffer.apply_style(getattr(StyledTextTagType, style), value)
 
-    def _on_link_activate(self, action):
+    def _on_link_activate(self, action, value):
         """
         Create a link of a selected region of text.
         """
@@ -702,9 +657,9 @@ class StyledTextEditor(Gtk.TextView):
                 tag.data = uri
 
 
-    def _on_action_activate(self, action):
+    def _on_action_activate(self, action, value):
         """Apply a format set from a Gtk.Action type of action."""
-        style = int(action.get_name())
+        style = getattr(StyledTextTagType, action.get_name())
         current_value = self.textbuffer.get_style_at_cursor(style)
 
         if style == StyledTextTagType.FONTCOLOR:
@@ -736,14 +691,12 @@ class StyledTextEditor(Gtk.TextView):
                        (style, str(value)))
             self.textbuffer.apply_style(style, value)
 
-    def _on_valueaction_changed(self, action):
-        """Apply a format set by a ValueAction type of action."""
+    def _on_valueaction_changed(self, obj, style):
+        """Apply a format set by a ShortListComboEntry."""
         if self._internal_style_change:
             return
 
-        style = int(action.get_name())
-
-        value = action.get_value()
+        value = obj.get_active_data()
         try:
             value = StyledTextTagType.STYLE_TYPE[style](value)
             _LOG.debug("applying style '%d' with value '%s'" %
@@ -753,7 +706,7 @@ class StyledTextEditor(Gtk.TextView):
             _LOG.debug("unable to convert '%s' to '%s'" %
                        (value, StyledTextTagType.STYLE_TYPE[style]))
 
-    def _format_clear_cb(self, action):
+    def _format_clear_cb(self, action, value):
         """
         Remove all formats from the selection or from all.
 
@@ -777,24 +730,27 @@ class StyledTextEditor(Gtk.TextView):
 
     def _on_buffer_changed(self, buffer):
         """synchronize the undo/redo buttons with what is possible"""
-        self.undo_action.set_sensitive(self.textbuffer.can_undo)
-        self.redo_action.set_sensitive(self.textbuffer.can_redo)
+        if self.undo_action:
+            self.undo_action.set_enabled(self.textbuffer.can_undo)
+            self.redo_action.set_enabled(self.textbuffer.can_redo)
 
     def _on_buffer_style_changed(self, buffer, changed_styles):
         """Synchronize actions as the format changes at the buffer's cursor."""
+        if not self.uimanager:
+            return  # never initialized a toolbar, not editable
+        types = [StyledTextTagType.ITALIC, StyledTextTagType.BOLD,
+                 StyledTextTagType.UNDERLINE]
+        self._internal_style_change = True
         for style, style_value in changed_styles.items():
-            if str(style) in self.toggle_actions:
-                action = self.action_group.get_action(str(style))
-                self._internal_style_change = True
-                action.set_active(style_value)
-                self._internal_style_change = False
-
-            if ((style == StyledTextTagType.FONTFACE) or
-                (style == StyledTextTagType.FONTSIZE)):
-                action = self.action_group.get_action(str(style))
-                self._internal_style_change = True
-                action.set_value(style_value)
-                self._internal_style_change = False
+            if style in types:
+                action = self.uimanager.get_action(
+                    self.action_group, str(StyledTextTagType(style)).upper())
+                action.change_state(Variant.new_boolean(style_value))
+            elif (style == StyledTextTagType.FONTFACE):
+                self.fontface.set_text(style_value)
+            elif style == StyledTextTagType.FONTSIZE:
+                self.fontsize.set_text(str(style_value))
+        self._internal_style_change = False
 
     def _spell_change_cb(self, menuitem, spellcheck):
         """Set spell checker spellcheck according to user selection."""
@@ -886,20 +842,17 @@ class StyledTextEditor(Gtk.TextView):
         start, end = self.textbuffer.get_bounds()
         return self.textbuffer.get_text(start, end, True)
 
-#     def get_toolbar(self):
-#         """
-#         Get the formatting toolbar of the editor.
-# 
-#         :returns: toolbar widget to use as formatting GUI.
-#         :rtype: Gtk.Toolbar
-#         """
-#         return self.toolbar
-
-    def undo(self, obj=None):
+    def undo(self, *obj):
         self.textbuffer.undo()
 
-    def redo(self, obj=None):
+    def redo(self, *obj):
         self.textbuffer.redo()
+#-------------------------------------------------------------------------
+#
+# Module functions
+#
+#-------------------------------------------------------------------------
+
 
 def uri_dialog(self, uri, callback):
     """
@@ -919,12 +872,14 @@ def uri_dialog(self, uri, callback):
                     uri = "gramps://%s/handle/%s" % (object_class, handle)
         EditLink(obj.dbstate, obj.uistate, obj.track, uri, callback)
 
-#-------------------------------------------------------------------------
-#
-# Module functions
-#
-#-------------------------------------------------------------------------
 
 def is_valid_fontsize(size):
     """Validator function for font size selector widget."""
     return (size > 0) and (size < 73)
+
+
+def make_cb(func, value):
+    """
+    Generates a callback function based off the passed arguments
+    """
+    return lambda x: func(x, value)

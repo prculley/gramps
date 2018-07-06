@@ -1497,7 +1497,7 @@ class GrampletPane(Gtk.ScrolledWindow):
                 uiman.remove_action_group(self.at_popup_action)
             self.at_popup_action = ActionGroup('AtPopupActions',
                                                actions)
-            uiman.insert_action_group(self.at_popup_action, 1)
+            uiman.insert_action_group(self.at_popup_action)
             self.at_popup_menu = uiman.add_ui_from_string([
                 ui_def % (a_menuitems, r_menuitems)])
             uiman.update_menu()

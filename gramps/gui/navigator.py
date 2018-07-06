@@ -260,7 +260,7 @@ class Navigator:
                     # self.view_toggle_actions[cat_num], value=view_num,
                     # on_change=self.cb_view_clicked, user_data=cat_num)
             # self.cat_view_group.set_sensitive(True)
-            uimanager.insert_action_group(self.cat_view_group, 1)
+            uimanager.insert_action_group(self.cat_view_group)
             mergeid = uimanager.add_ui_from_string(self.ui_category[cat_num])
             self.merge_ids.append(mergeid)
 

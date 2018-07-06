@@ -180,7 +180,6 @@ class EditNote(EditPrimary):
         self.set_window(win, None, self.get_menu_title())
         self.setup_configs('interface.note', 700, 500)
 
-
         vboxnote =  self.top.get_object('vbox131')
         notebook = self.top.get_object('note_notebook')
         #recreate start page as GrampsTab
@@ -271,7 +270,8 @@ class EditNote(EditPrimary):
         # create a formatting toolbar
         if not self.dbstate.db.readonly:
             vbox = self.top.get_object('container')
-            toolbar = self.texteditor.create_toolbar(self.uistate.uimanager)
+            toolbar = self.texteditor.create_toolbar(self.uistate.uimanager,
+                                                     self.window)
             vbox.pack_start(toolbar, False, False, 0)
             self.texteditor.set_transient_parent(self.window)
 

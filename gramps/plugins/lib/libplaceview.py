@@ -253,7 +253,7 @@ class PlaceBaseView(ListView):
         if self.map_action_group:
             self.uimanager.remove_action_group(self.map_action_group)
         self.map_action_group = ActionGroup('MapServices', actionlist)
-        self.uimanager.insert_action_group(self.map_action_group, 1)
+        self.uimanager.insert_action_group(self.map_action_group)
         return _ui
 
     def set_mapservice(self, mapkey):

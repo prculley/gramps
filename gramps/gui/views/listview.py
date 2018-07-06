@@ -899,7 +899,7 @@ class ListView(NavigationView):
                 self.uimanager.remove_action_group(self.at_popup_action)
             self.at_popup_action = ActionGroup('AtPopupActions',
                                                actions)
-            self.uimanager.insert_action_group(self.at_popup_action, 1)
+            self.uimanager.insert_action_group(self.at_popup_action)
             self.at_popup_menu = self.uimanager.add_ui_from_string(
                 self.at_popup_menu)
             self.uimanager.update_menu()

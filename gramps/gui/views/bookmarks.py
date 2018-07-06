@@ -175,7 +175,7 @@ class Bookmarks(metaclass=ABCMeta):
             text.write('</section>\n')
 
         self.action_group.add_actions(actions)
-        self.uistate.uimanager.insert_action_group(self.action_group, 1)
+        self.uistate.uimanager.insert_action_group(self.action_group)
         self.active = self.uistate.uimanager.add_ui_from_string(
             [text.getvalue()])
         if update_menu:

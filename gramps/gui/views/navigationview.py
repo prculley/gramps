@@ -413,7 +413,7 @@ class NavigationView(PageView):
         Enables the UI and action groups for the MRU list.
         """
         if self.mru_active == DISABLED:
-            self.uimanager.insert_action_group(self.mru_action, 1)
+            self.uimanager.insert_action_group(self.mru_action)
             self.mru_active = self.uimanager.add_ui_from_string(self.mru_ui)
             if update_menu:
                 self.uimanager.update_menu()

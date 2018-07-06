@@ -126,7 +126,7 @@ class GrampsWindowManager:
         """
         Enables the UI and action groups
         """
-        self.uimanager.insert_action_group(self.action_group, 1)
+        self.uimanager.insert_action_group(self.action_group)
         self.active = self.uimanager.add_ui_from_string([self.ui])
         self.uimanager.update_menu()
 

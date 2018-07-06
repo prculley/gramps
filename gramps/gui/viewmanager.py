@@ -662,7 +662,7 @@ class ViewManager(CLIManager):
         Initialize an action group for the UIManager
         """
         new_group = ActionGroup(name, actions)
-        self.uimanager.insert_action_group(new_group, 1)
+        self.uimanager.insert_action_group(new_group)
         self.uimanager.set_actions_sensitive(new_group, sensitive)
         return new_group
 
@@ -894,8 +894,8 @@ class ViewManager(CLIManager):
         self.__disconnect_previous_page()
 
         self.active_page = self.pages[page_num]
-        self.active_page.set_active()
         self.__connect_active_page(page_num)
+        self.active_page.set_active()
 
         self.uimanager.update_menu()
         if _GTKOSXAPPLICATION:
@@ -934,7 +934,7 @@ class ViewManager(CLIManager):
         into the UIManager
         """
         for grp in self.active_page.get_actions():
-            self.uimanager.insert_action_group(grp, 1)
+            self.uimanager.insert_action_group(grp)
 
         uidef = self.active_page.ui_definition()
         self.merge_ids = [self.uimanager.add_ui_from_string(uidef)]
@@ -943,7 +943,8 @@ class ViewManager(CLIManager):
             mergeid = self.uimanager.add_ui_from_string(uidef)
             self.merge_ids.append(mergeid)
 
-        configaction = self.uimanager.get_action('ConfigView')
+        configaction = self.uimanager.get_action(self.actiongroup,
+                                                 'ConfigView')
         if self.active_page.can_configure():
             configaction.set_enabled(True)
         else:
@@ -1370,7 +1371,7 @@ class ViewManager(CLIManager):
             make_plugin_callback)
         self.toolactions.add_actions(actions)
         self.tool_menu_ui_id = self.uistate.uimanager.add_ui_from_string(uidef)
-        self.uimanager.insert_action_group(self.toolactions, 1)
+        self.uimanager.insert_action_group(self.toolactions)
         #self.uistate.uimanager.update_menu()
 
     def __build_report_menu(self, report_menu_list):
@@ -1386,7 +1387,7 @@ class ViewManager(CLIManager):
             make_plugin_callback)
         self.reportactions.add_actions(actions)
         self.report_menu_ui_id = self.uistate.uimanager.add_ui_from_string(udef)
-        self.uimanager.insert_action_group(self.reportactions, 1)
+        self.uimanager.insert_action_group(self.reportactions)
         #self.uistate.uimanager.update_menu()
 
     def build_plugin_menu(self, text, item_list, categories, func):

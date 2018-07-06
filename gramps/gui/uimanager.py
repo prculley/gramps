@@ -24,7 +24,7 @@ A replacement UIManager and ActionGroup.
 
 import xml.etree.ElementTree as ET
 from gi.repository import GLib, Gio, Gtk
-import copy, sys
+import copy
 
 ACTION_NAME = 0  # tuple index for action name
 ACTION_CB = 1    # tuple index for action callback
@@ -36,7 +36,7 @@ class ActionGroup():
     """ This class represents a group of actions that con be manipulated
     together.
     """
-    def __init__(self, name, actionlist=None):
+    def __init__(self, name, actionlist=None, prefix='win'):
         """
         @param name: the action group name, used to match to the 'groups'
                      attribute in the ui xml.
@@ -53,9 +53,14 @@ class ActionGroup():
                 'True' or 'False': the action is interpreted as a checkbox.
                 'None': non stateful action (optional)
                 'string': the action is interpreted as a Radio button
+        @type prefix: str
+        @param prefix: the prefix used by this group.  If not provided, 'win'
+                       is assumed.
         """
         self.name = name
         self.actionlist = actionlist if actionlist else []
+        self.prefix = prefix + '.'
+        self.act_group = None
 
     def add_actions(self, actionlist):
         """  Add a list of actions to the current list
@@ -64,13 +69,17 @@ class ActionGroup():
         """
         self.actionlist.extend(actionlist)
 
+
 class UIManager():
     """
     This is Gramps UIManager, it is designed to replace the deprecated Gtk
     UIManager.  The replacement is not exact, but performs similar
     functions, in some case with the same method names and parameters.
-    It is designed to be a singleton, responsible only for Gramps main
-    window menus and toolbar.
+    It is designed to be a singleton.  The menu portion of this is responsible
+    only for Gramps main window menus and toolbar.
+
+    The ActionGroup portions can also be used by other windows.  Other windows
+    needing menus or toolbars can create them via Gtk.Builder.
     """
 
     def __init__(self, app, initial_xml):
@@ -153,7 +162,8 @@ class UIManager():
                         indx += 1
                         break
                     else:
-                        #print('del', child.tag, child.attrib, parents.tag, parents.attrib)
+                        #print('del', child.tag, child.attrib, parents.tag,
+                        #      parents.attrib)
                         del parents[indx]
                         break
             # The following looks for 'placeholder' elements and if found,
@@ -163,14 +173,14 @@ class UIManager():
             while indx < len(parents):
                 if parents[indx].tag == "placeholder":
                     subtree = parents[indx]
-                    #print('placholder del', parents[indx].tag, parents[indx].attrib, parents.tag, parents.attrib)
+                    #print('placholder del', parents[indx].tag,
+                    #      parents[indx].attrib, parents.tag, parents.attrib)
                     del parents[indx]
                     for child in subtree:
                         parents.insert(indx, child)
                         indx += 1
                 else:
                     indx += 1
-
 
         if self.builder:
             toolbar = self.builder.get_object("ToolBar")  # previous toolbar
@@ -202,7 +212,6 @@ class UIManager():
             if menuitem:
                 self.app.menubar.append_submenu(label, menuitem)
         # the following updates the toolbar from the new builder
-        #toolbar = self.app.window.grid.get_child_at(0, 0)
         toolbar_parent = toolbar.get_parent()
         tb_show = toolbar.get_visible()
         toolbar_parent.remove(toolbar)
@@ -239,7 +248,7 @@ class UIManager():
                             parent.insert(indx, update)
                 else:
                     self.et_xml.append(update)
-            results = ET.tostring(self.et_xml, encoding="unicode")
+            #results = ET.tostring(self.et_xml, encoding="unicode")
             #print(results)
             print ('*** Add ui')
             return changexml
@@ -279,24 +288,46 @@ class UIManager():
         """
         return self.builder.get_object(obj)
 
-    def insert_action_group(self, group, pos):
+    def insert_action_group(self, group, gio_group=None):
         """
         This inserts (actually overwrites any matching actions) the action
         group's actions to the app.
+        By default (with no gio_group), the action group is added to the main
+        Gramps window and the group assumes a 'win' prefix.
+        If not using the main window, the window MUST have the 'application'
+        property set for the accels to work.  In this case the actiongroups
+        must be created like the following:
+
+            # create Gramps ActionGroup
+            self.action_group = ActionGroup('name', actions, 'prefix')
+            # create Gio action group
+            act_grp = SimpleActionGroup()
+            # associate window with Gio group and its prefix
+            window.insert_action_group('prefix', act_grp)
+            # make the window 'application' aware
+            window.set_application(uimanager.app)
+            # tell the uimanager about the groups.
+            uimanager.insert_action_group(self.action_group, act_grp)
 
         @param group: the action group
         @type group: ActionGroup
-        @param pos: the position of the action group (not used)
-        @type pos: int
+        @param gio_group: the Gio action group associated with a window.
+        @type gio_group: Gio.SimpleActionGroup
         """
         try:
             assert(isinstance(group.actionlist, list))
+            if gio_group:
+                window_group = group.act_group = gio_group
+            elif group.act_group:
+                window_group = group.act_group
+            else:
+                window_group = group.act_group = self.app.window
             for item in group.actionlist:
                 if len(item) > 2 and item[ACTION_ACC]:
                     if self.app.get_actions_for_accel(item[ACTION_ACC]):
                         print('**Duplicate Accelerator %s' % item[ACTION_ACC])
-                    self.app.set_accels_for_action('win.' + item[ACTION_NAME],
-                                                   [item[ACTION_ACC]])
+                    self.app.set_accels_for_action(
+                        group.prefix + item[ACTION_NAME], [item[ACTION_ACC]])
                 if len(item) <= 3:
                     # Normal stateless actions
                     action = Gio.SimpleAction.new(item[ACTION_NAME], None)
@@ -314,7 +345,7 @@ class UIManager():
                         item[ACTION_NAME], None,
                         GLib.Variant.new_boolean(item[ACTION_ST]))
                     action.connect("change-state", item[ACTION_CB])
-                self.app.window.add_action(action)
+                window_group.add_action(action)
             self.action_groups.append(group)
         except:
             print(group.name, item)
@@ -326,9 +357,14 @@ class UIManager():
         @param group: the action group
         @type group: ActionGroup
         """
+        if group.act_group:
+            window_group = group.act_group
+        else:
+            window_group = self.app.window
         for item in group.actionlist:
-            self.app.window.remove_action(item[ACTION_NAME])
-            self.app.set_accels_for_action('win.' + item[ACTION_NAME], [])
+            window_group.remove_action(item[ACTION_NAME])
+            self.app.set_accels_for_action(group.prefix + item[ACTION_NAME],
+                                           [])
         self.action_groups.remove(group)
 
     def get_action_groups(self):
@@ -347,12 +383,12 @@ class UIManager():
         @type value: bool
         """
         for item in group.actionlist:
-            action = self.app.window.lookup_action(item[ACTION_NAME])
+            action = group.act_group.lookup_action(item[ACTION_NAME])
             if action:
                 action.set_enabled(value)
 
     def get_actions_sensitive(self, group):
-        """ This sets an ActionGroup enabled or disabled.  A disabled action
+        """ This gets an ActionGroup sensitive setting.  A disabled action
         will be greyed out in the UI.
 
         @param group: the action group
@@ -360,7 +396,7 @@ class UIManager():
         @return: the state of the group
         """
         item = group.actionlist[0]
-        action = self.app.window.lookup_action(item[ACTION_NAME])
+        action = group.act_group.lookup_action(item[ACTION_NAME])
         return action.get_enabled()
 
     def set_actions_visible(self, group, value):
@@ -380,10 +416,21 @@ class UIManager():
             if group.name in self.show_groups:
                 self.show_groups.remove(group.name)
 
-    def get_action(self, actionname):
+    def get_action(self, group, actionname):
         """ Return a single action from the group.
+        @param group: the action group
+        @type group: ActionGroup
         @param actionname: the action name
         @type actionname: string
         @return: Gio.Action
         """
-        return self.app.window.lookup_action(actionname)
+        return group.act_group.lookup_action(actionname)
+
+    def print_all_accels(self):
+        ''' A function used diagnostically to see what accels are present.'''
+        for group in self.action_groups:
+            for item in group.actionlist:
+                act = group.prefix + item[ACTION_NAME]
+                accels = self.app.get_accels_for_action(
+                    group.prefix + item[ACTION_NAME])
+                print(act, accels)
