@@ -236,7 +236,7 @@ class DbBsddb(DbBsddbRead, DbWriteBase, UpdateCallback):
         DbWriteBase.__init__(self)
         #UpdateCallback.__init__(self)
         self.secondary_connected = False
-        self.has_changed = False
+        self.has_changed = 0  # Also gives commits since startup
         self.brief_name = None
         self.update_env_version = False
         self.update_python_version = False
@@ -2051,7 +2051,7 @@ class DbBsddb(DbBsddbRead, DbWriteBase, UpdateCallback):
         transaction.clear()
         self.undodb.commit(transaction, msg)
         self.__after_commit(transaction)
-        self.has_changed = True
+        self.has_changed += 1  # Also gives commits since startup
         _LOG.debug("    %s%sDbBsddb %s transaction commit for '%s'"
                    % ("Magic " if not getattr(transaction, 'no_magic', False)
                       else "",

@@ -373,7 +373,7 @@ class DbBsddbRead(DbReadBase, Callback):
         self.path = ""
         self.surname_list = []
         self.txn = None
-        self.has_changed = False
+        self.has_changed = 0  # Also gives commits since startup
 
         self.__tables = {
             'Person':
