@@ -60,7 +60,8 @@ from gramps.gen.utils.file import media_path
 from gramps.gen.utils.keyword import (get_keywords, get_translations,
                                       get_translation_from_keyword,
                                       get_keyword_from_translation)
-from gramps.gen.lib import Date, FamilyRelType
+from gramps.gen.lib import Date, FamilyRelType, PlaceType
+from gramps.gen.lib.placetype import DM_NAME, DM_GRP, DM_SHOW
 from gramps.gen.lib import Name, Surname, NameOriginType
 from .managedwindow import ManagedWindow
 from .widgets import MarkupLabel, BasicLabel
@@ -565,17 +566,23 @@ class GrampsPreferences(ConfigureDialog):
             self.add_prefix_panel,
             self.add_date_panel,
             self.add_researcher_panel,
+            self.add_ptypes_panel,
             self.add_advanced_panel,
             self.add_color_panel,
             self.add_symbols_panel
             )
         ConfigureDialog.__init__(self, uistate, dbstate, page_funcs,
                                  GrampsPreferences, config,
-                                 on_close=update_constants)
+                                 on_close=self._close)
+        self.panel.set_current_page(0)
         help_btn = self.window.add_button(_('_Help'), Gtk.ResponseType.HELP)
         help_btn.connect(
             'clicked', lambda x: display_help(WIKI_HELP_PAGE, WIKI_HELP_SEC))
         self.setup_configs('interface.grampspreferences', 700, 450)
+
+    def _close(self):
+        update_constants()                  # save the age constants
+        self.dbstate.db.save_place_types()  # save place types data.
 
     def create_grid(self):
         """
@@ -1932,6 +1939,326 @@ class GrampsPreferences(ConfigureDialog):
             config.set(constant, intval)
         else:
             obj.set_text(str(intval))
+
+    def add_ptypes_panel(self, configdialog):
+        """
+        Add the tab to set place types.
+        """
+        # scan for place types in use
+        self.ptype_in_use = set()
+        for place in self.dbstate.db.iter_places():
+            for typ in place.get_types():
+                self.ptype_in_use.add(int(typ))
+        self.top = Glade("configureptypes.glade")
+        grid = self.top.get_object("grid")
+        self.ptypes_model = Gtk.ListStore(str, str, int, str, str)
+
+        self.ptypes_view = self.top.get_object("types_view")  # Gtk.TreeView()
+        self.ptypes_selection = self.ptypes_view.get_selection()
+        # add filter capabilities
+        self._tree_filter = self.ptypes_model.filter_new()
+        self._tree_filter.set_visible_func(self._apply_filter)
+
+        # set model with sorting enabled
+        self.ptypes_view.set_model(Gtk.TreeModelSort(model=self._tree_filter))
+        self._cursor_hndlr = self.ptypes_selection.connect(
+            'changed', self._cursor_changed)
+        # filter input box Gtk.SearchEntry()
+        self.filter_entry = self.top.get_object("search_entry")
+        self.filter_entry.connect('search-changed', self.filter_str_changed)
+        # the name edit entry
+        self.ptype_entry = self.top.get_object("type_name")
+        self.ptype_entry.connect('changed', self.update_type_name)
+        # buttons
+        btn = self.top.get_object("hide")
+        btn.connect('clicked', self.type_hide_clicked)
+        btn = self.top.get_object("add")
+        btn.connect('clicked', self.type_add_clicked)
+        btn = self.top.get_object("remove")
+        btn.connect('clicked', self.type_remove_clicked)
+        # The groups checkboxes
+        self.ptype_group_map = {}
+        self.draw_groups()
+
+        return _('Place Types'), grid
+
+    def _apply_filter(self, model, tr_iter, data):
+        """
+        Check if we need hide or show row acording the filter.
+        This is for "self._tree_filter.set_visible_func".
+        """
+        filter_str = self.filter_entry.get_text().lower()
+        # if no string - show the row
+        if not filter_str:
+            return True
+
+        # get type data
+        p_txt = model.get_value(tr_iter, 0) + model.get_value(tr_iter, 1)
+        typ = model.get_value(tr_iter, 2)
+        if typ < 0 and typ > PlaceType.CUSTOM:
+            p_txt += str(-typ)
+
+        # include the status
+        p_txt += model.get_value(tr_iter, 3)
+
+        # check all row columns and hide it if some query word doesn't present
+        filter_words = filter_str.split()
+        p_txt = p_txt.lower()
+        for word in filter_words:
+            if word not in p_txt:
+                # if some of words not present - hide the row
+                return False
+        # else - show the row
+        return True
+
+    def filter_str_changed(self, _widget):
+        """
+        Called when filter string is changed.
+        """
+        self.update_types()
+
+    def update_types(self, path=None):
+        """ update the TreeView model with the current types data """
+        self.ptypes_selection.handler_block(self._cursor_hndlr)
+        self.ptypes_model.clear()
+        for typ, tup in PlaceType.DATAMAP.items():
+            if typ == PlaceType.CUSTOM:
+                continue
+            # make a groups string for search purposes.
+            if tup[DM_GRP]:   # if a group is set
+                groups = ''
+                for gr_num, gr_nams in PlaceType.GROUPMAP.items():
+                    if tup[DM_GRP] & gr_num:
+                        groups += gr_nams[0] + ' '
+            else:
+                groups = _("None")
+            gov = ("{:>4d}".format(-typ) if
+                   (typ < 0 and typ > PlaceType.CUSTOM) else '')
+            stat = _("Visible") if tup[DM_SHOW] else _("Hidden")
+            stat += _(", In use") if (typ in self.ptype_in_use) else ""
+            self.ptypes_model.append(row=[
+                str(tup[DM_NAME]),  # name
+                groups,             # groups
+                typ,
+                stat,
+                gov])               # type number
+        self.ptypes_selection.handler_unblock(self._cursor_hndlr)
+        if not path or int(str(path)) >= len(self.ptypes_model):
+            path = '0'
+        self.ptypes_selection.select_path(path)
+        if len(self._tree_filter):
+            self.ptypes_view.scroll_to_cell(path, None, True, 0.5, 0)
+            self._cursor_changed(None)
+
+    def _cursor_changed(self, _obj):
+        """  Update the parts of the panel with data for current type """
+        model, node = self.ptypes_selection.get_selected()
+        if not node:
+            return
+        typ = model.get_value(node, 2)
+        name = model.get_value(node, 0)
+        self.ptype_entry.set_text(name)
+        rem_btn = self.top.get_object("remove")
+        if typ in self.ptype_in_use or typ > 0:
+            rem_btn.set_sensitive(False)
+        else:
+            rem_btn.set_sensitive(True)
+        hide_btn = self.top.get_object("hide")
+        if PlaceType.DATAMAP[typ][DM_SHOW]:  # visible
+            hide_btn.set_label(_("Hide"))
+        else:
+            hide_btn.set_label(_("Unhide"))
+        # update check boxes
+        groups = PlaceType.DATAMAP[typ][DM_GRP]
+        for group in self.ptype_group_map.keys():
+            self.ptype_group_map[group].set_active(group & groups)
+
+    def update_type_name(self, widget):
+        """ Update the stored type name when changed at top/right of panel
+        """
+        model, node = self.ptypes_selection.get_selected()
+        typ = model.get_value(node, 2)
+        name = self.ptype_entry.get_text()
+        tup = PlaceType.DATAMAP[typ]
+        if name == tup[DM_NAME]:
+            return
+        name = PlaceType.valid_name(name, p_type=typ)
+        new_tup = (name, tup[DM_GRP], tup[DM_SHOW])
+        PlaceType.DATAMAP[typ] = new_tup
+        if not PlaceType.STATUS:
+            PlaceType.STATUS = 1
+        cnode = model.convert_iter_to_child_iter(node)
+        cmodel = model.get_model()
+        cmodel.set_value(cnode, 0, name)
+
+    def type_hide_clicked(self, hide_btn):
+        """ Update the model and buttons when hide/unhide is clicked """
+        model, node = self.ptypes_selection.get_selected()
+        if not node:
+            return
+        typ = model.get_value(node, 2)
+        tup = PlaceType.DATAMAP[typ]
+        new_tup = (tup[DM_NAME], tup[DM_GRP], not tup[DM_SHOW])
+        PlaceType.DATAMAP[typ] = new_tup
+        if not PlaceType.STATUS:
+            PlaceType.STATUS = 1
+        if PlaceType.DATAMAP[typ][DM_SHOW]:  # visible
+            hide_btn.set_label(_("Hide"))
+            stat = _("Visible")
+        else:
+            hide_btn.set_label(_("Unhide"))
+            stat = _("Hidden")
+        stat += _(", In use") if (typ in self.ptype_in_use) else ""
+        cnode = model.convert_iter_to_child_iter(node)
+        cmodel = model.get_model()
+        cmodel.set_value(cnode, 3, stat)
+
+    def type_remove_clicked(self, _btn):
+        """ Remove a type from the system if it is not in use """
+        model, node = self.ptypes_selection.get_selected()
+        if not node:
+            return
+        typ = model.get_value(node, 2)
+        if typ in self.ptype_in_use:
+            ErrorDialog(
+                _("Place Type in use, cannot remove."),
+                PlaceType.DATAMAP[typ][DM_NAME], parent=self.window)
+            return
+        del PlaceType.DATAMAP[typ]
+        if not PlaceType.STATUS:
+            PlaceType.STATUS = 1
+        self.update_types()
+
+    def type_add_clicked(self, _widget):
+        """ add a new type """
+        self.filter_entry.set_text('')
+        self.ptypes_view.get_model().reset_default_sort_func()
+        typ = PlaceType.new()
+        name = PlaceType.valid_name(_("Type"), p_type=typ)
+        PlaceType.DATAMAP[typ] = (name, PlaceType.G_PLACE, True)
+        if not PlaceType.STATUS:
+            PlaceType.STATUS = 1
+        node = self.ptypes_model.insert(0, row=[
+            name,                                      # name
+            PlaceType.GROUPMAP[PlaceType.G_PLACE][0],  # groups
+            typ,                                       # type number
+            _("Visible"),                              # status
+            ''])                                       # GOV
+        self.ptypes_selection.select_path(0)
+        if len(self._tree_filter):
+            self.ptypes_view.scroll_to_cell(0, None, True, 0.5, 0)
+            self._cursor_changed(None)
+        self.ptype_entry.grab_focus()
+
+    def check_btn_toggled(self, btn, group):
+        """ Update groups from check button """
+        model, node = self.ptypes_selection.get_selected()
+        if not node:
+            return
+        typ = model.get_value(node, 2)
+        tup = PlaceType.DATAMAP[typ]
+        groups = ((tup[DM_GRP] | group) if btn.get_active() else
+                  (tup[DM_GRP] & ~ group))
+        new_tup = (tup[DM_NAME], groups, tup[DM_SHOW])
+        PlaceType.DATAMAP[typ] = new_tup
+        if not PlaceType.STATUS:
+            PlaceType.STATUS = 1
+
+    def group_menu(self, _obj, event, group, g_nam):
+        """ add a right click menu for groups checkboxes"""
+        if event.type == Gdk.EventType.BUTTON_PRESS and event.button == 3:
+            menu = Gtk.Menu()
+            self.ptypes_panel_menu = menu
+            item = Gtk.MenuItem(label=_("Add group"))
+            item.connect("activate", self.add_group)
+            menu.append(item)
+            item.show()
+            item = Gtk.MenuItem(label=_("Remove group: %s") % g_nam)
+            item.connect("activate", self.remove_group, group)
+            menu.append(item)
+            item.show()
+            item = Gtk.MenuItem(label=_("Rename group: %s") % g_nam)
+            item.connect("activate", self.rename_group, group)
+            menu.append(item)
+            item.show()
+            menu.show()
+            menu.popup(None, None, None, None, event.button, event.time)
+
+    def add_group(self, _obj):
+        """ Add a new group (right click over groups checkbox)"""
+        entry = self.top.get_object("new_group_entry")
+        groups_grid = self.top.get_object("groups_grid")
+        row = int((len(PlaceType.GROUPMAP) + 1) / 2)
+        groups_grid.attach(entry, 0, row, 1, 1)
+        entry.grab_focus()
+        entry.connect('focus-out-event', self.group_entry_focus_out)
+
+    def group_entry_focus_out(self, entry, _event):
+        """ Done editing added group entry """
+        g_name = entry.get_text().strip()
+        if g_name:
+            PlaceType.add_group(g_name)
+        self.draw_groups(redraw=True)
+
+    def remove_group(self, _obj, group):
+        """ Remove a group (right click over groups checkbox)"""
+        # find and remove references to this group in types
+        for typ, tup in PlaceType.DATAMAP.items():
+            new_tup = (tup[DM_NAME], tup[DM_GRP] & ~group, tup[DM_SHOW])
+            PlaceType.DATAMAP[typ] = new_tup
+        # and delete the group
+        del PlaceType.GROUPMAP[group]
+        if not PlaceType.STATUS:
+            PlaceType.STATUS = 1
+        self.draw_groups(redraw=True)
+
+    def rename_group(self, _obj, group):
+        """ Rename group (right click over groups checkbox)"""
+        entry = self.top.get_object("new_group_entry")
+        entry.set_text(PlaceType.GROUPMAP[group][0])
+        groups_grid = self.top.get_object("groups_grid")
+        row = int((len(PlaceType.GROUPMAP) + 1) / 2)
+        groups_grid.attach(entry, 0, row, 1, 1)
+        entry.grab_focus()
+        entry.connect('focus-out-event',
+                      self.rename_group_entry_focus_out, group)
+
+    def rename_group_entry_focus_out(self, entry, _event, group):
+        """ Done editing added group entry """
+        g_name = entry.get_text().strip()
+        if g_name:
+            tup = PlaceType.GROUPMAP[group]
+            PlaceType.GROUPMAP[group] = (g_name, tup[1])
+        self.draw_groups(redraw=True)
+
+    def draw_groups(self, redraw=False):
+        """
+        draw the groups checkboxes
+        if redraw is True, we should erase previous boxes first
+        """
+        groups_grid = self.top.get_object("groups_grid")
+        if redraw:
+            groups_grid.remove_column(0)
+            groups_grid.remove_column(0)
+        self.ptype_group_map = {}  # stores pointers to checkboxes
+        col = 0
+        row = 0
+        rows = len(PlaceType.GROUPMAP) / 2
+        g_list = [(group, tup[0]) for (group, tup) in
+                  PlaceType.GROUPMAP.items()]
+        g_list.sort(key=lambda tup: tup[1].lower())
+        for group, g_nam in g_list:
+            check = Gtk.CheckButton.new_with_label(g_nam)
+            self.ptype_group_map[group] = check
+            check.connect('button_press_event', self.group_menu, group, g_nam)
+            check.connect('toggled', self.check_btn_toggled, group)
+            groups_grid.attach(check, col, row, 1, 1)
+            row += 1
+            if row >= rows:
+                col = 1
+                row = 0
+        groups_grid.show_all()
+        self.update_types()
 
     def build_menu_names(self, obj):
         return (_('Preferences'), _('Preferences'))

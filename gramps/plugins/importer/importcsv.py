@@ -147,17 +147,6 @@ class CSVParser:
         self.pref = {} # person ref, internal to this sheet
         self.fref = {} # family ref, internal to this sheet
         self.placeref = {}
-        self.place_types = {}
-        # Build reverse dictionary, name to type number
-        for items in PlaceType().get_map().items(): # (0, 'Custom')
-            self.place_types[items[1]] = items[0]
-            self.place_types[items[1].lower()] = items[0]
-            if _(items[1]) != items[1]:
-                self.place_types[_(items[1])] = items[0]
-        # Add custom types:
-        for custom_type in self.db.get_place_types():
-            self.place_types[custom_type] = 0
-            self.place_types[custom_type.lower()] = 0
         column2label = {
             "surname": ("lastname", "last_name", "surname", _("surname"),
                         _("Surname")),
@@ -917,15 +906,14 @@ class CSVParser:
                 place.placeref_list.append(placeref)
             if place_date:
                 placeref.date = _dp.parse(place_date)
+                placeref.set_type_for_place(place_enclosed_by)
         #########################################################
         self.db.commit_place(place, self.trans)
 
     def get_place_type(self, place_type_str):
-        if place_type_str in self.place_types:
-            return PlaceType((self.place_types[place_type_str], place_type_str))
-        else:
-            # New custom type:
-            return PlaceType((0, place_type_str))
+        ptype = PlaceType()
+        ptype.set_from_xml_str(place_type_str)
+        return ptype
 
     def get_or_create_family(self, family_ref, husband, wife):
         "Return the family object for the give family ID."

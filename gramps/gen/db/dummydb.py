@@ -1539,6 +1539,11 @@ class DummyDb(M_A_M_B("NewBaseClass", (DbReadBase, Callback, object,), {})):
             LOG.warning("database is closed")
         return True
 
+    def save_place_types(self):
+        """ save the custom place type data
+        """
+        LOG.warning("database is closed")
+
     def set_event_id_prefix(self, val):
         """
         Set the naming template for Gramps Event ID values.

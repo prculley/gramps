@@ -22,25 +22,31 @@
 Location utility functions
 """
 from ..lib.date import Date, Today
+from ..lib.placetype import PlaceType
+from ..lib.placehiertype import PlaceHierType
+
 
 #-------------------------------------------------------------------------
 #
 # get_location_list
 #
 #-------------------------------------------------------------------------
-def get_location_list(db, place, date=None, lang=''):
+def get_location_list(db, place, date=None, lang='', hier=PlaceHierType.ADMIN):
     """
-    Return a list of place names for display.
+    Return a list of place names and types for display.
+    the list is in order of smallest (most enclosed) to largest place.
+    The list will match the date, lang and hierarchy type.
     """
     if date is None:
         date = __get_latest_date(place)
     visited = [place.handle]
-    lines = [(__get_name(place, date, lang), place.get_type())]
+    lines = [(__get_name(place, date, lang), __get_type(place, date))]
     while True:
         handle = None
         for placeref in place.get_placeref_list():
             ref_date = placeref.get_date_object()
-            if ref_date.is_empty() or date.match_exact(ref_date):
+            if placeref.get_type() == hier and (ref_date.is_empty() or
+                                                date.match_exact(ref_date)):
                 handle = placeref.ref
                 break
         if handle is None or handle in visited:
@@ -49,12 +55,12 @@ def get_location_list(db, place, date=None, lang=''):
         if place is None:
             break
         visited.append(handle)
-        lines.append((__get_name(place, date, lang), place.get_type()))
+        lines.append((__get_name(place, date, lang), __get_type(place, date)))
     return lines
 
 def __get_name(place, date, lang):
     endonym = None
-    for place_name in place.get_all_names():
+    for place_name in place.get_names():
         name_date = place_name.get_date_object()
         if name_date.is_empty() or date.match_exact(name_date):
             if place_name.get_language() == lang:
@@ -63,9 +69,16 @@ def __get_name(place, date, lang):
                 endonym = place_name.get_value()
     return endonym if endonym is not None else '?'
 
+def __get_type(place, date):
+    for place_type in place.get_types():
+        type_date = place_type.get_date_object()
+        if type_date.is_empty() or date.match_exact(type_date):
+            return place_type
+    return PlaceType(PlaceType.UNKNOWN)
+
 def __get_latest_date(place):
     latest_date = None
-    for place_name in place.get_all_names():
+    for place_name in place.get_names():
         date = place_name.get_date_object()
         if date.is_empty() or date.modifier == Date.MOD_AFTER:
             return Today()
@@ -122,7 +135,7 @@ def get_locations(db, place):
     return locations
 
 def __get_all_names(place):
-    return [name.get_value() for name in place.get_all_names()]
+    return [name.get_value() for name in place.get_names()]
 
 #-------------------------------------------------------------------------
 #

@@ -405,11 +405,11 @@ class MySelect(Gtk.ComboBox):
         #we need to inherit and have an combobox with an entry
         Gtk.ComboBox.__init__(self, has_entry=True)
         self.type_class = type_class
-        self.sel = StandardCustomSelector(type_class._I2SMAP, self,
-                                          type_class._CUSTOM,
+        self.sel = StandardCustomSelector(type_class.get_map(type_class), self,
+                                          type_class.CUSTOM,
                                           type_class._DEFAULT,
                                           additional,
-                                          type_class._MENU)
+                                          type_class.get_menu(type_class))
         self.show()
 
     def get_text(self):
@@ -559,9 +559,6 @@ class EditRule(ManagedWindow):
                         additional = self.db.get_name_types()
                     elif v == _('Surname origin type:'):
                         additional = self.db.get_origin_types()
-                    elif v == _('Place type:'):
-                        additional = sorted(self.db.get_place_types(),
-                                            key=lambda s: s.lower())
                     t = MySelect(_name2typeclass[v], additional)
                 elif v == _('Inclusive:'):
                     t = MyBoolean(_('Include selected Gramps ID'))
