@@ -55,6 +55,8 @@ _ = glocale.translation.sgettext
 class EditPlaceRef(EditReference):
 
     def __init__(self, state, uistate, track, place, place_ref, update):
+        if not place.get_names():
+            place.add_name(PlaceName())
         EditReference.__init__(self, state, uistate, track, place, place_ref,
                                update)
 

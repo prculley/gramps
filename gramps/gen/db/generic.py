@@ -49,6 +49,7 @@ from . import (DbReadBase, DbWriteBase, DbUndo, DBLOGNAME, DBUNDOFN,
                KEY_TO_NAME_MAP, DBMODE_R, DBMODE_W)
 from .utils import write_lock_file, clear_lock_file
 from .exceptions import DbVersionError, DbUpgradeRequiredError
+from ..display.place import displayer as _pd
 from ..errors import HandleError
 from ..utils.callback import Callback
 from ..updatecallback import UpdateCallback
@@ -630,9 +631,11 @@ class DbGeneric(DbWriteBase, DbReadBase, UpdateCallback, Callback):
         self.url_types = self._get_metadata('url_types', set())
         self.media_attributes = self._get_metadata('mattr_names', set())
         self.event_attributes = self._get_metadata('eattr_names', set())
+        self.place_attributes = self._get_metadata('placeattr_names', set())
         self.placeabbr_types = self._get_metadata('placeabbr_types', set())
         self.placehier_types = self._get_metadata('placehier_types', set())
         PlaceType.set_db_data(self._get_metadata('place_types_data', None))
+        _pd.load_formats(self._get_metadata('place_formats', []))
 
         # surname list
         self.surname_list = self.get_surname_list()
@@ -731,6 +734,7 @@ class DbGeneric(DbWriteBase, DbReadBase, UpdateCallback, Callback):
                 self._set_metadata('url_types', self.url_types)
                 self._set_metadata('mattr_names', self.media_attributes)
                 self._set_metadata('eattr_names', self.event_attributes)
+                self._set_metadata('placeattr_names', self.place_attributes)
                 self._set_metadata('placeabbr_types', self.placeabbr_types)
                 self._set_metadata('placehier_types', self.placehier_types)
                 self.save_place_types(close=True)
@@ -1995,9 +1999,10 @@ class DbGeneric(DbWriteBase, DbReadBase, UpdateCallback, Callback):
         for mref in place.media_list:
             attr_list += [str(attr.type) for attr in mref.attribute_list
                           if attr.type.is_custom() and str(attr.type)]
-        attr_list += [str(attr.type) for attr in place.attribute_list
-                      if attr.type.is_custom() and str(attr.type)]
         self.media_attributes.update(attr_list)
+        attr_list = [str(attr.type) for attr in place.attribute_list
+                      if attr.type.is_custom() and str(attr.type)]
+        self.place_attributes.update(attr_list)
 
     def commit_event(self, event, trans, change_time=None):
         """
@@ -2275,6 +2280,13 @@ class DbGeneric(DbWriteBase, DbReadBase, UpdateCallback, Callback):
         """
         return list(self.placeabbr_types)
 
+    def get_place_attribute_types(self):
+        """
+        Return a list of all custom place name types assocated with Place
+        instances in the database.
+        """
+        return list(self.place_attributes)
+
     ################################################################
     #
     # get_*_bookmarks methods
@@ -2318,6 +2330,11 @@ class DbGeneric(DbWriteBase, DbReadBase, UpdateCallback, Callback):
         """ save the custom place type data
         """
         self._set_metadata('place_types_data', PlaceType.get_db_data(close))
+
+    def save_place_formats(self, formats):
+        """ save the place formats for the place displayer
+        """
+        self._set_metadata('place_formats', formats)
 
     def get_default_handle(self):
         return self._get_metadata("default-person-handle", None)

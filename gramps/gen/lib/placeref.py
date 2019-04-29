@@ -157,12 +157,16 @@ class PlaceRef(RefBase, DateBase, CitationBase, SecondaryObject):
     def set_type_for_place(self, place):
         """
         Set the hierarchy type for the PlaceRef based on the type of the
-        enclosing place.  If place type is unknown (new place), set to ADMIN.
+        enclosing place.  If place type is a likely ADMIN candidate,
+        set to ADMIN.
         If ref.type is already set, skip.
         """
         if self.type == PlaceHierType.UNKNOWN:
             p_type = place.get_type()
-            if p_type.value == PlaceType.UNKNOWN:
+            g_mask = (PlaceType.G_PLACE | PlaceType.G_UNPOP |
+                      PlaceType.G_REGION | PlaceType.G_COUNTRY |
+                      PlaceType.G_BUILDING)
+            if p_type.value > PlaceType.UNKNOWN or p_type & g_mask:
                 self.type.set(PlaceHierType.ADMIN)
 
     def set_type(self, p_type):

@@ -33,12 +33,12 @@ import logging
 # gramps modules
 #
 #-------------------------------------------------------------------------
-from gramps.gen.lib import NoteType, Place
+from gramps.gen.lib import NoteType, Place, PlaceName
 from gramps.gen.db import DbTxn
 from .editprimary import EditPrimary
 from .displaytabs import (PlaceRefEmbedList, PlaceNameEmbedList,
                           PlaceTypeEmbedList, PlaceEventEmbedList,
-                          AttrEmbedList,
+                          PlaceAttrEmbedList,
                           LocationEmbedList, CitationEmbedList,
                           GalleryTab, NoteTab, WebEmbedList, PlaceBackRefList)
 from .editplacename import EditPlaceName
@@ -74,6 +74,8 @@ WIKI_HELP_SEC = _('manual|Place_Editor_dialog')
 class EditPlace(EditPrimary):
     """ Edit the place """
     def __init__(self, dbstate, uistate, track, place, callback=None):
+        if not place.get_names():
+            place.add_name(PlaceName())
         EditPrimary.__init__(self, dbstate, uistate, track, place,
                              dbstate.db.get_place_from_handle,
                              dbstate.db.get_place_from_gramps_id, callback)
@@ -297,10 +299,10 @@ class EditPlace(EditPrimary):
         self._add_tab(notebook, self.citation_list)
         self.track_ref_for_deletion("citation_list")
 
-        self.attr_list = AttrEmbedList(self.dbstate,
-                                       self.uistate,
-                                       self.track,
-                                       self.obj.get_attribute_list())
+        self.attr_list = PlaceAttrEmbedList(self.dbstate,
+                                            self.uistate,
+                                            self.track,
+                                            self.obj.get_attribute_list())
         self._add_tab(notebook, self.attr_list)
         self.track_ref_for_deletion("attr_list")
 

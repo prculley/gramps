@@ -68,6 +68,7 @@ from .widgets import MarkupLabel, BasicLabel
 from .dialog import ErrorDialog, OkDialog
 from .editors.editplaceformat import EditPlaceFormat
 from .display import display_help
+from .glade import Glade
 from gramps.gen.plug.utils import available_updates
 from .plug import PluginWindows
 #from gramps.gen.errors import WindowActiveError
@@ -1940,7 +1941,7 @@ class GrampsPreferences(ConfigureDialog):
         else:
             obj.set_text(str(intval))
 
-    def add_ptypes_panel(self, configdialog):
+    def add_ptypes_panel(self, _configdialog):
         """
         Add the tab to set place types.
         """
@@ -1982,7 +1983,7 @@ class GrampsPreferences(ConfigureDialog):
 
         return _('Place Types'), grid
 
-    def _apply_filter(self, model, tr_iter, data):
+    def _apply_filter(self, model, tr_iter, _data):
         """
         Check if we need hide or show row acording the filter.
         This is for "self._tree_filter.set_visible_func".
@@ -2032,8 +2033,12 @@ class GrampsPreferences(ConfigureDialog):
                         groups += gr_nams[0] + ' '
             else:
                 groups = _("None")
-            gov = ("{:>4d}".format(-typ) if
-                   (typ < 0 and typ > PlaceType.CUSTOM) else '')
+            if (typ < 0 and typ > PlaceType.CUSTOM):
+                desc = _("GOV Type:{:>4d}").format(-typ)
+            elif typ >= 0:
+                desc = _("Gramps Type: %s") % PlaceType._I2EMAP.get(typ, '')
+            else:
+                desc = _("Custom")
             stat = _("Visible") if tup[DM_SHOW] else _("Hidden")
             stat += _(", In use") if (typ in self.ptype_in_use) else ""
             self.ptypes_model.append(row=[
@@ -2041,7 +2046,7 @@ class GrampsPreferences(ConfigureDialog):
                 groups,             # groups
                 typ,
                 stat,
-                gov])               # type number
+                desc])               # type number
         self.ptypes_selection.handler_unblock(self._cursor_hndlr)
         if not path or int(str(path)) >= len(self.ptypes_model):
             path = '0'
@@ -2059,7 +2064,7 @@ class GrampsPreferences(ConfigureDialog):
         name = model.get_value(node, 0)
         self.ptype_entry.set_text(name)
         rem_btn = self.top.get_object("remove")
-        if typ in self.ptype_in_use or typ > 0:
+        if typ in self.ptype_in_use or typ >= 0:
             rem_btn.set_sensitive(False)
         else:
             rem_btn.set_sensitive(True)
@@ -2073,7 +2078,7 @@ class GrampsPreferences(ConfigureDialog):
         for group in self.ptype_group_map.keys():
             self.ptype_group_map[group].set_active(group & groups)
 
-    def update_type_name(self, widget):
+    def update_type_name(self, _widget):
         """ Update the stored type name when changed at top/right of panel
         """
         model, node = self.ptypes_selection.get_selected()
@@ -2085,8 +2090,8 @@ class GrampsPreferences(ConfigureDialog):
         name = PlaceType.valid_name(name, p_type=typ)
         new_tup = (name, tup[DM_GRP], tup[DM_SHOW])
         PlaceType.DATAMAP[typ] = new_tup
-        if not PlaceType.STATUS:
-            PlaceType.STATUS = 1
+        if not PlaceType.status:
+            PlaceType.status = 1
         cnode = model.convert_iter_to_child_iter(node)
         cmodel = model.get_model()
         cmodel.set_value(cnode, 0, name)
@@ -2100,8 +2105,8 @@ class GrampsPreferences(ConfigureDialog):
         tup = PlaceType.DATAMAP[typ]
         new_tup = (tup[DM_NAME], tup[DM_GRP], not tup[DM_SHOW])
         PlaceType.DATAMAP[typ] = new_tup
-        if not PlaceType.STATUS:
-            PlaceType.STATUS = 1
+        if not PlaceType.status:
+            PlaceType.status = 1
         if PlaceType.DATAMAP[typ][DM_SHOW]:  # visible
             hide_btn.set_label(_("Hide"))
             stat = _("Visible")
@@ -2125,8 +2130,8 @@ class GrampsPreferences(ConfigureDialog):
                 PlaceType.DATAMAP[typ][DM_NAME], parent=self.window)
             return
         del PlaceType.DATAMAP[typ]
-        if not PlaceType.STATUS:
-            PlaceType.STATUS = 1
+        if not PlaceType.status:
+            PlaceType.status = 1
         self.update_types()
 
     def type_add_clicked(self, _widget):
@@ -2136,9 +2141,9 @@ class GrampsPreferences(ConfigureDialog):
         typ = PlaceType.new()
         name = PlaceType.valid_name(_("Type"), p_type=typ)
         PlaceType.DATAMAP[typ] = (name, PlaceType.G_PLACE, True)
-        if not PlaceType.STATUS:
-            PlaceType.STATUS = 1
-        node = self.ptypes_model.insert(0, row=[
+        if not PlaceType.status:
+            PlaceType.status = 1
+        self.ptypes_model.insert(0, row=[
             name,                                      # name
             PlaceType.GROUPMAP[PlaceType.G_PLACE][0],  # groups
             typ,                                       # type number
@@ -2161,8 +2166,8 @@ class GrampsPreferences(ConfigureDialog):
                   (tup[DM_GRP] & ~ group))
         new_tup = (tup[DM_NAME], groups, tup[DM_SHOW])
         PlaceType.DATAMAP[typ] = new_tup
-        if not PlaceType.STATUS:
-            PlaceType.STATUS = 1
+        if not PlaceType.status:
+            PlaceType.status = 1
 
     def group_menu(self, _obj, event, group, g_nam):
         """ add a right click menu for groups checkboxes"""
@@ -2202,14 +2207,17 @@ class GrampsPreferences(ConfigureDialog):
 
     def remove_group(self, _obj, group):
         """ Remove a group (right click over groups checkbox)"""
+        # don't remove standard Groups!
+        if group <= PlaceType.G_OTHER:
+            return
         # find and remove references to this group in types
         for typ, tup in PlaceType.DATAMAP.items():
             new_tup = (tup[DM_NAME], tup[DM_GRP] & ~group, tup[DM_SHOW])
             PlaceType.DATAMAP[typ] = new_tup
         # and delete the group
         del PlaceType.GROUPMAP[group]
-        if not PlaceType.STATUS:
-            PlaceType.STATUS = 1
+        if not PlaceType.status:
+            PlaceType.status = 1
         self.draw_groups(redraw=True)
 
     def rename_group(self, _obj, group):

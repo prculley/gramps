@@ -24,6 +24,9 @@ Location utility functions
 from ..lib.date import Date, Today
 from ..lib.placetype import PlaceType
 from ..lib.placehiertype import PlaceHierType
+from ..lib.attrtype import AttributeType
+from gramps.gen.const import GRAMPS_LOCALE as glocale
+_ = glocale.translation.sgettext
 
 
 #-------------------------------------------------------------------------
@@ -33,14 +36,15 @@ from ..lib.placehiertype import PlaceHierType
 #-------------------------------------------------------------------------
 def get_location_list(db, place, date=None, lang='', hier=PlaceHierType.ADMIN):
     """
-    Return a list of place names and types for display.
+    Return a list of place names, types, and handles for display.
     the list is in order of smallest (most enclosed) to largest place.
     The list will match the date, lang and hierarchy type.
     """
     if date is None:
         date = __get_latest_date(place)
     visited = [place.handle]
-    lines = [(__get_name(place, date, lang), __get_type(place, date))]
+    name, abbrs = __get_name(place, date, lang)
+    lines = [(name, __get_type(place, date), place.handle, abbrs)]
     while True:
         handle = None
         for placeref in place.get_placeref_list():
@@ -55,19 +59,26 @@ def get_location_list(db, place, date=None, lang='', hier=PlaceHierType.ADMIN):
         if place is None:
             break
         visited.append(handle)
-        lines.append((__get_name(place, date, lang), __get_type(place, date)))
+        name, abbrs = __get_name(place, date, lang)
+        lines.append((name, __get_type(place, date), place.handle, abbrs))
     return lines
 
+
 def __get_name(place, date, lang):
+    """ Gets the name for a given date and language.  Returns the str name and
+    a list of abbreviations (PlaceAbbrevType)
+    """
     endonym = None
     for place_name in place.get_names():
         name_date = place_name.get_date_object()
         if name_date.is_empty() or date.match_exact(name_date):
             if place_name.get_language() == lang:
-                return place_name.get_value()
+                return place_name.get_value(), place_name.get_abbrevs()
             if endonym is None:
                 endonym = place_name.get_value()
-    return endonym if endonym is not None else '?'
+                abbs = place_name.get_abbrevs()
+    return (endonym, abbs) if endonym is not None else ('?', [])
+
 
 def __get_type(place, date):
     for place_type in place.get_types():
@@ -75,6 +86,7 @@ def __get_type(place, date):
         if type_date.is_empty() or date.match_exact(type_date):
             return place_type
     return PlaceType(PlaceType.UNKNOWN)
+
 
 def __get_latest_date(place):
     latest_date = None
@@ -103,9 +115,9 @@ def get_main_location(db, place, date=None):
     result as a dictionary of place types and names.
     """
     return dict([(int(place_type), name)
-                    for name, place_type
-                    in get_location_list(db, place, date)
-                    if not place_type.is_custom()])
+                 for name, place_type, dummy_hndl, dummy_abbrs
+                 in get_location_list(db, place, date)
+                 if not place_type.is_custom()])
 
 #-------------------------------------------------------------------------
 #
@@ -160,3 +172,19 @@ def located_in(db, handle1, handle2):
                     parent_visited = visited + [parent.ref]
                     todo.append((parent_place, parent_visited))
     return False
+
+
+#-------------------------------------------------------------------------
+#
+# get_code (postal code)
+#
+#-------------------------------------------------------------------------
+def get_code(place):
+    """
+    Returns the postal code(s) from a place that are found in attributes.
+    """
+    txt = ''
+    for attr in place.get_attribute_list():
+        if attr.type == AttributeType.POSTAL:
+            txt += (_(", ") if txt else '') + attr.value
+    return txt

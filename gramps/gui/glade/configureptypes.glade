@@ -52,7 +52,7 @@
             </child>
             <child>
               <object class="GtkTreeViewColumn" id="ptnumber">
-                <property name="title" translatable="yes">GOV</property>
+                <property name="title" translatable="yes">Description</property>
                 <property name="sort_indicator">True</property>
                 <property name="sort_column_id">4</property>
                 <child>

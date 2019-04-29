@@ -55,6 +55,7 @@ from .citationembedlist import CitationEmbedList
 from .personeventembedlist import PersonEventEmbedList
 from .personrefembedlist import PersonRefEmbedList
 from .personbackreflist import PersonBackRefList
+from .placeattrembedlist import PlaceAttrEmbedList
 from .placebackreflist import PlaceBackRefList
 from .placeeventembedlist import PlaceEventEmbedList
 from .placenameembedlist import PlaceNameEmbedList
