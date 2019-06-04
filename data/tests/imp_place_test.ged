@@ -19,6 +19,7 @@
 1 CHAR UTF-8
 2 VERS 3.0.0
 1 SUBM @SUBM1@
+1 LANG MyLang
 0 @SUBM1@ SUBM
 1 NAME The Gramps Tester
 1 ADDR TesterHouse, Annex, 112 Main St., Open Source, Software, Is Great
@@ -231,6 +232,11 @@
 2 DATE 1981
 2 PLAC USA
 3 _LOC @P11@
+1 RESI
+2 DATE JUN 1960
+2 PLAC the place unknown
+2 ADDR the address unknown
+3 NOTE address enclosed by place, both new
 0 @P1@ _LOC
 1 NAME Myhouse
 2 DATE JAN 2000
@@ -246,12 +252,17 @@
 3 PAGE Myhouse Type Citation
 1 EVEN Move-in to Myhouse
 2 TYPE Occupancy
+2 PLAC Ohio
+3 _LOC @P8@
 2 DATE 11 JAN 2000
 1 _LOC @P2@
 2 TYPE POLI
 2 DATE JAN 2000
 2 SOUR @S1@
 3 PAGE Myhouse located in Mycity Citation
+1 _LOC @P13@
+2 TYPE RELI
+2 DATE AFTER JAN 2012
 1 _DMGD Another Field I'm unfamiliar with
 2 TYPE WhoKnows
 2 DATE JAN 2000
@@ -316,8 +327,10 @@
 0 @P8@ _LOC
 1 NAME Ohio
 1 TYPE state
+1 _LOC @P9@
 1 _LOC @P11@
 1 _LOC @P11@
+1 _LOC @P12@
 2 TYPE POLI
 0 @P9@ _LOC
 1 NAME United States
@@ -326,12 +339,17 @@
 1 _LOC @P10@
 0 @P11@ _LOC
 1 NAME United States of America
-1 TYPE country
+1 TYPE Country
+2 _GOVTYPE 50
 1 _GOV object_276534a
 0 @P12@ _LOC
 1 NAME Testers Country
 1 TYPE country
 1 _GOV Tester001
+0 @P13@ _LOC
+1 NAME Testers Parish
+1 TYPE Parish
+2 _GOVTYPE 29
 0 @M1@ OBJE
 1 FILE myhouse.jpg
 2 FORM jpg

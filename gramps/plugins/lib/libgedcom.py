@@ -118,10 +118,12 @@ from gramps.gen.lib import (
     Address, Attribute, AttributeType, ChildRef,
     ChildRefType, Citation, Date, Event, EventRef, EventRoleType,
     EventType, Family, FamilyRelType, LdsOrd, Location, Media,
-    MediaRef, Name, NameType, Note, NoteType, Person, PersonRef, Place,
+    MediaRef, Name, NameType, Note, NoteType, Person, PersonRef,
+    Place, PlaceAbbrev, PlaceAbbrevType,  PlaceName, PlaceHierType,
+    PlaceRef, PlaceType,
     RepoRef, Repository, RepositoryType, Researcher,
     Source, SourceMediaType, SrcAttribute,
-    Surname, Tag, Url, UrlType, PlaceType, PlaceRef, PlaceName)
+    Surname, Tag, Url, UrlType)
 from gramps.gen.db import DbTxn
 from gramps.gen.updatecallback import UpdateCallback
 from gramps.gen.utils.file import media_path
@@ -131,6 +133,7 @@ from gramps.gen.utils.unknown import make_unknown, create_explanation_note
 from gramps.gen.datehandler._dateparser import DateParser
 from gramps.gen.db.dbconst import EVENT_KEY
 from gramps.gen.lib import (StyledText, StyledTextTag, StyledTextTagType)
+from gramps.gen.lib.const import DIFFERENT
 from gramps.gen.lib.urlbase import UrlBase
 from gramps.gen.datehandler import displayer
 from gramps.gen.utils.grampslocale import GrampsLocale, _LOCALE_NAMES
@@ -285,6 +288,7 @@ TOKEN__DMGD = 146
 TOKEN__AIDN = 147
 TOKEN_FONE = 148
 TOKEN_ROMN = 149
+TOKEN__GOVTYPE = 150
 
 TOKENS = {
     "_ADPN"           : TOKEN__ADPN,
@@ -309,6 +313,7 @@ TOKENS = {
     "_FSFTID"         : TOKEN__FSFTID,
     "_GODP"           : TOKEN__GODP,
     "_GOV"            : TOKEN__GOV,     # GOV_IDENTIFIER
+    "_GOVTYPE"        : TOKEN__GOVTYPE,  # GOV place type ID
     "_ITALIC"         : TOKEN_IGNORE,
     "_JUST"           : TOKEN__JUST,    # FTM Citation Quality Justification
     "_LEVEL"          : TOKEN_IGNORE,
@@ -1675,15 +1680,18 @@ class PlaceParser:
         'Zipcode'       : POSTAL,
         'Zip code'      : POSTAL, }
 
-    def __init__(self, line=None):
+    def __init__(self, line=None, pdict=None):
         self.pf_list = []
 
+        if pdict is not None:
+            self.pdict = pdict
         if line:
             self.parse_form(line)
 
     def parse_form(self, line):
         """
-        Parses the GEDCOM PLAC.FORM into a list of PlaceTypes(if possible).
+        Parses the GEDCOM PLAC.FORM into a list of PlaceTypes
+        (if possible).
         It does this my mapping the text strings (separated by commas) to the
         corresponding PlaceType by trying our own __field_map, then the
         translated PlaceType set, then the English PlaceType set.
@@ -1697,10 +1705,8 @@ class PlaceParser:
             elif type_num is not None:
                 type_num = PlaceType(type_num)
             else:
-                type_num = PlaceType(item)
-                if type_num.is_custom():
-                    type_num = PlaceType()
-                    type_num.set_from_xml_str(item)
+                ptype = self.pdict.get(item)
+                type_num = PlaceType((ptype, item) if ptype else item)
             self.pf_list.append(type_num)
 
     def get_pf(self):
@@ -1865,15 +1871,15 @@ class GedcomParser(UpdateCallback):
         return name
 
     @staticmethod
-    def __add_placeref(place, ref_hndl, date=None):
+    def __add_placeref(place, ref_hndl):
         """
         Adds a PlaceRef to a Place.  It checks for duplicates before adding.
         """
         pref = PlaceRef()
         pref.ref = ref_hndl
-        pref.date = date
+        pref.set_type(PlaceHierType.ADMIN)
         for ref in place.placeref_list:
-            if ref.serialize() == pref.serialize():
+            if ref.is_equivalent(pref) != DIFFERENT:
                 return
         place.add_placeref(pref)
 
@@ -1895,8 +1901,9 @@ class GedcomParser(UpdateCallback):
         self.emapper = IdFinder(event_ids, dbase.event_prefix)
         self.famc_map = stage_one.get_famc_map()
         self.fams_map = stage_one.get_fams_map()
+        self.place_type_dict = stage_one.get_place_type_dict()
 
-        self.place_parser = PlaceParser()
+        self.place_parser = PlaceParser(pdict=self.place_type_dict)
         self.inline_srcs = OrderedDict()
         self.media_map = {}
         self.note_type_map = {}
@@ -2549,15 +2556,15 @@ class GedcomParser(UpdateCallback):
             # +2 DATE <DATE_VALUE> {0:1}
             TOKEN__POST  : self.__place_post,
             # +1 _FPOST <FOKO_POSTCODE> {0:M}
-            TOKEN__FPOST : self.__place_fpost,
+            TOKEN__FPOST : self.__ignore,
             # +1 _MAIDENHEAD <MAIDENHEAD_LOCATOR> {0:1}
             TOKEN__MAIDENHEAD : self.__place_maiden,
             # +1 _GOV <GOV_IDENTIFIER> {0:1}
             TOKEN__GOV   : self.__place_gov,
             # +1 _FSTAE <FOKO_TERRITORY_IDENTIFIER> {0:1}
-            TOKEN__FSTAE  : self.__place_fstae,
+            TOKEN__FSTAE  : self.__ignore,
             # +1 _FCTRY <FOKO_STATE_IDENTIFIER> {0:1}
-            TOKEN__FCTRY  : self.__place_fctry,
+            TOKEN__FCTRY  : self.__ignore,
             # +1 _LOC @<XREF: _LOC>@ {0:1}
             TOKEN__LOC   : self.__place_loc,
         }
@@ -2581,7 +2588,7 @@ class GedcomParser(UpdateCallback):
             TOKEN_TYPE   : self.__place_type,
             # 1 _FPOST <FOKO_POSTCODE> {0:M}
             # 2 DATE <DATE_VALUE> {0:1}
-            TOKEN__FPOST : self.__place_fpost,
+            TOKEN__FPOST : self.__ignore,
             # 1 _POST <POSTAL_CODE> {0:M}
             # 2 DATE <DATE_VALUE> {0:1}
             # 2 << SOURCE_CITATION >> {0:M}
@@ -2589,9 +2596,9 @@ class GedcomParser(UpdateCallback):
             # 1 _GOV <GOV_IDENTIFIER> {0:1}
             TOKEN__GOV   : self.__place_gov,
             # 1 _FSTAE <FOKO_TERRITORY_IDENTIFIER> {0:1}
-            TOKEN__FSTAE : self.__place_fstae,
+            TOKEN__FSTAE : self.__ignore,
             # 1 _FCTRY <FOKO_STATE_IDENTIFIER> {0:1}
-            TOKEN__FCTRY : self.__place_fctry,
+            TOKEN__FCTRY : self.__ignore,
             # 1 MAP {0:1}
             TOKEN_MAP    : self.__place_map,
             # 1 _MAIDENHEAD <MAIDENHEAD_LOCATOR> {0:1}
@@ -2638,7 +2645,7 @@ class GedcomParser(UpdateCallback):
             # 2 LANG <LANGUAGE_ID> {0:1}
             TOKEN_LANG   : self.__place_name_lang,
             # 2 << SOURCE_CITATION >> {0:M}   stored directly in place.citation
-            TOKEN_SOUR   : self.__place_sour,
+            TOKEN_SOUR   : self.__place_name_sour,
         }
         self.func_list.append(self.loc_name_tbl)
 
@@ -2649,6 +2656,8 @@ class GedcomParser(UpdateCallback):
             TOKEN_SOUR   : self.__event_source,
             # 2 TYPE <TYPE_OF_DEMOGRAPICAL_DATA> {1:1}
             TOKEN_TYPE   : self.__place_subtype,
+            # 2 _GOVTYPE <GOVID_OF_TYPE> {0:1}
+            TOKEN__GOVTYPE : self.__place_subtype,
         }
         self.func_list.append(self.date_cit_type_tbl)
 
@@ -3115,10 +3124,14 @@ class GedcomParser(UpdateCallback):
                     if not name:
                         continue
                     if ptypes[indx] == PlaceParser.POSTAL:
-                        sub_state.place.set_code(name)
+                        attr = Attribute()
+                        attr.set_type(AttributeType.POSTAL)
+                        attr.set_value(name)
+                        sub_state.place.add_attribute(attr)
                         continue
                     title = name + \
                         ((', ' + title) if title else '')
+                    # look for GOV/LOC on the basic place
                     gov = None if indx else sub_state.place_gov
                     xref = None if indx else sub_state.place.gramps_id
                     place = self.__find_place(title, ptypes[indx],
@@ -3133,18 +3146,19 @@ class GedcomParser(UpdateCallback):
                             # already have a place, need to merge in our stuff
                             # we leave title alone, but set name for merge, if
                             # different, it will end up in alt-names
-                            sub_state.place.name.value = name
+                            sub_state.place.set_name(PlaceName(value=name))
+                            sub_state.place.set_type(ptypes[indx])
                             if prev_place_hndl:
                                 self.__add_placeref(sub_state.place,
                                                     prev_place_hndl)
                             # if the place was found by _LOC or _GOV, then type
-                            # might be different
-                            if place.place_type.is_default():
+                            # might be different; in this case leave it as user
+                            # had it
+                            if place.get_type() == PlaceType.UNKNOWN:
                                 place.set_type(ptypes[indx])
-                            elif place.place_type != ptypes[indx]:
-                                self.__place_type_note(ptypes[indx],
-                                                       prev_place_hndl, place)
-                            place.merge(sub_state.place)
+                            else:
+                                sub_state.place.set_types([])
+                            self.__place_merge(place, sub_state.place)
                             assert(place.handle)
                             self.dbase.commit_place(place, self.trans)
                             break
@@ -3155,7 +3169,7 @@ class GedcomParser(UpdateCallback):
                         # a new place with all the items
                         place = sub_state.place
                     place.set_title(title)
-                    place.name.value = name
+                    place.set_name(PlaceName(value=name))
                     if prev_place_hndl:
                         self.__add_placeref(place, prev_place_hndl)
                     place.set_type(ptypes[indx])
@@ -3166,9 +3180,10 @@ class GedcomParser(UpdateCallback):
                     self.place_names[title].append(place.handle)
             else:
                 # No hierarchy available, just save it.
-                sub_state.place.name.value = sub_state.place.title
+                sub_state.place.set_name(
+                    PlaceName(value=sub_state.place.title))
                 place = self.__find_place(sub_state.place.title,
-                                          sub_state.place.place_type, None,
+                                          sub_state.place.get_type(), None,
                                           gov=sub_state.place_gov,
                                           xref=sub_state.place.gramps_id)
                 if place is None:
@@ -3178,7 +3193,9 @@ class GedcomParser(UpdateCallback):
                     self.dbase.add_place(place, self.trans)
                     self.place_names[place.title].append(place.handle)
                 else:
-                    place.merge(sub_state.place)
+                    if sub_state.place.get_type() == PlaceType.UNKNOWN:
+                        sub_state.place.set_types([])
+                    self.__place_merge(place, sub_state.place)
                     assert(place.handle)
                     self.dbase.commit_place(place, self.trans)
             event.set_place_handle(place.get_handle())
@@ -3207,7 +3224,7 @@ class GedcomParser(UpdateCallback):
                         continue
                     else:
                         # already have a place, need to merge in our stuff
-                        a_place.merge(sub_state.addr_place)
+                        self.__place_merge(a_place, sub_state.addr_place)
                         assert(a_place.handle)
                         self.dbase.commit_place(a_place, self.trans)
                         continue
@@ -3218,7 +3235,7 @@ class GedcomParser(UpdateCallback):
                     # a new place with all the items
                     a_place = sub_state.addr_place
                 a_place.set_title(title)
-                a_place.name.set_value(places[indx].strip())
+                a_place.set_name(PlaceName(value=places[indx].strip()))
                 if prev_place_hndl:
                     self.__add_placeref(a_place, prev_place_hndl)
                 a_place.set_type(ptypes[indx])
@@ -3234,19 +3251,83 @@ class GedcomParser(UpdateCallback):
             self.__add_placeref(a_place, place.get_handle())
             self.dbase.commit_place(a_place, self.trans)
 
-    def __place_type_note(self, ptype, enclosed_hndl, place):
-        """
-        create or edit the note about changes to the place type
-        """
-        text = StyledText("%s %s\n" % (_("Additional Type:"), ptype))
-        gid = self.dbase.get_place_from_handle(enclosed_hndl).gramps_id
-        txt_link = "    %s: [%s]\n" % (_("Enclosed By"), gid)
-        tag = StyledTextTag(StyledTextTagType.LINK,
-                            'gramps://Place/handle/%s' % enclosed_hndl,
-                            [(len(txt_link) - len(gid) - 2,
-                              len(txt_link) - 2)])
-        text += StyledText(txt_link, [tag])
-        self.__do_note(place, 'Place Attribute', text)
+    def __place_merge(self, place, acquisition):
+        ''' Merge the places, similar to normal place merge, except that
+        names and types are merged on value only, so the result is less
+        restrictive.  This is necessary because names and values might be
+        coming from _LOC and from PLAC.FORM where they are not as complete as
+        from _LOC.
+        Also assumes that one side doesn't have date/lang info at all.
+
+        For notes, Gedcom file might contain the same note attached to a place
+        many times, once for each mention of the place.
+
+        We know the acquisition note is just text, so only need to
+        compare that.
+
+        @param place: a Place object
+        @type place: class Place
+        @param acquisition: a Place object
+        @type acquisition: class Place
+        '''
+        name_list = place.name_list[:]
+        for addendum in acquisition.name_list:
+            for name in name_list:
+                if name.value == addendum.value:
+                    if name.date.is_empty() and not name.lang:
+                        name.date = addendum.date
+                        name.lang = addendum.lang
+                        name.merge(addendum)
+                    elif addendum.date.is_empty() and not addendum.lang:
+                        name.merge(addendum)
+                    else:
+                        place.add_name(addendum)
+                    break
+                place.add_name(addendum)
+        acquisition.name_list = []
+        type_list = place.type_list[:]
+        for addendum in acquisition.type_list:
+            for ptype in type_list:
+                if int(ptype) == int(addendum):
+                    # look alike, is one definitive?
+                    if ptype.date.is_empty():
+                        ptype.date = addendum.date
+                        ptype.merge(addendum)
+                    elif addendum.date.is_empty():
+                        ptype.merge(addendum)
+                    else:
+                        place.add_type(addendum)
+                    break
+            else:
+                if int(addendum) != PlaceType.UNKNOWN:
+                    if(place.type_list and
+                       place.type_list[0] == PlaceType.UNKNOWN):
+                        del place.type_list[0]
+                    place.add_type(addendum)
+        acquisition.type_list = []
+        if acquisition.lat and not place.lat:
+            place.lat = acquisition.lat
+        if acquisition.long and not place.long:
+            place.long = acquisition.long
+        for addendum in acquisition.note_list:
+            if self.dbase.has_note_handle(addendum):
+                add_note = self.dbase.get_note_from_handle(addendum)
+            else:
+                place.add_note(addendum)
+                continue
+            for note_h in place.note_list:
+                if addendum == note_h:
+                    break  # pointing to same note, skip it.
+                if self.dbase.has_note_handle(note_h):
+                    note = self.dbase.get_note_from_handle(note_h)
+                    if note.get() == add_note.get():
+                        # need to delete the acquisitions note
+                        self.dbase.remove_note(addendum, self.trans)
+                        break
+            else:  # only executed if the inner loop did NOT break
+                place.add_note(addendum)
+        acquisition.note_list = []
+        place.merge(acquisition)
 
     def __find_file(self, fullname, altpath):
         # try to find the media file
@@ -4015,6 +4096,7 @@ class GedcomParser(UpdateCallback):
         """
         attr = Attribute()
         attr.set_type((AttributeType.CUSTOM, 'RESN'))
+        attr.set_value(line.data.strip())
         state.person.add_attribute(attr)
 
     def __person_alt_name(self, line, state):
@@ -4364,7 +4446,6 @@ class GedcomParser(UpdateCallback):
         if self.is_ftw:
             self.__person_resi(line, state)
             return
-        free_form = line.data
 
         sub_state = CurrentState(level=state.level + 1)
         sub_state.addr = Address()
@@ -4859,7 +4940,7 @@ class GedcomParser(UpdateCallback):
         sub_state.level = state.level + 1
         sub_state.lds_ord = LdsOrd()
         sub_state.lds_ord.set_type(lds_type)
-        sub_state.place_pf = PlaceParser()
+        sub_state.place_pf = PlaceParser(pdict=self.place_type_dict)
         sub_state.person = state.person
         state.person.lds_ord_list.append(sub_state.lds_ord)
 
@@ -4913,7 +4994,7 @@ class GedcomParser(UpdateCallback):
         @param state: The current state
         @type state: CurrentState
         """
-        state.place_pf = PlaceParser(line)
+        state.place_pf = PlaceParser(line, pdict=self.place_type_dict)
 
     def __lds_plac(self, line, state):
         """
@@ -4928,11 +5009,11 @@ class GedcomParser(UpdateCallback):
         The Gedcom spec doesn't treat LDS places the same as event places,
         instead it just has the single line with title.
         """
-        title = line.data
+        title = line.data.strip()
         if state.place is None:
             state.place = Place()
             state.place.set_title(title)
-            state.place.name.set_value(line.data)
+            state.place.set_name(PlaceName(value=line.data))
         else:
             # We have previously found a PLAC
             self.__add_msg(_("A second PLAC ignored"), line, state)
@@ -5457,7 +5538,7 @@ class GedcomParser(UpdateCallback):
         sub_state.place = None
         sub_state.family = state.family
         # LDS places don't use HEAD.PLAC.FORM
-        sub_state.place_pf = PlaceParser()
+        sub_state.place_pf = PlaceParser(pdict=self.place_type_dict)
         state.family.lds_ord_list.append(sub_state.lds_ord)
 
         self.__parse_level(sub_state, self.lds_parse_tbl, self.__ignore)
@@ -5895,7 +5976,7 @@ class GedcomParser(UpdateCallback):
             state.place = Place()
             place = state.place
             place.set_title(line.data)
-            place.name.set_value(line.data)
+            place.set_name(PlaceName(value=line.data))
 
             sub_state = CurrentState()
             sub_state.place = place
@@ -5927,7 +6008,7 @@ class GedcomParser(UpdateCallback):
         @param state: The current state
         @type state: CurrentState
         """
-        state.place_pf = PlaceParser(line)
+        state.place_pf = PlaceParser(line, pdict=self.place_type_dict)
 
     def __place_object(self, line, state):
         """
@@ -5956,10 +6037,10 @@ class GedcomParser(UpdateCallback):
 
         Store the FONE (Place_Phonetic_Variation) in the PlaceNote
         """
-        text = StyledText("%s %s\n" % (_("Place Phonetic Variation:"),
-                                       line.data))
-        subtext = self.__date_cit_type(state)
-        self.__do_note(state.place, 'Place Attribute', text + subtext)
+        text = "%s %s\n" % (_("Place Phonetic Variation:"), line.data)
+        subtext, cits = self.__date_cit_type(state)
+        self.__do_note(state.place, _('Place Attribute'), text + subtext)
+        state.place.get_name().get_citation_list().extend(cits)
 
     def __place_romn(self, line, state):
         """
@@ -5970,10 +6051,10 @@ class GedcomParser(UpdateCallback):
 
         Store the ROMN (Place_Romanized_Variation) in the PlaceNote
         """
-        text = StyledText("%s %s\n" % (_("Place Romanized Variation:"),
-                                       line.data))
-        subtext = self.__date_cit_type(state)
-        self.__do_note(state.place, 'Place Attribute', text + subtext)
+        text = "%s %s\n" % (_("Place Romanized Variation:"), line.data)
+        subtext, cits = self.__date_cit_type(state)
+        self.__do_note(state.place, _('Place Attribute'), text + subtext)
+        state.place.get_name().get_citation_list().extend(cits)
 
     def __place_chan(self, line, state):
         """ Parse the Change time for the place """
@@ -6001,6 +6082,25 @@ class GedcomParser(UpdateCallback):
         """
         state.ftype = line.data.strip()
 
+    def __place_attr(self, line, state, attrtype):
+        """
+        @param line: The current line in GedLine format
+        @type line: GedLine
+        @param state: The current state
+        @type state: CurrentState
+        @param attrtype: attribute type
+        @type attrtype: str or int
+
+        Store the information in a Place Attribute
+        """
+        attr = Attribute()
+        attr.set_type(attrtype)
+        text = line.data.strip()
+        subtext, cits = self.__date_cit_type(state, one_line=True)
+        attr.set_citation_list(cits)
+        attr.set_value(text + subtext)
+        state.place.add_attribute(attr)
+
     def __place_post(self, line, state):
         """
         @param line: The current line in GedLine format
@@ -6008,27 +6108,9 @@ class GedcomParser(UpdateCallback):
         @param state: The current state
         @type state: CurrentState
 
-        Store the _post in the PlaceNote
+        Store the _post in a Place Attribute
         """
-        text = StyledText("%s %s\n" % (_("ZIP/Postal Code:"), line.data))
-        subtext = self.__date_cit_type(state)
-        if state.place.code or str(subtext):
-            self.__do_note(state.place, 'Place Attribute', text + subtext)
-        if not state.place.code:
-            state.place.code = line.data.strip()
-
-    def __place_fpost(self, line, state):
-        """
-        @param line: The current line in GedLine format
-        @type line: GedLine
-        @param state: The current state
-        @type state: CurrentState
-
-        Store the _fpost in the PlaceNote
-        """
-        text = StyledText("%s %s\n" % (_("FOKO Postal Code:"), line.data))
-        subtext = self.__date_cit_type(state)
-        self.__do_note(state.place, 'Place Attribute', text + subtext)
+        self.__place_attr(line, state, AttributeType.POSTAL)
 
     def __place_demo(self, line, state):
         """
@@ -6037,11 +6119,9 @@ class GedcomParser(UpdateCallback):
         @param state: The current state
         @type state: CurrentState
 
-        Store the _DMGD (demographical data) in the PlaceNote
+        Store the _DMGD (demographical data) a Place Attribute
         """
-        text = StyledText("%s %s\n" % (_("Demographic data:"), line.data))
-        subtext = self.__date_cit_type(state)
-        self.__do_note(state.place, 'Place Attribute', text + subtext)
+        self.__place_attr(line, state, AttributeType.DMGD)
 
     def __place_aidn(self, line, state):
         """
@@ -6050,12 +6130,9 @@ class GedcomParser(UpdateCallback):
         @param state: The current state
         @type state: CurrentState
 
-        Store the _AIDN (Administrative Identifier) in the PlaceNote
+        Store the _AIDN (Administrative Identifier) in a Place Attribute
         """
-        text = StyledText("%s %s\n" % (_("Administrative Identifier:"),
-                                       line.data))
-        subtext = self.__date_cit_type(state)
-        self.__do_note(state.place, 'Place Attribute', text + subtext)
+        self.__place_attr(line, state, AttributeType.AIDN)
 
     def __place_maiden(self, line, state):
         """
@@ -6064,34 +6141,9 @@ class GedcomParser(UpdateCallback):
         @param state: The current state
         @type state: CurrentState
 
-        Store the _MAIDENHEAD (Maidenhead_Locator) in the PlaceNote
+        Store the _MAIDENHEAD (Maidenhead_Locator) in a Place Attribute
         """
-        self.__do_note(state.place, 'Place Attribute',
-                       "%s %s\n" % (_("Maidenhead Locator:"), line.data))
-
-    def __place_fstae(self, line, state):
-        """
-        @param line: The current line in GedLine format
-        @type line: GedLine
-        @param state: The current state
-        @type state: CurrentState
-
-        Store the _FSTAE (Foko_Territory_Identifier) in the PlaceNote
-        """
-        self.__do_note(state.place, 'Place Attribute', "%s %s\n" %
-                       (_("FOKO Territory Identifier:"), line.data))
-
-    def __place_fctry(self, line, state):
-        """
-        @param line: The current line in GedLine format
-        @type line: GedLine
-        @param state: The current state
-        @type state: CurrentState
-
-        Store the _FCTRY (Foko_State_Identifier) in the PlaceNote
-        """
-        self.__do_note(state.place, 'Place Attribute',
-                       "%s %s\n" % (_("FOKO State Identifier:"), line.data))
+        self.__place_attr(line, state, AttributeType.MAIDEN)
 
     def __place_loc(self, line, state):
         """
@@ -6102,10 +6154,7 @@ class GedcomParser(UpdateCallback):
 
         Deal with the Place
             n+1 _LOC @P0001@ line
-        we will treat this as any other Ged Xref eventually, but for now just
-        convert to a valid Gramps_id and store it.  Note that if we eventually
-        decide to store GOV ID in Gramps ID position, we will end up with a
-        skip in the Gramps ID range.
+        we will treat this as any other Ged Xref.
         """
         state.place.gramps_id = self.lid_map[line.data]
 
@@ -6120,17 +6169,13 @@ class GedcomParser(UpdateCallback):
         """
         sub_state = CurrentState()
         sub_state.level = state.level + 1
-        sub_state.name = PlaceName()
-        sub_state.name.value = line.data.strip()
+        sub_state.name = PlaceName(value=line.data.strip())
         sub_state.place = state.place   # to allow citations
         self.__parse_level(sub_state, self.loc_name_tbl, self.__undefined)
         state.msg += sub_state.msg
-        if not state.place.name.value:
-            state.place.set_name(sub_state.name)
-        elif state.place.name != sub_state.name:
-            state.place.add_alternative_name(sub_state.name)
+        state.place.add_name(sub_state.name)
         if sub_state.title:
-            self.__do_note(state.place, 'Place Attribute',
+            self.__do_note(state.place, _('Place Attribute'),
                            "%s %s\n" % (_("Name:"), sub_state.name.value) +
                            sub_state.title)
 
@@ -6173,14 +6218,14 @@ class GedcomParser(UpdateCallback):
         @param state: The current state
         @type state: CurrentState
 
-        Store the abbreviation of the name in The Note
+        Store the abbreviation of the name in the place name
         """
         subline = self.__chk_subordinate(state.level + 1, state, TOKEN_TYPE)
-        text = ''
+        abbr = PlaceAbbrev(value=line.data.strip())
         if subline:
-            text = "        %s %s\n" % (_("Type:"), subline.data)
-        state.title += _("    Abbreviation Of Name: ") + line.data + \
-            '\n' + text
+            abbrtype = PlaceAbbrevType(subline.data.strip())
+            abbr.set_type(abbrtype)
+        state.name.add_abbrev(abbr)
 
     def __place_name_namc(self, line, state):
         """
@@ -6193,6 +6238,15 @@ class GedcomParser(UpdateCallback):
         """
         state.title += _("    Place Name Addition: ") + line.data + '\n'
 
+    def __place_name_sour(self, line, state):
+        """
+        @param line: The current line in GedLine format
+        @type line: GedLine
+        @param state: The current state
+        @type state: CurrentState
+        """
+        state.name.add_citation(self.handle_source(line, state.level, state))
+
     def __place_type(self, line, state):
         """
         @param line: The current line in GedLine format
@@ -6201,17 +6255,17 @@ class GedcomParser(UpdateCallback):
         @type state: CurrentState
 
         Store the Place type
-        We keep the first encountered place type, and annotate the rest.
         """
-        place_parser = PlaceParser(line)
-        ptype = place_parser.get_pf()[0]
-        subtext = self.__date_cit_type(state)
-        if subtext.string or not state.place.place_type.is_default():
-            text = StyledText("%s %s\n" %
-                              (_("Additional Type:"), str(ptype)))
-            self.__do_note(state.place, 'Place Attribute', text + subtext)
-        if state.place.place_type.is_default():
-            state.place.set_type(ptype)
+        type_str = line.data.strip().capitalize()
+        ptype = self.place_type_dict.get(type_str)
+        ptype = PlaceType((ptype, type_str) if ptype else type_str)
+        sub_state = CurrentState()
+        sub_state.level = state.level + 1
+        sub_state.event = Event()   # we use this to save date/citation
+        self.__parse_level(sub_state, self.date_cit_type_tbl, self.__undefined)
+        ptype.set_date_object(sub_state.event.date)
+        ptype.set_citation_list(sub_state.event.citation_list)
+        state.place.add_type(ptype)
 
     def __place_even(self, line, state):
         """
@@ -6224,18 +6278,11 @@ class GedcomParser(UpdateCallback):
         @type line: GedLine
         @param state: The current state
         @type state: CurrentState
-
-        Since a standard Place has nowhere to store an Event, we put a link
-        to it in The Note.
         """
         event_ref = self.__build_event_pair(state, EventType.CUSTOM,
                                             self.event_parse_tbl, line.data)
-        event = self.dbase.get_event_from_handle(event_ref.ref)
-        text = "%s: [%s]\n" % (_('Event'), event.gramps_id)
-        tag = StyledTextTag(StyledTextTagType.LINK,
-                            'gramps://Event/handle/%s' % event.handle,
-                            [(4, len(text))])
-        self.__do_note(state.place, 'Place Attribute', StyledText(text, [tag]))
+        event_ref.set_role(EventRoleType.PLACE)
+        state.place.add_event_ref(event_ref)
 
     def __place_loc_ref(self, line, state):
         """
@@ -6255,70 +6302,63 @@ class GedcomParser(UpdateCallback):
         Since Gramps has nowhere to store the TYPE or citation, they are put
         into The Note.
         """
+        h_type = {'POLI' : 'Administrative',
+                  'RELI' : 'Religious',
+                  'GEOG' : 'Geographical',
+                  'CULT' : 'Cultural'}
         sub_state = CurrentState()
         sub_state.level = state.level + 1
-        sub_state.event = Event()   # we use this to save date/citation
+        sub_state.event = PlaceRef()   # we use this to save date/citation
         self.__parse_level(sub_state, self.date_cit_type_tbl, self.__undefined)
-        text = StyledText()
         state.msg += sub_state.msg
-        if sub_state.ftype:
-            text += "    %s %s\n" % (_("Hierarchical Relationship:"),
-                                     sub_state.ftype)
-        if not sub_state.event.date.is_empty():
-            text += "    %s %s\n" % (_("Date:"),
-                                     displayer.display(sub_state.event.date))
-        for cit_hndl in sub_state.event.citation_list:
-            cit = self.dbase.get_citation_from_handle(cit_hndl)
-            txt_link = "    %s: [%s]\n" % (_('Citation'), cit.gramps_id)
-            tag = StyledTextTag(StyledTextTagType.LINK,
-                                'gramps://Citation/handle/%s' % cit.handle,
-                                [(len(txt_link) - len(cit.gramps_id) - 2,
-                                  len(txt_link) - 2)])
-            text += StyledText(txt_link, [tag])
-            state.place.add_citation(cit_hndl)
-        if str(text):
-            text = StyledText("%s: [%s]\n" % (_("Enclosed By"),
-                                              line.data)) + text
-            self.__do_note(state.place, 'Place Attribute', text)
+        if sub_state.ftype:  # Hierarchical Relationship
+            htype = h_type.get(sub_state.ftype.upper(), sub_state.ftype)
+            htype = PlaceHierType(htype)
+        else:
+            htype = PlaceHierType(PlaceHierType.ADMIN)
+        sub_state.event.set_type(htype)
         # Initially set the PlaceRef.ref to the Gedcom xref ex:'@P0001@'
         # during post processing we will fix this up to a handle
-        self.__add_placeref(state.place, line.data.strip(),
-                            date=sub_state.event.date)
+        sub_state.event.ref = line.data.strip()
+        # Add the placeref if not duplicated
+        for placeref in state.place.placeref_list:
+            if placeref.is_equivalent(sub_state.event) != DIFFERENT:
+                placeref.merge(sub_state.event)
+                break
+        else:
+            state.place.placeref_list.append(sub_state.event)
 
-    def __date_cit_type(self, state):
+    def __date_cit_type(self, state, one_line=False):
         """
         @param state: The current state
         @type state: CurrentState
+        @param one_line: (True) Format as a single line or
+                         (False) do multiline and Indent the text
+        @type one_line: Bool
+        @return Returns a tuple containing the text and citation list.
+        @rtype tuple
 
-        This parses lines like the following, returning the results as
-        StyledText.
+        This is used for Place attributes, where we don't have a way to store
+        the Type and Date.
+        This parses lines like the following, returning the results as str.
             2 DATE <DATE_VALUE> {0:1}
             2 << SOURCE_CITATION >> {0:M}
             2 TYPE <TYPE_OF_DATA> {1:1}
-        Citations links are placed in the StyledText, as well as added to
-        state.place
+        Text and Citations are returned
         """
         sub_state = CurrentState()
         sub_state.level = state.level + 1
         sub_state.event = Event()   # we use this to save date/citation
         self.__parse_level(sub_state, self.date_cit_type_tbl, self.__undefined)
-        text = StyledText()
+        text = ''
+        fmt = '; %s %s' if one_line else '    %s %s\n'
         state.msg += sub_state.msg
         if sub_state.ftype:
-            text += "    %s %s\n" % (_("Type:"), sub_state.ftype)
+            text += fmt % (_("Type:"), sub_state.ftype)
         if not sub_state.event.date.is_empty():
-            text += "    %s %s\n" % (_("Date:"),
-                                     displayer.display(sub_state.event.date))
-        for cit_hndl in sub_state.event.citation_list:
-            cit = self.dbase.get_citation_from_handle(cit_hndl)
-            txt_link = "    %s: [%s]\n" % (_('Citation'), cit.gramps_id)
-            tag = StyledTextTag(StyledTextTagType.LINK,
-                                'gramps://Citation/handle/%s' % cit.handle,
-                                [(len(txt_link) - len(cit.gramps_id) - 2,
-                                  len(txt_link) - 2)])
-            text += StyledText(txt_link, [tag])
-            state.place.add_citation(cit_hndl)
-        return text
+            text += fmt % (_("Date:"),
+                           complete_gedcom_date(sub_state.event.date))
+        return (text, sub_state.event.citation_list)
 
     def __loc_postprocess(self):
         """
@@ -6345,28 +6385,30 @@ class GedcomParser(UpdateCallback):
                         ref_hndl = xref
                     if ref_hndl:
                         ref_place = self.dbase.get_place_from_handle(ref_hndl)
-                        title = place.name.value + ', ' + ref_place.title
+                        title = place.get_name().value + ', ' + ref_place.title
                         fnd_place = self.__find_place(title,
-                                                      place.place_type,
+                                                      place.get_type(),
                                                       ref_hndl,
-                                                      gov=place.handle)
+                                                      gov=place.handle,
+                                                      xref=place.gramps_id)
                         if fnd_place:
                             break
                     else:  # we don't have this xref yet
                         not_ready = True
                 if not fnd_place and not place.placeref_list:
-                    title = place.name.value
+                    title = place.get_name().value
                     fnd_place = self.__find_place(title,
-                                                  place.place_type, None,
-                                                  gov=place.handle)
+                                                  place.get_type(), None,
+                                                  gov=place.handle,
+                                                  xref=place.gramps_id)
                 gov = place.handle  # we used the handle pos for temp gov save.
                 old_gid = place.gramps_id
                 if fnd_place:
                     # merge in this record
-                    fnd_place.merge(place)
+                    self.__place_merge(fnd_place, place)
                     place = fnd_place
                     # Merge 'The Note'
-                    self.__merge_note(place, 'Place Attribute')
+                    self.__merge_note(place, _('Place Attribute'))
                     # The _LOC GID is from the Gedcom so we save that one
                     place.gramps_id = old_gid
                     self.dbase.commit_place(place, self.trans)
@@ -6392,7 +6434,7 @@ class GedcomParser(UpdateCallback):
                 self.__add_msg("Gedcom issue found, possibly a missing _LOC "
                                "reference.")
                 for place in self.locs_list:
-                    place.title = place.name.value
+                    place.title = place.get_name().value
                     gov = place.handle
                     place.handle = None  # clear out possible _GOV
                     placeref_list = []
@@ -6417,10 +6459,6 @@ class GedcomParser(UpdateCallback):
         2) Place.PlaceRef.ref handles need to be set; not all available till
            now. The .ref will have '@P001@' strings embedded that need to be
            swapped out with the handle.
-        3) The special place Note which may have Place References needs to be
-           fixed.  The note will have '@P001@' strings embedded that need to be
-           swapped out with StyledText Links containg the handles and actual
-           GIDs of the references.
         """
         gid2gov = {}  # to correct for gov override of gids in notes
         for gov, hndl in self.place_gov2hndl.items():
@@ -6430,14 +6468,7 @@ class GedcomParser(UpdateCallback):
             self.dbase.commit_place(place, self.trans)
         for gid, hndl in self.lid2id.items():
             place = self.dbase.get_place_from_handle(hndl)
-            # Find 'The Note'
-            note = None
-            for note_hndl in place.note_list:
-                note = self.dbase.get_note_from_handle(note_hndl)
-                if note.type == NoteType('Place Attribute'):
-                    break
             gid = None
-            tag = None
             placeref_list = place.placeref_list
             place.placeref_list = []
             for pref in placeref_list:
@@ -6450,24 +6481,15 @@ class GedcomParser(UpdateCallback):
                         # only happens on bad Gedcom with missing _LOC recs
                         continue
                     pref.ref = ref_hndl
-                    # if 'The Note' contained @P7@ make them into valid links
-                    xref = StyledText(xref)
-                    if note and str(xref) in str(note.text):
-                        gov = gid2gov.get(gid)
-                        if gov:
-                            gid = gov
-                        tag = StyledTextTag(
-                            StyledTextTagType.LINK,
-                            'gramps://Place/handle/%s' % ref_hndl,
-                            [(0, len(gid))])
-                        note.text = note.text.replace(xref,
-                                                      StyledText(gid, [tag]))
                 # Need to redo PlaceRef list to avoid duplicates; editing of
                 # prefs above converts to handles and these might already be
                 # present.
-                self.__add_placeref(place, pref.ref, date=pref.date)
-            if note and tag:  # If anything chaged
-                self.dbase.commit_note(note, self.trans)
+                for placeref in place.placeref_list:
+                    if placeref.is_equivalent(pref) != DIFFERENT:
+                        placeref.merge(pref)
+                        break
+                else:
+                    place.placeref_list.append(pref)
             if gid or len(placeref_list) != len(place.placeref_list):
                 # If anything chaged
                 assert(place.handle)
@@ -6617,9 +6639,9 @@ class GedcomParser(UpdateCallback):
         # of an address, better to use raw one.
         if not title:  # indicates that no structured address provided
             title = addr.get_street()
-            state.addr_pf = [PlaceType((PlaceType.CUSTOM, _("Address")))]
+            state.addr_pf = [PlaceType(_("Address"))]
             state.addr = [title]
-            sub_state.place.name.value = title
+            sub_state.place.set_name(PlaceName(value=title))
         else:
             # structured address provided
             for item, ptype in ((addr.get_street(), PlaceType.STREET),
@@ -6631,14 +6653,19 @@ class GedcomParser(UpdateCallback):
                     continue    # Don't store empties
                 state.addr_pf += [ptype]
                 state.addr += [item]
-            sub_state.place.name.value = state.addr[0]
+            sub_state.place.set_name(PlaceName(value=state.addr[0]))
             sub_state.place.set_type(state.addr_pf[0])
         sub_state.place.set_title(title)
+        # store postal code if present
+        if addr.postal:
+            attr = Attribute()
+            attr.set_type(AttributeType.POSTAL)
+            attr.set_value(addr.postal)
+            sub_state.place.add_attribute(attr)
         # store notes etc into place
-        sub_state.place.set_code(addr.postal)
         sub_state.place.set_note_list(addr.note_list)
         sub_state.place.set_citation_list(addr.citation_list)
-        sub_state.place.name.date = addr.date
+        sub_state.place.get_name().date = addr.date
         state.addr_place = sub_state.place
 
     def __event_privacy(self, line, state):
@@ -7945,14 +7972,10 @@ class GedcomParser(UpdateCallback):
             1 <<SOURCE_CITATION>> {0:M}
             1 <<CHANGE_DATE>> {0:1}
         """
+        place = Place()
         gid = self.lid_map[line.token_text]
-        hndl = self.lid2id.get(gid, None)
-        if hndl:
-            place = self.dbase.get_place_from_handle(hndl)
-        else:  # make a place and save it for later post-processing
-            place = Place()
-            self.locs_list.append(place)
-            place.gramps_id = gid
+        self.locs_list.append(place)
+        place.gramps_id = gid
 
         state = CurrentState()
         state.place = place
@@ -7963,12 +7986,9 @@ class GedcomParser(UpdateCallback):
         self.__check_msgs(
             "%s %s %s" % (_("Place"), _("Gramps ID"), place.get_gramps_id()),
             state, place)
-        if hndl:  # we have a place, so save updates.
-            assert(place.handle)
-            self.dbase.commit_place(place, self.trans, place.change)
-            if state.place_gov:
-                self.place_gov2hndl[state.place_gov] = place.handle
-        elif state.place_gov:
+        if place.get_name().is_empty():
+            place.add_name(PlaceName(value=_("Unknown")))
+        if state.place_gov:
             # we don't have a final place yet, save _GOV in handle for now
             place.handle = state.place_gov
 
@@ -8894,6 +8914,7 @@ class GedcomStageOne:
         self.enc = ""
         self.pcnt = 0
         self.lcnt = 0
+        self.place_type_dict = {}  # stores _GOVTYPE values for pass two
         self.lid_map = IdMapper(
             dbase.has_place_gramps_id,
             dbase.find_next_place_gramps_id,
@@ -8913,7 +8934,7 @@ class GedcomStageOne:
         line = input_file.read(2)
         if line == b"\xef\xbb":
             input_file.read(1)
-            self.enc = "utf_8_sig"
+            self.enc = "UTF_8_SIG"
             return TextIOWrapper(input_file, encoding='utf_8_sig',
                                  errors='replace', newline=None)
         elif line == b"\xff\xfe" or line == b"\xfe\xff":
@@ -8928,7 +8949,7 @@ class GedcomStageOne:
         else:
             input_file.seek(0)
             return TextIOWrapper(input_file, encoding='utf-8',
-                                 errors='replace', newline=None)
+                                 errors='surrogateescape', newline=None)
 
     def parse(self):
         """
@@ -8937,6 +8958,7 @@ class GedcomStageOne:
         current_family_id = ""
 
         reader = self.__detect_file_decoder(self.ifile)
+        prev_value = ''  # stores previous line value
 
         for line in reader:
             # Scan for a few items, keep counts.  Also look for actual CHAR
@@ -8969,7 +8991,27 @@ class GedcomStageOne:
                 self.famc[value[1:-1]].append(current_family_id)
             elif key == 'CHAR' and not self.enc:
                 assert isinstance(value, str)
-                self.enc = value
+                self.enc = value.upper()
+            elif key == '_GOVTYPE':
+                # we need PlaceType by _GOVTYPE early to avoid problems with
+                # similar TYPE values, so store them in this pass
+                byte_value = prev_value.encode('utf-8',
+                                               errors='surrogateescape')
+                if '1252' in self.enc:
+                    # if file was actually cp1252 we encoded it wrong as utf8
+                    prev_value = byte_value.decode('cp1252',
+                                                   errors='surrogateescape')
+                elif not ('UTF' in self.enc or 'UNICODE' == self.enc):
+                    # if file was actually latin1 we encoded it wrong as utf8
+                    # assume that no one uses Ansel and Gedcom L together
+                    prev_value = byte_value.decode('latin1',
+                                                   errors='surrogateescape')
+                try:
+                    # GOV types are negative in our PlaceTypes
+                    self.place_type_dict[prev_value] = -int(value)
+                except (ValueError, TypeError):
+                    pass
+            prev_value = value.capitalize()
         LOG.debug("parse pcnt %d", self.pcnt)
         LOG.debug("parse famc %s", dict(self.famc))
         LOG.debug("parse fams %s", dict(self.fams))
@@ -8991,14 +9033,14 @@ class GedcomStageOne:
         """
         Return the detected encoding
         """
-        return self.enc.upper()
+        return self.enc
 
     def set_encoding(self, enc):
         """
         Forces the encoding
         """
         assert isinstance(enc, str)
-        self.enc = enc
+        self.enc = enc.upper()
 
     def get_person_count(self):
         """
@@ -9017,6 +9059,12 @@ class GedcomStageOne:
         Return the xref to gid map class table
         """
         return self.lid_map
+
+    def get_place_type_dict(self):
+        """
+        Return the _GOVTYPE place type text to int dict
+        """
+        return self.place_type_dict
 
 
 #-------------------------------------------------------------------------
@@ -9061,6 +9109,37 @@ def make_gedcom_date(subdate, calendar, mode, quality):
     if quality in DATE_QUALITY:
         retval = "%s %s" % (DATE_QUALITY[quality], retval)
     return retval
+
+
+def complete_gedcom_date(date):
+    """
+    Convert a Gramps date structure into a GEDCOM compatible date.
+    """
+    start = date.get_start_date()
+    if start != Date.EMPTY:
+        cal = date.get_calendar()
+        mod = date.get_modifier()
+        quality = date.get_quality()
+        if quality in DATE_QUALITY:
+            qual_text = DATE_QUALITY[quality] + " "
+        else:
+            qual_text = ""
+        if mod == Date.MOD_SPAN:
+            val = "%sFROM %s TO %s" % (
+                qual_text,
+                make_gedcom_date(start, cal, mod, None),
+                make_gedcom_date(date.get_stop_date(), cal, mod, None))
+        elif mod == Date.MOD_RANGE:
+            val = "%sBET %s AND %s" % (
+                qual_text,
+                make_gedcom_date(start, cal, mod, None),
+                make_gedcom_date(date.get_stop_date(), cal, mod, None))
+        else:
+            val = make_gedcom_date(start, cal, mod, quality)
+        return val
+    elif date.get_text():
+        return date.get_text()
+    return ""
 
 
 def __build_date_string(day, mon, year, bce, mmap):

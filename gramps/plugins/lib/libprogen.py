@@ -54,8 +54,8 @@ from gramps.gen.errors import HandleError
 from gramps.gen.lib import (Address, Attribute, AttributeType, ChildRef,
                             Citation, Date, Event, EventRef, EventType, Family,
                             FamilyRelType, Name, NameType, NameOriginType, Note,
-                            NoteType, Person, Place, PlaceName, Source,
-                            SrcAttribute, Surname, Tag)
+                            NoteType, Person, Place, PlaceName, PlaceType,
+                            Source, SrcAttribute, Surname, Tag)
 from gramps.gen.updatecallback import UpdateCallback
 from gramps.gen.utils.id import create_id
 

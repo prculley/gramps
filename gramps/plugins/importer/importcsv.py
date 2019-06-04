@@ -877,9 +877,9 @@ class CSVParser:
         if place_title is not None:
             place.title = place_title
         if place_name is not None:
-            place.name = PlaceName(value=place_name)
+            place.add_name(PlaceName(value=place_name))
         if place_type_str is not None:
-            place.place_type = self.get_place_type(place_type_str)
+            place.add_type(self.get_place_type(place_type_str))
         if place_latitude is not None:
             place.lat = place_latitude
         if place_longitude is not None:
@@ -1060,7 +1060,7 @@ class CSVParser:
                 return (0, place)
         place = Place()
         place.set_title(place_name)
-        place.name = PlaceName(value=place_name)
+        place.set_name(PlaceName(value=place_name))
         self.db.add_place(place, self.trans)
         self.place_count += 1
         return (1, place)

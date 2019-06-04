@@ -1,12 +1,12 @@
 0 HEAD
 1 SOUR Gramps
-2 VERS 5.0.0-alpha3
+2 VERS 5.1.0
 2 NAME Gramps
-1 DATE 4 AUG 2019
-2 TIME 15:26:44
+1 DATE 3 JUN 2019
+2 TIME 16:51:49
 1 SUBM @SUBM@
 1 FILE C:\Users\prc\AppData\Roaming\gramps\temp\exp_sample_ged.ged
-1 COPR Copyright (c) 2017 Alex Roitman,,,.
+1 COPR Copyright (c) 2019 Alex Roitman,,,.
 1 GEDC
 2 VERS 5.5.1
 2 FORM LINEAGE-LINKED
@@ -96,11 +96,11 @@
 2 TYPE Death of Magnes Smith
 2 DATE 20 FEB 1910
 2 PLAC Rønne, Bornholm, Denmark
-3 FORM place, amt, kingdom
+3 FORM City, Amt (dänisches), kingdom
 3 MAP
 4 LATI N55.1
 4 LONG E14.7
-3 _LOC @RNNNNEJO75IC@
+3 _LOC @GEO2614553@
 1 FAMC @F0002@
 2 PEDI birth
 1 FAMS @F0011@
@@ -179,11 +179,11 @@
 2 TYPE Birth of Hjalmar Smith
 2 DATE 7 APR 1895
 2 PLAC Rønne, Bornholm, Denmark
-3 FORM place, amt, kingdom
+3 FORM City, Amt (dänisches), kingdom
 3 MAP
 4 LATI N55.1
 4 LONG E14.7
-3 _LOC @RNNNNEJO75IC@
+3 _LOC @GEO2614553@
 1 DEAT
 2 TYPE Death of Hjalmar Smith
 2 DATE 26 JUN 1975
@@ -193,11 +193,11 @@
 2 TYPE Baptism of Hjalmar Smith
 2 DATE 3 JUN 1895
 2 PLAC Rønne, Bornholm, Denmark
-3 FORM place, amt, kingdom
+3 FORM City, Amt (dänisches), kingdom
 3 MAP
 4 LATI N55.1
 4 LONG E14.7
-3 _LOC @RNNNNEJO75IC@
+3 _LOC @GEO2614553@
 1 EVEN
 2 TYPE Immi
 2 DATE 14 NOV 1912
@@ -234,11 +234,11 @@
 2 TYPE Birth of Hans Peter Smith
 2 DATE 17 APR 1904
 2 PLAC Rønne, Bornholm, Denmark
-3 FORM place, amt, kingdom
+3 FORM City, Amt (dänisches), kingdom
 3 MAP
 4 LATI N55.1
 4 LONG E14.7
-3 _LOC @RNNNNEJO75IC@
+3 _LOC @GEO2614553@
 2 SOUR @S0002@
 3 PAGE 22 6
 3 DATA
@@ -292,11 +292,11 @@
 2 TYPE Birth of Herman Julius Nielsen
 2 DATE 31 AUG 1889
 2 PLAC Rønne, Bornholm, Denmark
-3 FORM place, amt, kingdom
+3 FORM City, Amt (dänisches), kingdom
 3 MAP
 4 LATI N55.1
 4 LONG E14.7
-3 _LOC @RNNNNEJO75IC@
+3 _LOC @GEO2614553@
 1 DEAT
 2 TYPE Death of Herman Julius Nielsen
 2 DATE 1945
@@ -340,11 +340,11 @@
 2 TYPE Birth of Gus Smith
 2 DATE 11 SEP 1897
 2 PLAC Rønne, Bornholm, Denmark
-3 FORM place, amt, kingdom
+3 FORM City, Amt (dänisches), kingdom
 3 MAP
 4 LATI N55.1
 4 LONG E14.7
-3 _LOC @RNNNNEJO75IC@
+3 _LOC @GEO2614553@
 1 DEAT
 2 TYPE Death of Gus Smith
 2 DATE 21 OCT 1963
@@ -365,11 +365,11 @@
 2 TYPE Birth of Jennifer Anderson
 2 DATE 5 NOV 1907
 2 PLAC Rønne, Bornholm, Denmark
-3 FORM place, amt, kingdom
+3 FORM City, Amt (dänisches), kingdom
 3 MAP
 4 LATI N55.1
 4 LONG E14.7
-3 _LOC @RNNNNEJO75IC@
+3 _LOC @GEO2614553@
 1 DEAT
 2 TYPE Death of Jennifer Anderson
 2 DATE 29 MAY 1985
@@ -388,11 +388,11 @@
 2 TYPE Birth of Lillie Harriet Jones
 2 DATE 2 MAY 1910
 2 PLAC Rønne, Bornholm, Denmark
-3 FORM place, amt, kingdom
+3 FORM City, Amt (dänisches), kingdom
 3 MAP
 4 LATI N55.1
 4 LONG E14.7
-3 _LOC @RNNNNEJO75IC@
+3 _LOC @GEO2614553@
 1 DEAT
 2 TYPE Death of Lillie Harriet Jones
 2 DATE 26 JUN 1990
@@ -445,11 +445,11 @@
 2 TYPE Birth of Carl Emil Smith
 2 DATE 20 DEC 1899
 2 PLAC Rønne, Bornholm, Denmark
-3 FORM place, amt, kingdom
+3 FORM City, Amt (dänisches), kingdom
 3 MAP
 4 LATI N55.1
 4 LONG E14.7
-3 _LOC @RNNNNEJO75IC@
+3 _LOC @GEO2614553@
 1 DEAT
 2 TYPE Death of Carl Emil Smith
 2 DATE 28 JAN 1959
@@ -470,20 +470,20 @@
 2 TYPE Birth of Hjalmar Smith
 2 DATE 31 JAN 1893
 2 PLAC Rønne, Bornholm, Denmark
-3 FORM place, amt, kingdom
+3 FORM City, Amt (dänisches), kingdom
 3 MAP
 4 LATI N55.1
 4 LONG E14.7
-3 _LOC @RNNNNEJO75IC@
+3 _LOC @GEO2614553@
 1 DEAT
 2 TYPE Death of Hjalmar Smith
 2 DATE 25 SEP 1894
 2 PLAC Rønne, Bornholm, Denmark
-3 FORM place, amt, kingdom
+3 FORM City, Amt (dänisches), kingdom
 3 MAP
 4 LATI N55.1
 4 LONG E14.7
-3 _LOC @RNNNNEJO75IC@
+3 _LOC @GEO2614553@
 1 FAMC @F0003@
 2 PEDI birth
 1 CHAN
@@ -525,11 +525,11 @@
 2 TYPE Birth of Astrid Shermanna Augusta Smith
 2 DATE 31 JAN 1889
 2 PLAC Rønne, Bornholm, Denmark
-3 FORM place, amt, kingdom
+3 FORM City, Amt (dänisches), kingdom
 3 MAP
 4 LATI N55.1
 4 LONG E14.7
-3 _LOC @RNNNNEJO75IC@
+3 _LOC @GEO2614553@
 1 DEAT
 2 TYPE Death of Astrid Shermanna Augusta Smith
 2 DATE 21 DEC 1963
@@ -596,11 +596,11 @@
 2 TYPE Birth of Kirsti Marie Smith
 2 DATE 15 DEC 1886
 2 PLAC Rønne, Bornholm, Denmark
-3 FORM place, amt, kingdom
+3 FORM City, Amt (dänisches), kingdom
 3 MAP
 4 LATI N55.1
 4 LONG E14.7
-3 _LOC @RNNNNEJO75IC@
+3 _LOC @GEO2614553@
 1 DEAT
 2 TYPE Death of Kirsti Marie Smith
 2 DATE 18 JUL 1966
@@ -640,11 +640,11 @@
 2 TYPE Death of Anna Streiffert
 2 DATE 2 FEB 1927
 2 PLAC Rønne, Bornholm, Denmark
-3 FORM place, amt, kingdom
+3 FORM City, Amt (dänisches), kingdom
 3 MAP
 4 LATI N55.1
 4 LONG E14.7
-3 _LOC @RNNNNEJO75IC@
+3 _LOC @GEO2614553@
 1 FAMS @F0011@
 1 CHAN
 2 DATE 21 DEC 2007
@@ -905,11 +905,7 @@
 3 ADOP BOTH
 1 FAMC @F0005@
 2 PEDI adopted
-1 OBJE
-2 FORM jpeg
-2 TITL Michael O'Toole 2015-11
-2 FILE d:\users\prc\documents\gramps\data\tests\O0.jpg
-2 NOTE @N0019@
+1 OBJE @O0000@
 1 NOTE @N0007@
 1 CHAN
 2 DATE 18 JUN 2016
@@ -1212,11 +1208,11 @@
 2 TYPE Marriage of Gustaf Smith, Sr. and Anna Hansdotter
 2 DATE 27 NOV 1885
 2 PLAC Rønne, Bornholm, Denmark
-3 FORM place, amt, kingdom
+3 FORM City, Amt (dänisches), kingdom
 3 MAP
 4 LATI N55.1
 4 LONG E14.7
-3 _LOC @RNNNNEJO75IC@
+3 _LOC @GEO2614553@
 1 CHIL @I0026@
 1 CHIL @I0023@
 1 CHIL @I0021@
@@ -1243,11 +1239,11 @@
 2 TYPE Marriage of Herman Julius Nielsen and Astrid Shermanna Augusta Smith
 2 DATE 30 NOV 1912
 2 PLAC Rønne, Bornholm, Denmark
-3 FORM place, amt, kingdom
+3 FORM City, Amt (dänisches), kingdom
 3 MAP
 4 LATI N55.1
 4 LONG E14.7
-3 _LOC @RNNNNEJO75IC@
+3 _LOC @GEO2614553@
 1 CHIL @I0042@
 1 CHAN
 2 DATE 12 JUN 2016
@@ -1315,11 +1311,11 @@
 2 TYPE Marriage of Magnes Smith and Anna Streiffert
 2 DATE 24 AUG 1884
 2 PLAC Rønne, Bornholm, Denmark
-3 FORM place, amt, kingdom
+3 FORM City, Amt (dänisches), kingdom
 3 MAP
 4 LATI N55.1
 4 LONG E14.7
-3 _LOC @RNNNNEJO75IC@
+3 _LOC @GEO2614553@
 1 CHAN
 2 DATE 21 DEC 2007
 3 TIME 07:35:26
@@ -1397,182 +1393,67 @@
 1 CHAN
 2 DATE 29 OCT 2016
 3 TIME 16:27:59
-0 @S0000@ SOUR
-1 TITL Marriage Certificae
-1 REPO @R0002@
-2 CALN what-321-ever
-3 MEDI Photo
-1 NOTE @N0004@
+0 @GEO2264397@ _LOC
+1 NAME Portugal
+2 LANG English
+2 ABBR PT
+3 TYPE ISO3166
+1 NAME Portuguese Republic
+2 ABBR PT
+3 TYPE ISO3166
+1 NAME Lusitania
+2 ABBR PT
+3 TYPE ISO3166
+1 NAME Portugal
+2 LANG German
+1 NAME Portugal
+2 LANG French
+1 NAME Portuguese Republic
+2 LANG English
+2 ABBR PT
+3 TYPE ISO3166
+1 NAME Republic of Portugal
+2 ABBR PT
+3 TYPE ISO3166
+1 NAME Portugal
+1 NAME República Portuguesa
+1 TYPE republic
+2 _GOVTYPE 56
+1 MAP
+2 LATI N39.6945
+2 LONG W8.13057
+1 _LOC @object_1176980@
+2 DATE AFT 1986
+2 TYPE POLI
+1 SOUR @S0008@
+2 PAGE GeoNames ID: 2264397
 1 CHAN
-2 DATE 21 DEC 2007
-3 TIME 07:35:26
-0 @S0001@ SOUR
-1 TITL Birth Certificate
+2 DATE 3 JUN 2019
+3 TIME 17:00:33
+0 @GEO2614553@ _LOC
+1 NAME Rønne
+1 NAME Rønne
+2 LANG German
+1 NAME Rønne
+2 LANG English
+1 NAME Rønne
+2 LANG Danish
+1 TYPE City
+1 TYPE place39
+2 _GOVTYPE 39
+1 _POST 3700
+1 _DMGD 13890
+2 TYPE Population
+1 MAP
+2 LATI N55.1
+2 LONG E14.7
+1 _LOC @object_364181@
+2 TYPE POLI
+1 SOUR @S0008@
+2 PAGE GeoNames ID: 2614553
 1 CHAN
-2 DATE 21 DEC 2007
-3 TIME 07:35:26
-0 @S0002@ SOUR
-1 TITL Birth Records
-1 CHAN
-2 DATE 21 DEC 2007
-3 TIME 07:35:26
-0 @S0003@ SOUR
-1 TITL Birth, Death and Marriage Records
-1 REPO @R0002@
-2 CALN CA-123-LL-456_Num/ber
-3 MEDI Film
-1 NOTE @N0005@
-1 CHAN
-2 DATE 21 DEC 2007
-3 TIME 07:35:26
-0 @S0004@ SOUR
-1 TITL findagrave.com
-1 CHAN
-2 DATE 4 JUN 2016
-3 TIME 21:28:36
-0 @S0005@ SOUR
-1 TITL Import from imp_FTM_LINK.ged
-1 REPO @R0000@
-1 REPO @R0001@
-1 CHAN
-2 DATE 29 AUG 2016
-3 TIME 19:51:48
-0 @S0006@ SOUR
-1 TITL Ohio Births, 1958-2002
-1 REPO @R0004@
-1 CHAN
-2 DATE 29 AUG 2016
-3 TIME 19:51:48
-0 @S0007@ SOUR
-1 AUTH The tester
-1 PUBL Published when the test was written
-1 ABBR TST
-1 REPO @R0006@
-1 CHAN
-2 DATE 29 OCT 2016
-3 TIME 16:20:39
-0 @R0000@ REPO
-1 NAME Business that produced the product: Ancestry.com
-1 ADDR 360 W 4800 N, Provo, UT 84604
-2 ADR1 360 W 4800 N, Provo, UT 84604
-1 PHON (801) 705-7000
-1 FAX (801) 705-7001
-1 EMAIL help@@ancestry.com
-1 WWW http://www.ancestry.com
-0 @R0001@ REPO
-1 NAME SUBM (Submitter): (@@SUBM@@) The Subm /Tester/
-1 ADDR 123 Main St.
-2 CONT Winslow
-2 CONT PA
-2 CONT 12345
-2 ADR1 123 Main St.
-2 CITY Winslow
-2 STAE PA
-2 POST 12345
-1 PHON 440-871-3401
-1 EMAIL mrstester@@gmail.com
-1 FAX 440-321-4568
-1 WWW http://mrstester.com
-1 NOTE @N0009@
-0 @R0002@ REPO
-1 NAME New York Public Library
-1 ADDR 5th Ave at 42 street
-2 CONT New York
-2 CONT New York
-2 CONT 11111
-2 CONT USA
-2 ADR1 5th Ave at 42 street
-2 CITY New York
-2 STAE New York
-2 POST 11111
-2 CTRY USA
-0 @R0003@ REPO
-1 NAME Aunt Martha's Attic
-1 ADDR 123 Main St
-2 CONT Someville
-2 CONT ST
-2 CONT USA
-2 ADR1 123 Main St
-2 CITY Someville
-2 STAE ST
-2 CTRY USA
-1 WWW http://library.gramps-project.org
-1 NOTE @N0006@
-0 @R0004@ REPO
-1 NAME Testers Repository
-1 ADDR 123 High St., OSF village, CA, USA
-2 ADR1 123 High St., OSF village, CA, USA
-1 PHON 988-765-4321
-1 EMAIL tester_repo@@osf.com
-1 FAX 987-654-3210
-1 WWW http://www.tester_repo.com
-1 NOTE @N0012@
-1 NOTE @N0013@
-0 @R0005@ REPO
-0 @R0006@ REPO
-0 @N0000@ NOTE Witness name: John Doe
-1 CONT Witness comment: This is a simple test.
-0 @N0001@ NOTE Witness name: No Name
-0 @N0002@ NOTE BIOGRAPHY
-1 CONT Martin was listed as being a Husman, (owning a house as opposed to a far
-1 CONC m) in the house records of Gladsax.
-0 @N0003@ NOTE BIOGRAPHY
-1 CONT 
-1 CONT Hjalmar sailed from Copenhagen, Denmark on the OSCAR II, 14 November 191
-1 CONC 2 arriving in New York 27 November 1912. He was seventeen years old. O
-1 CONC n the ship passenger list his trade was listed as a Blacksmith.  He cam
-1 CONC e to Reno, Nevada and lived with his sister Marie for a time before sett
-1 CONC ling in Sparks. He worked for Southern Pacific Railroad as a car inspect
-1 CONC or for a time, then went to work for Standard Oil
-1 CONT Company. He enlisted in the army at Sparks 7 December 1917 and served a
-1 CONC s a Corporal in the Medical Corp until his discharge 12 August 1919 at t
-1 CONC he Presidio in San Francisco, California. Both he and Marjorie are burie
-1 CONC d in the Masonic Memorial Gardens Mausoleum in Reno, he the 30th June 19
-1 CONC 75, and she the 25th of June 1980.
-0 @N0004@ NOTE But Aunt Martha still keeps the original!
-0 @N0005@ NOTE The repository reference from the source is important
-0 @N0006@ NOTE Some note on the repo
-0 @N0007@ NOTE Some Unicode Characters: ࣶǼЀج⿄㑝㵋圛墉幵聟聦𐅉🚶🛈
-1 CONT Some Bold Unicode Characters: ࣶǼЀج⿄㑝㵋圛墉幵聟聦𐅉🚶🛈
-1 CONT Some Italic Unicode Characters: ࣶǼЀج⿄㑝㵋圛墉幵聟聦𐅉🚶🛈
-1 CONT Some Unicode Characters: ࣶǼЀج⿄㑝㵋圛墉幵聟聦𐅉🚶🛈
-1 CONT Some Bold Unicode Characters: ࣶǼЀج⿄㑝㵋圛墉幵聟聦𐅉🚶🛈
-1 CONT Some Italic Unicode Characters: ࣶǼЀج⿄㑝㵋圛墉幵聟聦𐅉🚶🛈
-0 @N0008@ NOTE Records not imported into HEAD (header):
-1 CONT 
-1 CONT Only one phone number supported                                     Lin
-1 CONC e     9: 3 PHON (800) 705-7000
-0 @N0009@ NOTE Records not imported into SUBM (Submitter): (@@SUBM@@) The Subm /Te
-1 CONC ster/:
-1 CONT 
-1 CONT Only one phone number supported                                     Lin
-1 CONC e    29: 1 PHON 800-871-3401
-0 @N0010@ NOTE Address with PHON,FAX,EMAIL,WWW. attached directly to person is no
-1 CONC t legal Gedcom, but allowed here.
-0 @N0011@ NOTE Address as event is legal, with PHON,FAX,EMAIL,WWW
-0 @N0012@ NOTE The repository record
-0 @N0013@ NOTE Records not imported into REPO (repository) Gramps ID R0002:
-1 CONT 
-1 CONT Only one phone number supported                                     Lin
-1 CONC e    87: 1 PHON 800-765-4321
-0 @N0014@ NOTE ******************************************************************8
-1 CONC 90123456789
-1 CONT ******************************************************************89 123
-1 CONC 456789
-0 @N0015@ NOTE This should show up under the ASSO tag in Gedcom
-0 @N0016@ NOTE ??? What is RESN???
-0 @N0017@ NOTE A citation Note Source text
-0 @N0018@ NOTE Another Citation Note
-0 @N0019@ NOTE A bad photo for sure
-0 @N0020@ NOTE Timeline
-1 CONT French Texas	1684–1689
-1 CONT Spanish Texas	1690–1821
-1 CONT Mexican Texas	1821–1836
-1 CONT Republic of Texas	1836–1845
-1 CONT Statehood	1845–1860
-1 CONT Civil War Era	1861–1865
-1 CONT Reconstruction	1865–1899
-1 CONT 
+2 DATE 3 JUN 2019
+3 TIME 16:25:39
 0 @P0000@ _LOC
 1 NAME Löderup, Malmöhus Län, Sweden
 1 CHAN
@@ -1786,10 +1667,7 @@
 1 _LOC @P0038@
 2 DATE FROM 1690 TO 1821
 2 TYPE POLI
-1 OBJE
-2 FORM image/png
-2 TITL 1024px-Texas_flag_map.svg
-2 FILE d:\users\prc\documents\gramps\data\tests\1024px-Texas_flag_map.svg.png
+1 OBJE @O0001@
 1 NOTE @N0020@
 1 SOUR @S0007@
 2 PAGE widipedia
@@ -1850,42 +1728,120 @@
 1 CHAN
 2 DATE 29 SEP 2017
 3 TIME 21:40:58
-0 @RNNNNEJO75IC@ _LOC
-1 NAME Rønne
-2 LANG Danish
-1 NAME Rønne, Bornholm, Denmark
-1 NAME Rønne Bornholm, Denmark
-1 TYPE place
-1 _GOV RNNNNEJO75IC
+0 @object_1176980@ _LOC
+1 NAME European Union
+2 DATE AFT 2009
+2 LANG English
+2 SOUR @S0008@
+3 PAGE None, just testing
+2 ABBR EU
+3 TYPE Abbreviation
+1 NAME Europese Unie
+2 LANG Dutch
+1 NAME Euroopan Yhteisö
+2 DATE BEF 2009
+2 LANG Finnish
+1 NAME Europäische Union
+2 DATE AFT 2009
+2 LANG German
+1 NAME Union européenne
+2 LANG French
+1 NAME Euroopan Unioni
+2 LANG Finnish
+1 NAME Aontais Eorpaigh
+2 LANG Gaelic
+1 NAME Europäische Gemeinschaft
+2 DATE BEF 2009
+2 LANG German
+1 NAME Unión Europea
+2 LANG Spanish
+1 NAME European Community
+2 DATE FROM 1992 TO 2009
+2 LANG English
+1 TYPE confederation
+2 _GOVTYPE 71
+2 SOUR @S0008@
+3 PAGE Cit for test purposes
+3 DATA
+4 DATE JUN 2019
+1 _GOV object_1176980
 1 MAP
-2 LATI N55.1
-2 LONG E14.7
-1 _LOC @object_364181@
-2 TYPE POLI
+2 LATI N50.342813
+2 LONG E10.784506
+1 EVEN Lisbon Treaty
+2 TYPE History
+2 DATE 2009
+2 PLAC Lisbon, Portugal, European Community
+3 FORM town, republic, confederation
+3 MAP
+4 LATI N38.72564
+4 LONG W9.150028
+3 _LOC @object_1177032@
+3 _GOV object_1177032
 1 CHAN
-2 DATE 29 SEP 2017
-3 TIME 21:19:12
+2 DATE 3 JUN 2019
+3 TIME 16:52:08
+0 @object_1177032@ _LOC
+1 NAME Lisbon
+2 LANG English
+1 NAME Lisboa
+1 NAME Distrito de Lisboa
+1 NAME Lisbon District
+2 LANG English
+1 NAME Lissabon
+2 LANG German
+1 NAME District de Lisbonne
+2 LANG French
+1 NAME Distrikt Lissabon
+2 LANG German
+1 NAME Lisbonne
+2 LANG French
+1 TYPE town
+2 _GOVTYPE 51
+1 TYPE District
+1 _GOV object_1177032
+1 MAP
+2 LATI N38.72564
+2 LONG W9.150028
+1 _LOC @GEO2264397@
+2 TYPE POLI
+1 SOUR @S0008@
+2 PAGE GeoNames ID: 2267056
+1 CHAN
+2 DATE 3 JUN 2019
+3 TIME 17:01:25
 0 @object_190123@ _LOC
 1 NAME Denmark
 2 LANG English
-1 NAME Danmark
-2 LANG Swedish
-1 NAME Danemark
-2 LANG French
-1 NAME Danmark
-2 LANG Danish
-1 NAME Dänemark
-2 LANG German
+2 ABBR DK
+3 TYPE ISO3166
 1 NAME Dinamarca
 2 LANG Spanish
+1 NAME Danemark
+2 LANG French
+1 NAME Dänemark
+2 LANG German
+1 NAME Danmark
+2 LANG Swedish
+1 NAME Danmark
+2 LANG Danish
 1 TYPE kingdom
+2 _GOVTYPE 31
 1 _GOV object_190123
+1 MAP
+2 LATI N55.482291
+2 LONG E9.986007
+1 _LOC @object_1176980@
+2 DATE AFT 1973
+2 TYPE POLI
 1 CHAN
-2 DATE 29 SEP 2017
-3 TIME 21:15:51
+2 DATE 3 JUN 2019
+3 TIME 16:26:21
 0 @object_364181@ _LOC
 1 NAME Bornholm
 2 LANG Danish
+1 TYPE Amt (dänisches)
+2 _GOVTYPE 57
 1 TYPE amt
 1 _GOV object_364181
 1 MAP
@@ -1894,6 +1850,214 @@
 1 _LOC @object_190123@
 2 TYPE POLI
 1 CHAN
-2 DATE 29 SEP 2017
-3 TIME 21:15:51
+2 DATE 3 JUN 2019
+3 TIME 16:14:17
+0 @S0000@ SOUR
+1 TITL Marriage Certificae
+1 REPO @R0002@
+2 CALN what-321-ever
+3 MEDI Photo
+1 NOTE @N0004@
+1 CHAN
+2 DATE 21 DEC 2007
+3 TIME 07:35:26
+0 @S0001@ SOUR
+1 TITL Birth Certificate
+1 CHAN
+2 DATE 21 DEC 2007
+3 TIME 07:35:26
+0 @S0002@ SOUR
+1 TITL Birth Records
+1 CHAN
+2 DATE 21 DEC 2007
+3 TIME 07:35:26
+0 @S0003@ SOUR
+1 TITL Birth, Death and Marriage Records
+1 REPO @R0002@
+2 CALN CA-123-LL-456_Num/ber
+3 MEDI Film
+1 NOTE @N0005@
+1 CHAN
+2 DATE 21 DEC 2007
+3 TIME 07:35:26
+0 @S0004@ SOUR
+1 TITL findagrave.com
+1 CHAN
+2 DATE 4 JUN 2016
+3 TIME 21:28:36
+0 @S0005@ SOUR
+1 TITL Import from imp_FTM_LINK.ged
+1 REPO @R0000@
+1 REPO @R0001@
+1 CHAN
+2 DATE 29 AUG 2016
+3 TIME 19:51:48
+0 @S0006@ SOUR
+1 TITL Ohio Births, 1958-2002
+1 REPO @R0004@
+1 CHAN
+2 DATE 29 AUG 2016
+3 TIME 19:51:48
+0 @S0007@ SOUR
+1 AUTH The tester
+1 PUBL Published when the test was written
+1 ABBR TST
+1 REPO @R0006@
+1 CHAN
+2 DATE 29 OCT 2016
+3 TIME 16:20:39
+0 @S0008@ SOUR
+1 TITL GeoNames
+1 AUTH Marc Wick
+1 REPO @R0007@
+1 CHAN
+2 DATE 3 JUN 2019
+3 TIME 16:18:34
+0 @R0000@ REPO
+1 NAME Business that produced the product: Ancestry.com
+1 ADDR 360 W 4800 N, Provo, UT 84604
+2 ADR1 360 W 4800 N, Provo, UT 84604
+1 PHON (801) 705-7000
+1 FAX (801) 705-7001
+1 EMAIL help@@ancestry.com
+1 WWW http://www.ancestry.com
+0 @R0001@ REPO
+1 NAME SUBM (Submitter): (@@SUBM@@) The Subm /Tester/
+1 ADDR 123 Main St.
+2 CONT Winslow
+2 CONT PA
+2 CONT 12345
+2 ADR1 123 Main St.
+2 CITY Winslow
+2 STAE PA
+2 POST 12345
+1 PHON 440-871-3401
+1 EMAIL mrstester@@gmail.com
+1 FAX 440-321-4568
+1 WWW http://mrstester.com
+1 NOTE @N0009@
+0 @R0002@ REPO
+1 NAME New York Public Library
+1 ADDR 5th Ave at 42 street
+2 CONT New York
+2 CONT New York
+2 CONT 11111
+2 CONT USA
+2 ADR1 5th Ave at 42 street
+2 CITY New York
+2 STAE New York
+2 POST 11111
+2 CTRY USA
+0 @R0003@ REPO
+1 NAME Aunt Martha's Attic
+1 ADDR 123 Main St
+2 CONT Someville
+2 CONT ST
+2 CONT USA
+2 ADR1 123 Main St
+2 CITY Someville
+2 STAE ST
+2 CTRY USA
+1 WWW http://library.gramps-project.org
+1 NOTE @N0006@
+0 @R0004@ REPO
+1 NAME Testers Repository
+1 ADDR 123 High St., OSF village, CA, USA
+2 ADR1 123 High St., OSF village, CA, USA
+1 PHON 988-765-4321
+1 EMAIL tester_repo@@osf.com
+1 FAX 987-654-3210
+1 WWW http://www.tester_repo.com
+1 NOTE @N0012@
+1 NOTE @N0013@
+0 @R0005@ REPO
+0 @R0006@ REPO
+0 @R0007@ REPO
+1 NAME www.geonames.org
+1 WWW http://www.geonames.org/
+1 EMAIL marc@@geonames.org
+1 NOTE @N0021@
+0 @N0000@ NOTE Witness name: John Doe
+1 CONT Witness comment: This is a simple test.
+0 @N0001@ NOTE Witness name: No Name
+0 @N0002@ NOTE BIOGRAPHY
+1 CONT Martin was listed as being a Husman, (owning a house as opposed to a far
+1 CONC m) in the house records of Gladsax.
+0 @N0003@ NOTE BIOGRAPHY
+1 CONT 
+1 CONT Hjalmar sailed from Copenhagen, Denmark on the OSCAR II, 14 November 191
+1 CONC 2 arriving in New York 27 November 1912. He was seventeen years old. O
+1 CONC n the ship passenger list his trade was listed as a Blacksmith.  He cam
+1 CONC e to Reno, Nevada and lived with his sister Marie for a time before sett
+1 CONC ling in Sparks. He worked for Southern Pacific Railroad as a car inspect
+1 CONC or for a time, then went to work for Standard Oil
+1 CONT Company. He enlisted in the army at Sparks 7 December 1917 and served a
+1 CONC s a Corporal in the Medical Corp until his discharge 12 August 1919 at t
+1 CONC he Presidio in San Francisco, California. Both he and Marjorie are burie
+1 CONC d in the Masonic Memorial Gardens Mausoleum in Reno, he the 30th June 19
+1 CONC 75, and she the 25th of June 1980.
+0 @N0004@ NOTE But Aunt Martha still keeps the original!
+0 @N0005@ NOTE The repository reference from the source is important
+0 @N0006@ NOTE Some note on the repo
+0 @N0007@ NOTE Some Unicode Characters: ࣶǼЀج⿄㑝㵋圛墉幵聟聦𐅉🚶🛈
+1 CONT Some Bold Unicode Characters: ࣶǼЀج⿄㑝㵋圛墉幵聟聦𐅉🚶🛈
+1 CONT Some Italic Unicode Characters: ࣶǼЀج⿄㑝㵋圛墉幵聟聦𐅉🚶🛈
+1 CONT Some Unicode Characters: ࣶǼЀج⿄㑝㵋圛墉幵聟聦𐅉🚶🛈
+1 CONT Some Bold Unicode Characters: ࣶǼЀج⿄㑝㵋圛墉幵聟聦𐅉🚶🛈
+1 CONT Some Italic Unicode Characters: ࣶǼЀج⿄㑝㵋圛墉幵聟聦𐅉🚶🛈
+0 @N0008@ NOTE Records not imported into HEAD (header):
+1 CONT 
+1 CONT Only one phone number supported                                     Lin
+1 CONC e     9: 3 PHON (800) 705-7000
+0 @N0009@ NOTE Records not imported into SUBM (Submitter): (@@SUBM@@) The Subm /Te
+1 CONC ster/:
+1 CONT 
+1 CONT Only one phone number supported                                     Lin
+1 CONC e    29: 1 PHON 800-871-3401
+0 @N0010@ NOTE Address with PHON,FAX,EMAIL,WWW. attached directly to person is no
+1 CONC t legal Gedcom, but allowed here.
+0 @N0011@ NOTE Address as event is legal, with PHON,FAX,EMAIL,WWW
+0 @N0012@ NOTE The repository record
+0 @N0013@ NOTE Records not imported into REPO (repository) Gramps ID R0002:
+1 CONT 
+1 CONT Only one phone number supported                                     Lin
+1 CONC e    87: 1 PHON 800-765-4321
+0 @N0014@ NOTE ******************************************************************8
+1 CONC 90123456789
+1 CONT ******************************************************************89 123
+1 CONC 456789
+0 @N0015@ NOTE This should show up under the ASSO tag in Gedcom
+0 @N0016@ NOTE ??? What is RESN???
+0 @N0017@ NOTE A citation Note Source text
+0 @N0018@ NOTE Another Citation Note
+0 @N0019@ NOTE A bad photo for sure
+0 @N0020@ NOTE Timeline
+1 CONT French Texas	1684–1689
+1 CONT Spanish Texas	1690–1821
+1 CONT Mexican Texas	1821–1836
+1 CONT Republic of Texas	1836–1845
+1 CONT Statehood	1845–1860
+1 CONT Civil War Era	1861–1865
+1 CONT Reconstruction	1865–1899
+1 CONT 
+0 @N0021@ NOTE GeoNames was founded by Marc Wick. You can reach him at marc@@geona
+1 CONC mes.org
+1 CONT GeoNames is a project of Unxos GmbH, Weingartenstrasse 8, 8708 Männedorf
+1 CONC , Switzerland.
+1 CONT This work is licensed under a Creative Commons Attribution 3.0 License
+0 @O0000@ OBJE
+1 FILE d:\users\prc\documents\gramps2\data\tests\O0.jpg
+2 FORM jpg
+2 TITL Michael O'Toole 2015-11
+1 NOTE @N0019@
+1 CHAN
+2 DATE 29 OCT 2016
+3 TIME 15:23:37
+0 @O0001@ OBJE
+1 FILE d:\users\prc\documents\gramps2\data\tests\1024px-Texas_flag_map.svg.png
+2 FORM png
+2 TITL 1024px-Texas_flag_map.svg
+1 CHAN
+2 DATE 10 JUN 2018
+3 TIME 19:14:55
 0 TRLR

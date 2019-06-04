@@ -42,7 +42,8 @@ class VCardCheck(unittest.TestCase):
             <header>
             <created date="%04d-%02d-%02d" version="%s"/>
             <researcher/>
-            </header>""" % \
+            </header>
+            <place-types/>""" % \
             (GRAMPS_XML_VERSION, date[0], date[1], date[2], VERSION)
         expect_str = self.header + """<people><person handle="I0000" """ \
                 """id="I0000"><gender>U</gender><name type="Birth Name">""" \
@@ -50,14 +51,16 @@ class VCardCheck(unittest.TestCase):
         namespace = "http://gramps-project.org/xml/%s/" % GRAMPS_XML_VERSION
         ET.register_namespace("", namespace)
         self.gramps = ET.XML(expect_str)
-        self.person = self.gramps[1][0]
+        self.person = self.gramps[2][0]
         self.name = self.person[1]
         self.vcard = ["BEGIN:VCARD", "VERSION:3.0", "FN:Lastname",
                       "N:Lastname;;;;", "END:VCARD"]
 
     def canonicalize(self, doc):
         handles = {}
+        people = None
         for element in doc.iter("*"):
+            #print(element.tag)
             gramps_id = element.get('id')
             if gramps_id is not None:
                 handles[element.get('handle')] = gramps_id
@@ -67,10 +70,28 @@ class VCardCheck(unittest.TestCase):
                 element.set('hlink', handles.get(hlink))
             if element.get('change') is not None:
                 del element.attrib['change']
+            if 'place-types' in element.tag or 'researcher' in element.tag:
+                element.clear()
+                continue
             if element.text is not None and not element.text.strip():
                 element.text = ''
             if element.tail is not None and not element.tail.strip():
                 element.tail = ''
+            if 'people' in element.tag:
+                people = element
+        # Grramps XML is sorted by handle for its records.  Unfortuantely,
+        # this is not always consistant when several records are created
+        # in the same second.  The lower half of the handle is random and can
+        # result in different handle order, which messes up this test.
+        # So re-sort the people by id instead.
+        if people:
+            data = []
+            for pers in people:
+                key = pers.get('id')
+                data.append((key, pers))
+            data.sort()
+            # insert the last item from each tuple
+            people[:] = [item[-1] for item in data]
 
         return ET.tostring(doc, encoding='utf-8')
 
@@ -93,11 +114,13 @@ class VCardCheck(unittest.TestCase):
             print(err_str)
         result_doc = ET.XML(result_str)
 
-        if debug:
-            print(self.canonicalize(result_doc))
-            print(self.canonicalize(expect_doc))
-        self.assertEqual(self.canonicalize(result_doc),
-                         self.canonicalize(expect_doc))
+        res = self.canonicalize(result_doc)
+        exp = self.canonicalize(expect_doc)
+        if res != exp:
+            print()
+            print(res)
+            print(exp)
+        self.assertEqual(res, exp)
 
     def test_base(self):
         self.do_case("\r\n".join(self.vcard), self.gramps)
@@ -217,7 +240,7 @@ class VCardCheck(unittest.TestCase):
         self.vcard[4] = "BEGIN:VCARD"
         self.vcard.extend(["VERSION:3.0", "FN:Another", "N:Another;;;;", "END:VCARD"])
         attribs = {'handle': 'I0001', 'id': 'I0001'}
-        person = ET.SubElement(self.gramps[1], "person", attribs)
+        person = ET.SubElement(self.gramps[2], "person", attribs)
         ET.SubElement(person, 'gender').text = 'U'
         name = ET.SubElement(person, 'name', {'type': 'Birth Name'})
         ET.SubElement(name, 'surname').text = 'Another'
@@ -287,7 +310,7 @@ class VCardCheck(unittest.TestCase):
     def test_add_name_empty(self):
         self.vcard[2] = "FN:Lastname"
         self.vcard[3] = "N: "
-        self.gramps.remove(self.gramps[1])
+        self.gramps.remove(self.gramps[2])
         self.do_case("\r\n".join(self.vcard), self.gramps)
 
     def test_add_firstname_regular(self):
@@ -425,7 +448,7 @@ class VCardCheck(unittest.TestCase):
         attribs = {'hlink': 'E0000', 'role': 'Primary'}
         eventref = ET.SubElement(self.person, 'eventref', attribs)
         events = ET.Element('events')
-        self.gramps.insert(1, events)
+        self.gramps.insert(2, events)
         attribs = {'handle': 'E0000', 'id': 'E0000'}
         event = ET.SubElement(events, 'event', attribs)
         ET.SubElement(event, 'type').text = 'Birth'
@@ -437,7 +460,7 @@ class VCardCheck(unittest.TestCase):
         attribs = {'hlink': 'E0000', 'role': 'Primary'}
         eventref = ET.SubElement(self.person, 'eventref', attribs)
         events = ET.Element('events')
-        self.gramps.insert(1, events)
+        self.gramps.insert(2, events)
         attribs = {'handle': 'E0000', 'id': 'E0000'}
         event = ET.SubElement(events, 'event', attribs)
         ET.SubElement(event, 'type').text = 'Birth'
@@ -449,7 +472,7 @@ class VCardCheck(unittest.TestCase):
         attribs = {'hlink': 'E0000', 'role': 'Primary'}
         eventref = ET.SubElement(self.person, 'eventref', attribs)
         events = ET.Element('events')
-        self.gramps.insert(1, events)
+        self.gramps.insert(2, events)
         attribs = {'handle': 'E0000', 'id': 'E0000'}
         event = ET.SubElement(events, 'event', attribs)
         ET.SubElement(event, 'type').text = 'Birth'
@@ -461,7 +484,7 @@ class VCardCheck(unittest.TestCase):
         attribs = {'hlink': 'E0000', 'role': 'Primary'}
         eventref = ET.SubElement(self.person, 'eventref', attribs)
         events = ET.Element('events')
-        self.gramps.insert(1, events)
+        self.gramps.insert(2, events)
         attribs = {'handle': 'E0000', 'id': 'E0000'}
         event = ET.SubElement(events, 'event', attribs)
         ET.SubElement(event, 'type').text = 'Birth'
@@ -473,7 +496,7 @@ class VCardCheck(unittest.TestCase):
         attribs = {'hlink': 'E0000', 'role': 'Primary'}
         eventref = ET.SubElement(self.person, 'eventref', attribs)
         events = ET.Element('events')
-        self.gramps.insert(1, events)
+        self.gramps.insert(2, events)
         attribs = {'handle': 'E0000', 'id': 'E0000'}
         event = ET.SubElement(events, 'event', attribs)
         ET.SubElement(event, 'type').text = 'Birth'
@@ -485,7 +508,7 @@ class VCardCheck(unittest.TestCase):
         attribs = {'hlink': 'E0000', 'role': 'Primary'}
         eventref = ET.SubElement(self.person, 'eventref', attribs)
         events = ET.Element('events')
-        self.gramps.insert(1, events)
+        self.gramps.insert(2, events)
         attribs = {'handle': 'E0000', 'id': 'E0000'}
         event = ET.SubElement(events, 'event', attribs)
         ET.SubElement(event, 'type').text = 'Birth'
@@ -501,7 +524,7 @@ class VCardCheck(unittest.TestCase):
         attribs = {'hlink': 'E0000', 'role': 'Primary'}
         eventref = ET.SubElement(self.person, 'eventref', attribs)
         events = ET.Element('events')
-        self.gramps.insert(1, events)
+        self.gramps.insert(2, events)
         attribs = {'handle': 'E0000', 'id': 'E0000'}
         event = ET.SubElement(events, 'event', attribs)
         ET.SubElement(event, 'type').text = 'Occupation'

@@ -1,303 +1,381 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE database PUBLIC "-//Gramps//DTD Gramps XML 1.7.1//EN"
-"http://gramps-project.org/xml/1.7.1/grampsxml.dtd">
-<database xmlns="http://gramps-project.org/xml/1.7.1/">
+<!DOCTYPE database PUBLIC "-//Gramps//DTD Gramps XML 1.8.0//EN"
+"http://gramps-project.org/xml/1.8.0/grampsxml.dtd">
+<database xmlns="http://gramps-project.org/xml/1.8.0/">
   <header>
-    <created date="2019-08-04" version="5.0.2"/>
+    <created date="1999-12-25" version="5.1.2"/>
     <researcher>
       <resname>Alex Roitman,,,</resname>
       <resaddr>Not Provided, Not Provided</resaddr>
     </researcher>
   </header>
+  <place-types>
+    <place-type name="Address">
+      <pgroup>Place</pgroup>
+    </place-type>
+    <place-type name="State_again">
+      <pgroup>Place</pgroup>
+    </place-type>
+    <place-type name="Continent">
+      <pgroup>Place</pgroup>
+    </place-type>
+    <place-type name="Home">
+      <pgroup>Place</pgroup>
+    </place-type>
+    <place-type name="Country50" number="-50">
+      <pgroup>Place</pgroup>
+    </place-type>
+    <place-type name="Parish29" number="-29">
+      <pgroup>Place</pgroup>
+    </place-type>
+    <place-type name="Unknown" number="0"/>
+    <place-type name="Country" number="1">
+      <pgroup>Country</pgroup>
+    </place-type>
+    <place-type name="State" number="2">
+      <pgroup>Region</pgroup>
+    </place-type>
+    <place-type name="County" number="3">
+      <pgroup>Region</pgroup>
+    </place-type>
+    <place-type name="City" number="4">
+      <pgroup>Place</pgroup>
+    </place-type>
+    <place-type name="Parish" number="5">
+      <pgroup>Region</pgroup>
+    </place-type>
+    <place-type name="Locality" number="6">
+      <pgroup>Place</pgroup>
+    </place-type>
+    <place-type name="Street" number="7"/>
+    <place-type name="Province" number="8">
+      <pgroup>Region</pgroup>
+    </place-type>
+    <place-type name="Region" number="9">
+      <pgroup>Region</pgroup>
+    </place-type>
+    <place-type name="Department" number="10">
+      <pgroup>Region</pgroup>
+    </place-type>
+    <place-type name="Neighborhood" number="11">
+      <pgroup>Place</pgroup>
+    </place-type>
+    <place-type name="District" number="12">
+      <pgroup>Place</pgroup>
+    </place-type>
+    <place-type name="Borough" number="13">
+      <pgroup>Place</pgroup>
+    </place-type>
+    <place-type name="Municipality" number="14">
+      <pgroup>Place</pgroup>
+    </place-type>
+    <place-type name="Town" number="15">
+      <pgroup>Place</pgroup>
+    </place-type>
+    <place-type name="Village" number="16">
+      <pgroup>Place</pgroup>
+    </place-type>
+    <place-type name="Hamlet" number="17">
+      <pgroup>Place</pgroup>
+    </place-type>
+    <place-type name="Farm" number="18">
+      <pgroup>Place</pgroup>
+    </place-type>
+    <place-type name="Building" number="19">
+      <pgroup>Building</pgroup>
+    </place-type>
+    <place-type name="Number" number="20"/>
+  </place-types>
   <events>
-    <event handle="_0000000600000006" change="1" id="E0000">
+    <event handle="_0000000600000006" change="1" id="E00000">
       <type>Marriage</type>
       <dateval val="1885-11-27"/>
       <place hlink="_0000000700000007"/>
       <description>Marriage of Gustaf Smith, Sr. and Anna Hansdotter</description>
     </event>
-    <event handle="_0000001200000012" change="1" id="E0001">
+    <event handle="_0000001200000012" change="1" id="E00001">
       <type>Birth</type>
       <dateval val="1864-10-02" quality="estimated"/>
       <place hlink="_0000001300000013"/>
       <description>Birth of Anna Hansdotter</description>
     </event>
-    <event handle="_0000001400000014" change="1" id="E0002">
+    <event handle="_0000001400000014" change="1" id="E00002">
       <type>Death</type>
       <dateval val="1945-09-29"/>
       <place hlink="_0000001600000016"/>
       <description>Death of Anna Hansdotter</description>
       <noteref hlink="_0000001500000015"/>
     </event>
-    <event handle="_0000001b0000001b" change="1" id="E0003">
+    <event handle="_0000001b0000001b" change="1" id="E00003">
       <type>Birth</type>
       <dateval val="1966-08-11"/>
       <place hlink="_0000001c0000001c"/>
       <description>Birth of Keith Lloyd Smith</description>
     </event>
-    <event handle="_0000001f0000001f" change="1" id="E0004">
+    <event handle="_0000001f0000001f" change="1" id="E00004">
       <type>Birth</type>
       <dateval val="1904-04-17"/>
       <place hlink="_0000000700000007"/>
       <description>Birth of Hans Peter Smith</description>
     </event>
-    <event handle="_0000002000000020" change="1" id="E0005">
+    <event handle="_0000002000000020" change="1" id="E00005">
       <type>Death</type>
       <dateval val="1977-01-29"/>
       <place hlink="_0000001c0000001c"/>
       <description>Death of Hans Peter Smith</description>
     </event>
-    <event handle="_0000002500000025" change="1" id="E0006">
+    <event handle="_0000002500000025" change="1" id="E00006">
       <type>Birth</type>
       <dateval val="1821-01-29"/>
       <place hlink="_0000002600000026"/>
       <description>Birth of Hanna Smith</description>
     </event>
-    <event handle="_0000002a0000002a" change="1" id="E0007">
+    <event handle="_0000002a0000002a" change="1" id="E00007">
       <type>Birth</type>
       <dateval val="1889-08-31"/>
       <place hlink="_0000000700000007"/>
       <description>Birth of Herman Julius Nielsen</description>
     </event>
-    <event handle="_0000002b0000002b" change="1" id="E0008">
+    <event handle="_0000002b0000002b" change="1" id="E00008">
       <type>Death</type>
       <dateval val="1945"/>
       <description>Death of Herman Julius Nielsen</description>
     </event>
-    <event handle="_0000002f0000002f" change="1" id="E0009">
+    <event handle="_0000002f0000002f" change="1" id="E00009">
       <type>Birth</type>
       <dateval val="1897" type="about"/>
       <description>Birth of Evelyn Michaels</description>
     </event>
-    <event handle="_0000003300000033" change="1" id="E0010">
+    <event handle="_0000003300000033" change="1" id="E00010">
       <type>Birth</type>
       <dateval val="1934-11-04"/>
       <place hlink="_0000003400000034"/>
       <description>Birth of Marjorie Lee Smith</description>
     </event>
-    <event handle="_0000003600000036" change="1" id="E0011">
+    <event handle="_0000003600000036" change="1" id="E00011">
       <type>Birth</type>
       <dateval val="1897-09-11"/>
       <place hlink="_0000000700000007"/>
       <description>Birth of Gus Smith</description>
     </event>
-    <event handle="_0000003700000037" change="1" id="E0012">
+    <event handle="_0000003700000037" change="1" id="E00012">
       <type>Death</type>
       <dateval val="1963-10-21"/>
       <place hlink="_0000001c0000001c"/>
       <description>Death of Gus Smith</description>
     </event>
-    <event handle="_0000003900000039" change="1" id="E0013">
+    <event handle="_0000003900000039" change="1" id="E00013">
       <type>Birth</type>
       <dateval val="1907-11-05"/>
       <place hlink="_0000000700000007"/>
       <description>Birth of Jennifer Anderson</description>
     </event>
-    <event handle="_0000003a0000003a" change="1" id="E0014">
+    <event handle="_0000003a0000003a" change="1" id="E00014">
       <type>Death</type>
       <dateval val="1985-05-29"/>
       <place hlink="_0000001c0000001c"/>
       <description>Death of Jennifer Anderson</description>
     </event>
-    <event handle="_0000003b0000003b" change="1" id="E0015">
+    <event handle="_0000003b0000003b" change="1" id="E00015">
       <type>Residence</type>
       <dateval val="1980"/>
       <place hlink="_0000003f0000003f"/>
     </event>
-    <event handle="_0000004100000041" change="1" id="E0016">
+    <event handle="_0000004100000041" change="1" id="E00016">
       <type>Birth</type>
       <dateval val="1910-05-02"/>
       <place hlink="_0000000700000007"/>
       <description>Birth of Lillie Harriet Jones</description>
     </event>
-    <event handle="_0000004200000042" change="1" id="E0017">
+    <event handle="_0000004200000042" change="1" id="E00017">
       <type>Death</type>
       <dateval val="1990-06-26"/>
       <description>Death of Lillie Harriet Jones</description>
     </event>
-    <event handle="_0000004400000044" change="1" id="E0018">
+    <event handle="_0000004400000044" change="1" id="E00018">
       <type>Birth</type>
       <dateval val="1932-01-30"/>
       <place hlink="_0000001c0000001c"/>
       <description>Birth of John Hjalmar Smith</description>
     </event>
-    <event handle="_0000004b0000004b" change="1" id="E0019">
+    <event handle="_0000004b0000004b" change="1" id="E00019">
       <type>Birth</type>
       <dateval val="1963-08-28"/>
       <place hlink="_0000001c0000001c"/>
       <description>Birth of Eric Lloyd Smith</description>
     </event>
-    <event handle="_0000004c0000004c" change="1" id="E0020">
+    <event handle="_0000004c0000004c" change="1" id="E00020">
       <type>Adopted</type>
     </event>
-    <event handle="_0000004f0000004f" change="1" id="E0021">
+    <event handle="_0000004f0000004f" change="1" id="E00021">
       <type>Birth</type>
       <dateval val="1998-04-12"/>
       <place hlink="_0000005000000050"/>
       <description>Birth of Amber Marie Smith</description>
     </event>
-    <event handle="_0000005100000051" change="1" id="E0022">
+    <event handle="_0000005100000051" change="1" id="E00022">
       <type>Christening</type>
       <dateval val="1998-04-26"/>
       <place hlink="_0000005200000052"/>
       <description>Christening of Amber Marie Smith</description>
     </event>
-    <event handle="_0000005400000054" change="1" id="E0023">
+    <event handle="_0000005400000054" change="1" id="E00023">
       <type>Birth</type>
       <dateval val="1899-12-20"/>
       <place hlink="_0000000700000007"/>
       <description>Birth of Carl Emil Smith</description>
     </event>
-    <event handle="_0000005500000055" change="1" id="E0024">
+    <event handle="_0000005500000055" change="1" id="E00024">
       <type>Death</type>
       <dateval val="1959-01-28"/>
       <place hlink="_0000003400000034"/>
       <description>Death of Carl Emil Smith</description>
       <attribute type="Cause" value="Bad breath"/>
     </event>
-    <event handle="_0000005600000056" change="1" id="E0025">
+    <event handle="_0000005600000056" change="1" id="E00025">
       <type>Birth</type>
       <dateval val="1893-01-31"/>
       <place hlink="_0000000700000007"/>
       <description>Birth of Hjalmar Smith</description>
     </event>
-    <event handle="_0000005700000057" change="1" id="E0026">
+    <event handle="_0000005700000057" change="1" id="E00026">
       <type>Birth</type>
+      <description>No Date Information</description>
     </event>
-    <event handle="_0000005800000058" change="1" id="E0027">
+    <event handle="_0000005800000058" change="1" id="E00027">
       <type>Death</type>
       <dateval val="1894-09-25"/>
       <place hlink="_0000000700000007"/>
       <description>Death of Hjalmar Smith</description>
     </event>
-    <event handle="_0000005900000059" change="1" id="E0028">
+    <event handle="_0000005900000059" change="1" id="E00028">
       <type>Death</type>
     </event>
-    <event handle="_0000005b0000005b" change="1" id="E0029">
+    <event handle="_0000005b0000005b" change="1" id="E00029">
       <type>Nobility Title</type>
       <dateval val="1874-10-05"/>
       <place hlink="_0000000700000007"/>
       <description>Sir Jimmy Smith</description>
     </event>
-    <event handle="_0000005c0000005c" change="1" id="E0030">
+    <event handle="_0000005c0000005c" change="1" id="E00030">
       <type>Birth</type>
       <dateval val="1830-11-19"/>
       <place hlink="_0000002600000026"/>
       <description>Birth of Martin Smith</description>
     </event>
-    <event handle="_0000005d0000005d" change="1" id="E0031">
+    <event handle="_0000005d0000005d" change="1" id="E00031">
       <type>Death</type>
       <daterange start="1899" stop="1905"/>
       <place hlink="_0000005e0000005e"/>
       <description>Death of Martin Smith</description>
     </event>
-    <event handle="_0000005f0000005f" change="1" id="E0032">
+    <event handle="_0000005f0000005f" change="1" id="E00032">
       <type>Baptism</type>
       <dateval val="1830-11-23"/>
       <place hlink="_0000002600000026"/>
       <description>Baptism of Martin Smith</description>
     </event>
-    <event handle="_0000006200000062" change="1" id="E0033">
+    <event handle="_0000006200000062" change="1" id="E00033">
       <type>DATE</type>
       <description>2007-12-21</description>
       <attribute type="Time" value="01:35:26"/>
     </event>
-    <event handle="_0000006300000063" change="1" id="E0034">
+    <event handle="_0000006300000063" change="1" id="E00034">
       <type>Birth</type>
       <dateval val="1889-01-31"/>
       <place hlink="_0000000700000007"/>
       <description>Birth of Astrid Shermanna Augusta Smith</description>
     </event>
-    <event handle="_0000006400000064" change="1" id="E0035">
+    <event handle="_0000006400000064" change="1" id="E00035">
       <type>Death</type>
       <dateval val="1963-12-21"/>
       <place hlink="_0000001c0000001c"/>
       <description>Death of Astrid Shermanna Augusta Smith</description>
     </event>
-    <event handle="_0000006500000065" change="1" id="E0036">
+    <event handle="_0000006500000065" change="1" id="E00036">
       <type>Birth</type>
       <dateval val="1862-11-28"/>
       <place hlink="_0000006600000066"/>
       <description>Birth of Gustaf Smith, Sr.</description>
     </event>
-    <event handle="_0000006700000067" change="1" id="E0037">
+    <event handle="_0000006700000067" change="1" id="E00037">
       <type>Death</type>
       <dateval val="1930-07-23" type="before"/>
       <place hlink="_0000001600000016"/>
       <description>Death of Gustaf Smith, Sr.</description>
     </event>
-    <event handle="_0000006800000068" change="1" id="E0038">
+    <event handle="_0000006800000068" change="1" id="E00038">
       <type>Immi</type>
       <dateval val="1908-05-21"/>
       <place hlink="_0000006900000069"/>
     </event>
-    <event handle="_0000006a0000006a" change="1" id="E0039">
+    <event handle="_0000006a0000006a" change="1" id="E00039">
       <type>Christening</type>
       <dateval val="1862-12-07"/>
       <place hlink="_0000002600000026"/>
       <description>Christening of Gustaf Smith, Sr.</description>
     </event>
-    <event handle="_0000007000000070" change="1" id="E0040">
+    <event handle="_0000007000000070" change="1" id="E00040">
       <type>Birth</type>
       <dateval val="1775" type="about"/>
       <place hlink="_0000005e0000005e"/>
       <description>Birth of Marta Ericsdotter</description>
     </event>
-    <event handle="_0000007300000073" change="1" id="E0041">
+    <event handle="_0000007300000073" change="1" id="E00041">
       <type>Birth</type>
       <dateval val="1886-12-15"/>
       <place hlink="_0000000700000007"/>
       <description>Birth of Kirsti Marie Smith</description>
     </event>
-    <event handle="_0000007400000074" change="1" id="E0042">
+    <event handle="_0000007400000074" change="1" id="E00042">
       <type>Death</type>
       <dateval val="1966-07-18"/>
       <place hlink="_0000001c0000001c"/>
       <description>Death of Kirsti Marie Smith</description>
     </event>
-    <event handle="_0000007700000077" change="1" id="E0043">
+    <event handle="_0000007700000077" change="1" id="E00043">
       <type>Birth</type>
       <dateval val="1770" type="about"/>
       <place hlink="_0000005e0000005e"/>
       <description>Birth of Ingeman Smith</description>
     </event>
-    <event handle="_0000007900000079" change="1" id="E0044">
+    <event handle="_0000007900000079" change="1" id="E00044">
       <type>Birth</type>
       <dateval val="1860-09-23"/>
       <place hlink="_0000007a0000007a"/>
       <description>Birth of Anna Streiffert</description>
     </event>
-    <event handle="_0000007b0000007b" change="1" id="E0045">
+    <event handle="_0000007b0000007b" change="1" id="E00045">
       <type>Death</type>
       <dateval val="1927-02-02"/>
       <place hlink="_0000000700000007"/>
       <description>Death of Anna Streiffert</description>
     </event>
-    <event handle="_0000007e0000007e" change="1" id="E0046">
+    <event handle="_0000007e0000007e" change="1" id="E00046">
       <type>Birth</type>
       <dateval val="1966" type="after"/>
       <place hlink="_0000001c0000001c"/>
       <description>Birth of Craig Peter Smith</description>
     </event>
-    <event handle="_0000007f0000007f" change="1" id="E0047">
+    <event handle="_0000007f0000007f" change="1" id="E00047">
       <type>Census</type>
       <description>Census of Craig Peter Smith</description>
       <noteref hlink="_0000008000000080"/>
     </event>
-    <event handle="_0000008200000082" change="1" id="E0048">
+    <event handle="_0000008200000082" change="1" id="E00048">
       <type>Birth</type>
       <dateval val="1858-10-06"/>
       <place hlink="_0000008300000083"/>
       <description>Birth of Magnes Smith</description>
       <attribute type="RIN" value="789654123"/>
     </event>
-    <event handle="_0000008400000084" change="1" id="E0049">
+    <event handle="_0000008400000084" change="1" id="E00049">
       <type>Death</type>
       <dateval val="1910-02-20"/>
       <place hlink="_0000000700000007"/>
       <description>Death of Magnes Smith</description>
     </event>
-    <event handle="_0000008600000086" change="1" id="E0050">
+    <event handle="_0000008600000086" change="1" id="E00050">
       <type>Birth</type>
       <dateval val="1965-08-26"/>
       <place hlink="_0000008900000089"/>
@@ -306,242 +384,242 @@
         <citationref hlink="_0000008800000088"/>
       </attribute>
     </event>
-    <event handle="_0000008a0000008a" change="1" id="E0051">
+    <event handle="_0000008a0000008a" change="1" id="E00051">
       <type>Occupation</type>
       <description>Retail Manager</description>
     </event>
-    <event handle="_0000008b0000008b" change="1" id="E0052">
+    <event handle="_0000008b0000008b" change="1" id="E00052">
       <type>Degree</type>
       <dateval val="1988"/>
       <description>Business Management</description>
     </event>
-    <event handle="_0000008d0000008d" change="1" id="E0053">
+    <event handle="_0000008d0000008d" change="1" id="E00053">
       <type>Birth</type>
       <dateval val="1903-06-03"/>
       <place hlink="_0000008e0000008e"/>
       <description>Birth of Marjorie Ohman</description>
     </event>
-    <event handle="_0000008f0000008f" change="1" id="E0054">
+    <event handle="_0000008f0000008f" change="1" id="E00054">
       <type>Death</type>
       <dateval val="1980-06-22"/>
       <place hlink="_0000003400000034"/>
       <description>Death of Marjorie Ohman</description>
     </event>
-    <event handle="_0000009100000091" change="1" id="E0055">
+    <event handle="_0000009100000091" change="1" id="E00055">
       <type>Birth</type>
       <dateval val="1966-07-02"/>
       <place hlink="_0000009200000092"/>
       <description>Birth of Darcy Horne</description>
     </event>
-    <event handle="_0000009400000094" change="1" id="E0056">
+    <event handle="_0000009400000094" change="1" id="E00056">
       <type>Birth</type>
       <dateval val="1935-03-13"/>
       <place hlink="_0000001c0000001c"/>
       <description>Birth of Lloyd Smith</description>
     </event>
-    <event handle="_0000009600000096" change="1" id="E0057">
+    <event handle="_0000009600000096" change="1" id="E00057">
       <type>Birth</type>
       <dateval val="1933-11-22"/>
       <place hlink="_0000001600000016"/>
       <description>Birth of Alice Paula Perkins</description>
     </event>
-    <event handle="_0000009800000098" change="1" id="E0058">
+    <event handle="_0000009800000098" change="1" id="E00058">
       <type>Birth</type>
       <dateval val="1991-09-16"/>
       <place hlink="_0000009900000099"/>
       <description>Birth of Lars Peter Smith</description>
     </event>
-    <event handle="_0000009a0000009a" change="1" id="E0059">
+    <event handle="_0000009a0000009a" change="1" id="E00059">
       <type>Adopted</type>
     </event>
-    <event handle="_0000009c0000009c" change="1" id="E0060">
+    <event handle="_0000009c0000009c" change="1" id="E00060">
       <type>Birth</type>
       <dateval val="1800-09-14"/>
       <place hlink="_0000002600000026"/>
       <description>Birth of Elna Jefferson</description>
     </event>
-    <event handle="_0000009d0000009d" change="1" id="E0061">
+    <event handle="_0000009d0000009d" change="1" id="E00061">
       <type>Death</type>
       <place hlink="_0000005e0000005e"/>
       <description>Death of Elna Jefferson</description>
     </event>
-    <event handle="_0000009e0000009e" change="1" id="E0062">
+    <event handle="_0000009e0000009e" change="1" id="E00062">
       <type>Christening</type>
       <dateval val="1800-09-16"/>
       <place hlink="_0000002600000026"/>
       <description>Christening of Elna Jefferson</description>
     </event>
-    <event handle="_000000a3000000a3" change="1" id="E0063">
+    <event handle="_000000a3000000a3" change="1" id="E00063">
       <type>Birth</type>
       <dateval val="1961-05-24"/>
       <place hlink="_000000a6000000a6"/>
       <description>Birth of Edwin Michael Smith</description>
       <citationref hlink="_000000a5000000a5"/>
     </event>
-    <event handle="_000000a7000000a7" change="1" id="E0064">
+    <event handle="_000000a7000000a7" change="1" id="E00064">
       <type>Occupation</type>
       <description>Software Engineer</description>
       <noteref hlink="_000000a8000000a8"/>
     </event>
-    <event handle="_000000a9000000a9" change="1" id="E0065">
+    <event handle="_000000a9000000a9" change="1" id="E00065">
       <type>Education</type>
       <daterange start="1979" stop="1984"/>
       <place hlink="_000000aa000000aa"/>
       <description>Education of Edwin Michael Smith</description>
     </event>
-    <event handle="_000000ab000000ab" change="1" id="E0066">
+    <event handle="_000000ab000000ab" change="1" id="E00066">
       <type>Degree</type>
       <dateval val="1984"/>
       <description>B.S.E.E.</description>
     </event>
-    <event handle="_000000ad000000ad" change="1" id="E0067">
+    <event handle="_000000ad000000ad" change="1" id="E00067">
       <type>Birth</type>
       <dateval val="1832-11-29"/>
       <place hlink="_000000ae000000ae"/>
       <description>Birth of Kerstina Hansdotter</description>
     </event>
-    <event handle="_000000af000000af" change="1" id="E0068">
+    <event handle="_000000af000000af" change="1" id="E00068">
       <type>Death</type>
       <dateval val="1908" type="before"/>
       <place hlink="_0000005e0000005e"/>
       <description>Death of Kerstina Hansdotter</description>
     </event>
-    <event handle="_000000b1000000b1" change="1" id="E0069">
+    <event handle="_000000b1000000b1" change="1" id="E00069">
       <type>Birth</type>
       <daterange start="1794" stop="1796"/>
       <place hlink="_000000b2000000b2"/>
       <description>Birth of Martin Smith</description>
     </event>
-    <event handle="_000000b3000000b3" change="1" id="E0070">
+    <event handle="_000000b3000000b3" change="1" id="E00070">
       <type>Death</type>
       <place hlink="_0000005e0000005e"/>
       <description>Death of Martin Smith</description>
     </event>
-    <event handle="_000000b5000000b5" change="1" id="E0071">
+    <event handle="_000000b5000000b5" change="1" id="E00071">
       <type>Birth</type>
       <dateval val="1826-01-29"/>
       <place hlink="_0000002600000026"/>
       <description>Birth of Ingeman Smith</description>
     </event>
-    <event handle="_000000b7000000b7" change="1" id="E0072">
+    <event handle="_000000b7000000b7" change="1" id="E00072">
       <type>Birth</type>
       <dateval val="1960-02-05"/>
       <place hlink="_000000a6000000a6"/>
       <description>Birth of Marjorie Alice Smith</description>
     </event>
-    <event handle="_000000b9000000b9" change="1" id="E0073">
+    <event handle="_000000b9000000b9" change="1" id="E00073">
       <type>Birth</type>
       <dateval val="1935-12-02"/>
       <description>Birth of Janis Elaine Green</description>
     </event>
-    <event handle="_000000bb000000bb" change="1" id="E0074">
+    <event handle="_000000bb000000bb" change="1" id="E00074">
       <type>Birth</type>
       <dateval val="1996-06-26"/>
       <place hlink="_0000005000000050"/>
       <description>Birth of Mason Michael Smith</description>
     </event>
-    <event handle="_000000bc000000bc" change="1" id="E0075">
+    <event handle="_000000bc000000bc" change="1" id="E00075">
       <type>Christening</type>
       <dateval val="1996-07-10"/>
       <place hlink="_0000005200000052"/>
       <description>Christening of Mason Michael Smith</description>
     </event>
-    <event handle="_000000be000000be" change="1" id="E0076">
+    <event handle="_000000be000000be" change="1" id="E00076">
       <type>Birth</type>
       <daterange start="1886-12" stop="1897-13" cformat="Hebrew"/>
       <description>Birth of Edwin Willard</description>
     </event>
-    <event handle="_000000c0000000c0" change="1" id="E0077">
+    <event handle="_000000c0000000c0" change="1" id="E00077">
       <type>Birth</type>
       <dateval val="1823" type="after"/>
       <place hlink="_0000002600000026"/>
       <description>Birth of Ingar Smith</description>
     </event>
-    <event handle="_000000c1000000c1" change="1" id="E0078">
+    <event handle="_000000c1000000c1" change="1" id="E00078">
       <type>Birth</type>
       <dateval val="1895-04-07"/>
       <place hlink="_0000000700000007"/>
       <description>Birth of Hjalmar Smith</description>
     </event>
-    <event handle="_000000c2000000c2" change="1" id="E0079">
+    <event handle="_000000c2000000c2" change="1" id="E00079">
       <type>Death</type>
       <dateval val="1975-06-26"/>
       <place hlink="_0000003400000034"/>
       <description>Death of Hjalmar Smith</description>
     </event>
-    <event handle="_000000c3000000c3" change="1" id="E0080">
+    <event handle="_000000c3000000c3" change="1" id="E00080">
       <type>Baptism</type>
       <dateval val="1895-06-03"/>
       <place hlink="_000000c4000000c4"/>
       <description>Baptism of Hjalmar Smith</description>
     </event>
-    <event handle="_000000c5000000c5" change="1" id="E0081">
+    <event handle="_000000c5000000c5" change="1" id="E00081">
       <type>Immi</type>
       <dateval val="1912-11-14"/>
       <place hlink="_0000006900000069"/>
     </event>
-    <event handle="_000000c8000000c8" change="1" id="E0082">
+    <event handle="_000000c8000000c8" change="1" id="E00082">
       <type>Birth</type>
       <dateval val="1860-09-27"/>
       <place hlink="_0000008300000083"/>
       <description>Birth of Emil Smith</description>
     </event>
-    <event handle="_000000c9000000c9" change="1" id="E0083">
+    <event handle="_000000c9000000c9" change="1" id="E00083">
       <type>Residence</type>
       <datespan start="1873" stop="1878"/>
       <place hlink="_000000ca000000ca"/>
       <description>At the boarding school</description>
     </event>
-    <event handle="_000000cb000000cb" change="1" id="E0084">
+    <event handle="_000000cb000000cb" change="1" id="E00084">
       <type>Residence</type>
       <datestr val="from 1873 to  &lt;hebrew&gt;1878"/>
       <place hlink="_000000cc000000cc"/>
       <description>At the hebrew boarding school</description>
     </event>
-    <event handle="_000000cd000000cd" change="1" id="E0085">
+    <event handle="_000000cd000000cd" change="1" id="E00085">
       <type>Marriage</type>
       <daterange start="1816" stop="1817"/>
       <place hlink="_0000002600000026"/>
       <description>Marriage of Martin Smith and Elna Jefferson</description>
     </event>
-    <event handle="_000000ce000000ce" change="1" id="E0086">
+    <event handle="_000000ce000000ce" change="1" id="E00086">
       <type>Marriage</type>
       <datestr val="between 1789 and  &lt;hebrew&gt;1790"/>
       <place hlink="_0000005e0000005e"/>
       <description>Marriage of Ingeman Smith and Marta Ericsdotter</description>
     </event>
-    <event handle="_000000cf000000cf" change="1" id="E0087">
+    <event handle="_000000cf000000cf" change="1" id="E00087">
       <type>Marriage</type>
       <dateval val="1986-07-12"/>
       <place hlink="_000000d0000000d0"/>
       <description>Marriage of Eric Lloyd Smith and Darcy Horne</description>
     </event>
-    <event handle="_000000d2000000d2" change="1" id="E0088">
+    <event handle="_000000d2000000d2" change="1" id="E00088">
       <type>Marriage</type>
       <dateval val="1884-08-24"/>
       <place hlink="_0000000700000007"/>
       <description>Marriage of Magnes Smith and Anna Streiffert</description>
       <objref hlink="_000000d3000000d3"/>
     </event>
-    <event handle="_000000d5000000d5" change="1" id="E0089">
+    <event handle="_000000d5000000d5" change="1" id="E00089">
       <type>Marriage Banns</type>
       <dateval val="1883-08-24"/>
       <description>Celebration</description>
     </event>
-    <event handle="_000000d7000000d7" change="1" id="E0090">
+    <event handle="_000000d7000000d7" change="1" id="E00090">
       <type>Marriage</type>
       <dateval val="1954-06-04"/>
       <place hlink="_0000001600000016"/>
       <description>Marriage of John Hjalmar Smith and Alice Paula Perkins</description>
       <citationref hlink="_000000d8000000d8"/>
     </event>
-    <event handle="_000000db000000db" change="1" id="E0091">
+    <event handle="_000000db000000db" change="1" id="E00091">
       <type>Marriage</type>
       <dateval val="1995-05-27"/>
       <place hlink="_000000dc000000dc"/>
       <description>Marriage of Edwin Michael Smith and Janice Ann Adams</description>
     </event>
-    <event handle="_000000dd000000dd" change="1" id="E0092" priv="1">
+    <event handle="_000000dd000000dd" change="1" id="E00092" priv="1">
       <type>Engagement</type>
       <dateval val="1994-10-05"/>
       <place hlink="_0000001c0000001c"/>
@@ -551,44 +629,44 @@
       <attribute type="Witness" value="George Smorge"/>
       <attribute type="_UID" value="123456"/>
     </event>
-    <event handle="_000000de000000de" change="1" id="E0093">
+    <event handle="_000000de000000de" change="1" id="E00093">
       <type>Civil</type>
       <description>Common law marriage</description>
     </event>
-    <event handle="_000000df000000df" change="1" id="E0094">
+    <event handle="_000000df000000df" change="1" id="E00094">
       <type>Marriage</type>
       <datespan start="1856" stop="1857"/>
       <description>Marriage of Martin Smith and Kerstina Hansdotter</description>
     </event>
-    <event handle="_000000e0000000e0" change="1" id="E0095">
+    <event handle="_000000e0000000e0" change="1" id="E00095">
       <type>Marriage</type>
       <dateval val="1910" type="about"/>
       <description>Marriage of Edwin Willard and Kirsti Marie Smith</description>
     </event>
-    <event handle="_000000e1000000e1" change="1" id="E0096">
+    <event handle="_000000e1000000e1" change="1" id="E00096">
       <type>Marriage</type>
       <dateval val="1912-11-30"/>
       <place hlink="_0000000700000007"/>
       <description>Marriage of Herman Julius Nielsen and Astrid Shermanna Augusta Smith</description>
     </event>
-    <event handle="_000000e2000000e2" change="1" id="E0097">
+    <event handle="_000000e2000000e2" change="1" id="E00097">
       <type>Marriage</type>
       <dateval val="1927-10-31"/>
       <place hlink="_0000003400000034"/>
       <description>Marriage of Hjalmar Smith and Marjorie Ohman</description>
     </event>
-    <event handle="_000000e3000000e3" change="1" id="E0098">
+    <event handle="_000000e3000000e3" change="1" id="E00098">
       <type>Marriage</type>
       <dateval val="1920" type="about"/>
       <description>Marriage of Gus Smith and Evelyn Michaels</description>
     </event>
-    <event handle="_000000e4000000e4" change="1" id="E0099">
+    <event handle="_000000e4000000e4" change="1" id="E00099">
       <type>Marriage</type>
       <dateval val="1958-08-10"/>
       <place hlink="_0000001c0000001c"/>
       <description>Marriage of Lloyd Smith and Janis Elaine Green</description>
     </event>
-    <event handle="_000000e6000000e6" change="1" id="E0100">
+    <event handle="_000000e6000000e6" change="1" id="E00100">
       <type>Marriage</type>
     </event>
   </events>
@@ -854,7 +932,7 @@
       <eventref hlink="_0000005d0000005d" role="Primary"/>
       <eventref hlink="_0000005f0000005f" role="Primary"/>
       <eventref hlink="_0000006200000062" role="Primary"/>
-      <attribute type="RESN" value=""/>
+      <attribute type="RESN" value="locked"/>
       <childof hlink="_0000002700000027"/>
       <parentin hlink="_0000006000000060"/>
       <noteref hlink="_0000006100000061"/>
@@ -1327,134 +1405,166 @@
     </source>
   </sources>
   <places>
-    <placeobj handle="_0000000700000007" change="1" id="P0000" type="Unknown">
+    <placeobj handle="_0000000700000007" change="1" id="P0000">
       <ptitle>Rønne, Bornholm, Denmark</ptitle>
       <pname value="Rønne, Bornholm, Denmark"/>
+      <ptype value="Unknown" number="0"/>
+      <coord long="E14.7083" lat="N55.1010"/>
       <objref hlink="_000000d3000000d3"/>
       <citationref hlink="_000000d4000000d4"/>
     </placeobj>
-    <placeobj handle="_0000001300000013" change="1" id="P0001" type="Unknown">
+    <placeobj handle="_0000001300000013" change="1" id="P0001">
       <ptitle>Löderup, Malmöhus Län, Sweden</ptitle>
       <pname value="Löderup, Malmöhus Län, Sweden"/>
+      <ptype value="Unknown" number="0"/>
     </placeobj>
-    <placeobj handle="_0000001600000016" change="1" id="P0002" type="Unknown">
+    <placeobj handle="_0000001600000016" change="1" id="P0002">
       <ptitle>Sparks, Washoe Co., NV</ptitle>
       <pname value="Sparks, Washoe Co., NV"/>
+      <ptype value="Unknown" number="0"/>
     </placeobj>
-    <placeobj handle="_0000001c0000001c" change="1" id="P0003" type="Unknown">
+    <placeobj handle="_0000001c0000001c" change="1" id="P0003">
       <ptitle>San Francisco, San Francisco Co., CA</ptitle>
       <pname value="San Francisco, San Francisco Co., CA"/>
+      <ptype value="Unknown" number="0"/>
     </placeobj>
-    <placeobj handle="_0000002600000026" change="1" id="P0004" type="Unknown">
+    <placeobj handle="_0000002600000026" change="1" id="P0004">
       <ptitle>Gladsax, Kristianstad Län, Sweden</ptitle>
       <pname value="Gladsax, Kristianstad Län, Sweden"/>
+      <ptype value="Unknown" number="0"/>
     </placeobj>
-    <placeobj handle="_0000003400000034" change="1" id="P0005" type="Unknown">
+    <placeobj handle="_0000003400000034" change="1" id="P0005">
       <ptitle>Reno, Washoe Co., NV</ptitle>
       <pname value="Reno, Washoe Co., NV"/>
+      <ptype value="Unknown" number="0"/>
     </placeobj>
-    <placeobj handle="_0000003c0000003c" change="1" id="P0006" type="Country">
+    <placeobj handle="_0000003c0000003c" change="1" id="P0006">
       <ptitle>USA</ptitle>
       <pname value="USA"/>
+      <ptype value="Country" number="1"/>
     </placeobj>
-    <placeobj handle="_0000003d0000003d" change="1" id="P0007" type="State">
+    <placeobj handle="_0000003d0000003d" change="1" id="P0007">
       <ptitle>CA, USA</ptitle>
       <pname value="CA"/>
-      <placeref hlink="_0000003c0000003c"/>
+      <ptype value="State" number="2"/>
+      <placeref hlink="_0000003c0000003c" type="Administrative"/>
     </placeobj>
-    <placeobj handle="_0000003e0000003e" change="1" id="P0008" type="City">
+    <placeobj handle="_0000003e0000003e" change="1" id="P0008">
       <ptitle>San Francisco, CA, USA</ptitle>
       <pname value="San Francisco"/>
-      <placeref hlink="_0000003d0000003d"/>
+      <ptype value="City" number="4"/>
+      <placeref hlink="_0000003d0000003d" type="Administrative"/>
     </placeobj>
-    <placeobj handle="_0000003f0000003f" change="1" id="P0009" type="Street">
+    <placeobj handle="_0000003f0000003f" change="1" id="P0009">
       <ptitle>459 Main St., The Village, 87654, San Francisco, CA, USA</ptitle>
       <pname value="459 Main St., The Village, 87654"/>
-      <placeref hlink="_0000003e0000003e"/>
+      <ptype value="Street" number="7"/>
+      <placeref hlink="_0000003e0000003e" type="Administrative"/>
     </placeobj>
-    <placeobj handle="_0000005000000050" change="1" id="P0010" type="Unknown">
+    <placeobj handle="_0000005000000050" change="1" id="P0010">
       <ptitle>Hayward, Alameda Co., CA</ptitle>
       <pname value="Hayward, Alameda Co., CA"/>
+      <ptype value="Unknown" number="0"/>
     </placeobj>
-    <placeobj handle="_0000005200000052" change="1" id="P0011" type="Unknown">
+    <placeobj handle="_0000005200000052" change="1" id="P0011">
       <ptitle>Community Presbyterian Church, Danville, CA</ptitle>
       <pname value="Community Presbyterian Church, Danville, CA"/>
+      <ptype value="Unknown" number="0"/>
     </placeobj>
-    <placeobj handle="_0000005e0000005e" change="1" id="P0012" type="Unknown">
+    <placeobj handle="_0000005e0000005e" change="1" id="P0012">
       <ptitle>Sweden</ptitle>
       <pname value="Sweden"/>
+      <ptype value="Unknown" number="0"/>
     </placeobj>
-    <placeobj handle="_0000006600000066" change="1" id="P0013" type="Unknown">
+    <placeobj handle="_0000006600000066" change="1" id="P0013">
       <ptitle>Grostorp, Kristianstad Län, Sweden</ptitle>
       <pname value="Grostorp, Kristianstad Län, Sweden"/>
+      <ptype value="Unknown" number="0"/>
     </placeobj>
-    <placeobj handle="_0000006900000069" change="1" id="P0014" type="Unknown">
+    <placeobj handle="_0000006900000069" change="1" id="P0014">
       <ptitle>Copenhagen, Denmark</ptitle>
       <pname value="Copenhagen, Denmark"/>
+      <ptype value="Unknown" number="0"/>
     </placeobj>
-    <placeobj handle="_0000007200000072" change="1" id="P0015" type="Country">
+    <placeobj handle="_0000007200000072" change="1" id="P0015">
       <ptitle>Sweden</ptitle>
       <pname value="Sweden"/>
+      <ptype value="Country" number="1"/>
     </placeobj>
-    <placeobj handle="_0000007a0000007a" change="1" id="P0016" type="Unknown">
+    <placeobj handle="_0000007a0000007a" change="1" id="P0016">
       <ptitle>Hoya/Jona/Hoia, Sweden</ptitle>
       <pname value="Hoya/Jona/Hoia, Sweden"/>
+      <ptype value="Unknown" number="0"/>
     </placeobj>
-    <placeobj handle="_0000008300000083" change="1" id="P0017" type="Unknown">
+    <placeobj handle="_0000008300000083" change="1" id="P0017">
       <ptitle>Simrishamn, Kristianstad Län, Sweden</ptitle>
       <pname value="Simrishamn, Kristianstad Län, Sweden"/>
+      <ptype value="Unknown" number="0"/>
     </placeobj>
-    <placeobj handle="_0000008900000089" change="1" id="P0018" type="Unknown">
+    <placeobj handle="_0000008900000089" change="1" id="P0018">
       <ptitle>Fremont, Alameda Co., CA</ptitle>
       <pname value="Fremont, Alameda Co., CA"/>
+      <ptype value="Unknown" number="0"/>
     </placeobj>
-    <placeobj handle="_0000008e0000008e" change="1" id="P0019" type="Unknown">
+    <placeobj handle="_0000008e0000008e" change="1" id="P0019">
       <ptitle>Denver, Denver Co., CO</ptitle>
       <pname value="Denver, Denver Co., CO"/>
+      <ptype value="Unknown" number="0"/>
     </placeobj>
-    <placeobj handle="_0000009200000092" change="1" id="P0020" type="Unknown">
+    <placeobj handle="_0000009200000092" change="1" id="P0020">
       <ptitle>Sacramento, Sacramento Co., CA</ptitle>
       <pname value="Sacramento, Sacramento Co., CA"/>
+      <ptype value="Unknown" number="0"/>
     </placeobj>
-    <placeobj handle="_0000009900000099" change="1" id="P0021" type="Unknown">
+    <placeobj handle="_0000009900000099" change="1" id="P0021">
       <ptitle>Santa Rosa, Sonoma Co., CA</ptitle>
       <pname value="Santa Rosa, Sonoma Co., CA"/>
+      <ptype value="Unknown" number="0"/>
     </placeobj>
-    <placeobj handle="_000000a6000000a6" change="1" id="P0022" type="Unknown">
+    <placeobj handle="_000000a6000000a6" change="1" id="P0022">
       <ptitle>San Jose, Santa Clara Co., CA</ptitle>
       <pname value="San Jose, Santa Clara Co., CA"/>
+      <ptype value="Unknown" number="0"/>
     </placeobj>
-    <placeobj handle="_000000aa000000aa" change="1" id="P0023" type="Unknown">
+    <placeobj handle="_000000aa000000aa" change="1" id="P0023">
       <ptitle>UC Berkeley</ptitle>
       <pname value="UC Berkeley"/>
+      <ptype value="Unknown" number="0"/>
     </placeobj>
-    <placeobj handle="_000000ae000000ae" change="1" id="P0024" type="Unknown">
+    <placeobj handle="_000000ae000000ae" change="1" id="P0024">
       <ptitle>Smestorp, Kristianstad Län, Sweden</ptitle>
       <pname value="Smestorp, Kristianstad Län, Sweden"/>
+      <ptype value="Unknown" number="0"/>
     </placeobj>
-    <placeobj handle="_000000b2000000b2" change="1" id="P0025" type="Unknown">
+    <placeobj handle="_000000b2000000b2" change="1" id="P0025">
       <ptitle>Tommarp, Kristianstad Län, Sweden</ptitle>
       <pname value="Tommarp, Kristianstad Län, Sweden"/>
+      <ptype value="Unknown" number="0"/>
     </placeobj>
-    <placeobj handle="_000000c4000000c4" change="1" id="P0026" type="Unknown">
+    <placeobj handle="_000000c4000000c4" change="1" id="P0026">
       <ptitle>Rønne Bornholm, Denmark</ptitle>
       <pname value="Rønne Bornholm, Denmark"/>
+      <ptype value="Unknown" number="0"/>
     </placeobj>
-    <placeobj handle="_000000ca000000ca" change="1" id="P0027" type="Unknown">
+    <placeobj handle="_000000ca000000ca" change="1" id="P0027">
       <ptitle>Oronoko, Berrien, Michigan, USA</ptitle>
       <pname value="Oronoko, Berrien, Michigan, USA"/>
+      <ptype value="Unknown" number="0"/>
     </placeobj>
-    <placeobj handle="_000000cc000000cc" change="1" id="P0028" type="Home">
+    <placeobj handle="_000000cc000000cc" change="1" id="P0028">
       <ptitle>Shemps</ptitle>
       <pname value="Shemps"/>
+      <ptype value="Home"/>
     </placeobj>
-    <placeobj handle="_000000d0000000d0" change="1" id="P0029" type="Unknown">
+    <placeobj handle="_000000d0000000d0" change="1" id="P0029">
       <ptitle>Woodland, Yolo Co., CA</ptitle>
       <pname value="Woodland, Yolo Co., CA"/>
+      <ptype value="Unknown" number="0"/>
     </placeobj>
-    <placeobj handle="_000000dc000000dc" change="1" id="P0030" type="Unknown">
+    <placeobj handle="_000000dc000000dc" change="1" id="P0030">
       <ptitle>San Ramon, Conta Costa Co., CA</ptitle>
       <pname value="San Ramon, Conta Costa Co., CA"/>
+      <ptype value="Unknown" number="0"/>
     </placeobj>
   </places>
   <objects>
@@ -1466,13 +1576,13 @@
       <noteref hlink="_000000fa000000fa"/>
     </object>
     <object handle="_000000d3000000d3" change="1" id="O0001">
-      <file src="Magnes&amp;Anna_smiths_marr_cert.jpg" mime="unknown" description="Magnes&amp;Anna_smiths_marr_cert.jpg"/>
+      <file src="Magnes&amp;Anna_smiths_marr_cert.jpg" mime="image/jpeg" description="Magnes&amp;Anna_smiths_marr_cert.jpg"/>
     </object>
     <object handle="_000000d9000000d9" change="1" id="O0002">
-      <file src="John&amp;Alice_smiths_marr_cert.jpg" mime="unknown" description="John&amp;Alice_smiths_marr_cert.jpg"/>
+      <file src="John&amp;Alice_smiths_marr_cert.jpg" mime="image/jpeg" description="John&amp;Alice_smiths_marr_cert.jpg"/>
     </object>
     <object handle="_000000f2000000f2" change="1" id="O0003">
-      <file src="Attic_photo.jpg" mime="unknown" description="Attic_photo.jpg"/>
+      <file src="Attic_photo.jpg" mime="image/jpeg" description="Attic_photo.jpg"/>
     </object>
   </objects>
   <repositories>
@@ -1576,7 +1686,7 @@ Filename omitted                                                    Line    48: 
     <note handle="_0000004900000049" change="1" id="N0013" type="GEDCOM import">
       <text>Records not imported into INDI (individual) Gramps ID I0018:
 
-Tag recognized but not supported                                    Line   245: 2 TYPE first generaton
+Tag recognized but not supported                                    Line   247: 2 TYPE first generaton
 </text>
       <style name="fontface" value="Monospace">
         <range start="0" end="165"/>
@@ -1608,7 +1718,7 @@ Company. He enlisted in the army at Sparks 7 December 1917 and served as a Corpo
     <note handle="_000000d1000000d1" change="1" id="N0020" type="GEDCOM import">
       <text>Records not imported into FAM (family) Gramps ID F0010:
 
-Tag recognized but not supported                                    Line   863: 2 _STAT 
+Tag recognized but not supported                                    Line   865: 2 _STAT 
 </text>
       <style name="fontface" value="Monospace">
         <range start="0" end="146"/>
@@ -1617,8 +1727,8 @@ Tag recognized but not supported                                    Line   863: 
     <note handle="_000000d6000000d6" change="1" id="N0021" type="GEDCOM import">
       <text>Records not imported into FAM (family) Gramps ID F0011:
 
-Could not import Magnes&amp;Anna_smiths_marr_cert.jpg                   Line   878: 3 OBJE 
-Could not import Magnes&amp;Anna_smiths_marr_cert.jpg                   Line   881: 2 OBJE 
+Could not import Magnes&amp;Anna_smiths_marr_cert.jpg                   Line   880: 3 OBJE 
+Could not import Magnes&amp;Anna_smiths_marr_cert.jpg                   Line   883: 2 OBJE 
 </text>
       <style name="fontface" value="Monospace">
         <range start="0" end="233"/>
@@ -1627,7 +1737,7 @@ Could not import Magnes&amp;Anna_smiths_marr_cert.jpg                   Line   8
     <note handle="_000000da000000da" change="1" id="N0022" type="GEDCOM import">
       <text>Records not imported into FAM (family) Gramps ID F0012:
 
-Could not import John&amp;Alice_smiths_marr_cert.jpg                    Line   905: 1 OBJE 
+Could not import John&amp;Alice_smiths_marr_cert.jpg                    Line   907: 1 OBJE 
 </text>
       <style name="fontface" value="Monospace">
         <range start="0" end="145"/>
@@ -1636,7 +1746,7 @@ Could not import John&amp;Alice_smiths_marr_cert.jpg                    Line   9
     <note handle="_000000e5000000e5" change="1" id="N0023" type="GEDCOM import">
       <text>Records not imported into FAM (family) Gramps ID F0008:
 
-Tag recognized but not supported                                    Line  1005: 1 ADDR 123 Main st, Grantville, Virginia, USA
+Tag recognized but not supported                                    Line  1007: 1 ADDR 123 Main st, Grantville, Virginia, USA
 </text>
       <style name="fontface" value="Monospace">
         <range start="0" end="183"/>
@@ -1660,8 +1770,8 @@ Tag recognized but not supported                                    Line  1005: 
     <note handle="_000000ef000000ef" change="1" id="N0029" type="GEDCOM import">
       <text>Records not imported into SOUR (source) Gramps ID S0003:
 
-Tag recognized but not supported                                    Line  1045: 1 DATA 
-Skipped subordinate line                                            Line  1046: 2 AGNC NYC Public Library
+Tag recognized but not supported                                    Line  1047: 1 DATA 
+Skipped subordinate line                                            Line  1048: 2 AGNC NYC Public Library
 </text>
       <style name="fontface" value="Monospace">
         <range start="0" end="252"/>
@@ -1676,9 +1786,9 @@ Skipped subordinate line                                            Line  1046: 
     <note handle="_000000f6000000f6" change="1" id="N0032" type="GEDCOM import">
       <text>Records not imported into REPO (repository) Gramps ID R0003:
 
-REFN ignored                                                        Line  1075: 3 REFN blah blah
-Skipped subordinate line                                            Line  1076: 4 TYPE who knows
-Could not import Attic_photo.jpg                                    Line  1079: 3 OBJE 
+REFN ignored                                                        Line  1077: 3 REFN blah blah
+Skipped subordinate line                                            Line  1078: 4 TYPE who knows
+Could not import Attic_photo.jpg                                    Line  1081: 3 OBJE 
 </text>
       <style name="fontface" value="Monospace">
         <range start="0" end="344"/>
@@ -1687,7 +1797,7 @@ Could not import Attic_photo.jpg                                    Line  1079: 
     <note handle="_000000f7000000f7" change="1" id="N0033" type="GEDCOM import">
       <text>Records not imported into Top Level:
 
-Unknown tag                                                         Line  1106: 0 XXX an unknown token at level 0
+Unknown tag                                                         Line  1108: 0 XXX an unknown token at level 0
 </text>
       <style name="fontface" value="Monospace">
         <range start="0" end="152"/>
@@ -1696,13 +1806,13 @@ Unknown tag                                                         Line  1106: 
     <note handle="_000000f9000000f9" change="1" id="N0034" type="GEDCOM import">
       <text>Records not imported into Top Level:
 
-Unknown tag                                                         Line  1109: 1 @X1@ XXX and unknown token xref definition
+Unknown tag                                                         Line  1111: 1 @X1@ XXX and unknown token xref definition
 </text>
       <style name="fontface" value="Monospace">
         <range start="0" end="163"/>
       </style>
     </note>
-    <note handle="_000000fa000000fa" change="1506704761" id="N0035" type="General">
+    <note handle="_000000fa000000fa" change="1572107555" id="N0035" type="General">
       <text>Objects referenced by this note were missing in a file imported on 12/25/1999 12:00:00 AM.</text>
     </note>
   </notes>

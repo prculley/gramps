@@ -1,12 +1,86 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE database PUBLIC "-//Gramps//DTD Gramps XML 1.7.1//EN"
-"http://gramps-project.org/xml/1.7.1/grampsxml.dtd">
-<database xmlns="http://gramps-project.org/xml/1.7.1/">
+<!DOCTYPE database PUBLIC "-//Gramps//DTD Gramps XML 1.8.0//EN"
+"http://gramps-project.org/xml/1.8.0/grampsxml.dtd">
+<database xmlns="http://gramps-project.org/xml/1.8.0/">
   <header>
-    <created date="2018-11-28" version="5.0.1"/>
+    <created date="1999-12-25" version="5.1.2"/>
     <researcher>
     </researcher>
   </header>
+  <place-types>
+    <place-type name="Address">
+      <pgroup>Place</pgroup>
+    </place-type>
+    <place-type name="State_again">
+      <pgroup>Place</pgroup>
+    </place-type>
+    <place-type name="Continent">
+      <pgroup>Place</pgroup>
+    </place-type>
+    <place-type name="Country50" number="-50">
+      <pgroup>Place</pgroup>
+    </place-type>
+    <place-type name="Parish29" number="-29">
+      <pgroup>Place</pgroup>
+    </place-type>
+    <place-type name="Unknown" number="0"/>
+    <place-type name="Country" number="1">
+      <pgroup>Country</pgroup>
+    </place-type>
+    <place-type name="State" number="2">
+      <pgroup>Region</pgroup>
+    </place-type>
+    <place-type name="County" number="3">
+      <pgroup>Region</pgroup>
+    </place-type>
+    <place-type name="City" number="4">
+      <pgroup>Place</pgroup>
+    </place-type>
+    <place-type name="Parish" number="5">
+      <pgroup>Region</pgroup>
+    </place-type>
+    <place-type name="Locality" number="6">
+      <pgroup>Place</pgroup>
+    </place-type>
+    <place-type name="Street" number="7"/>
+    <place-type name="Province" number="8">
+      <pgroup>Region</pgroup>
+    </place-type>
+    <place-type name="Region" number="9">
+      <pgroup>Region</pgroup>
+    </place-type>
+    <place-type name="Department" number="10">
+      <pgroup>Region</pgroup>
+    </place-type>
+    <place-type name="Neighborhood" number="11">
+      <pgroup>Place</pgroup>
+    </place-type>
+    <place-type name="District" number="12">
+      <pgroup>Place</pgroup>
+    </place-type>
+    <place-type name="Borough" number="13">
+      <pgroup>Place</pgroup>
+    </place-type>
+    <place-type name="Municipality" number="14">
+      <pgroup>Place</pgroup>
+    </place-type>
+    <place-type name="Town" number="15">
+      <pgroup>Place</pgroup>
+    </place-type>
+    <place-type name="Village" number="16">
+      <pgroup>Place</pgroup>
+    </place-type>
+    <place-type name="Hamlet" number="17">
+      <pgroup>Place</pgroup>
+    </place-type>
+    <place-type name="Farm" number="18">
+      <pgroup>Place</pgroup>
+    </place-type>
+    <place-type name="Building" number="19">
+      <pgroup>Building</pgroup>
+    </place-type>
+    <place-type name="Number" number="20"/>
+  </place-types>
   <events>
     <event handle="_0000001f0000001f" change="1" id="E00000">
       <type>Birth</type>
@@ -979,134 +1053,163 @@
     </source>
   </sources>
   <places>
-    <placeobj handle="_0000000100000001" change="1" id="P0000" type="Unknown">
+    <placeobj handle="_0000000100000001" change="1" id="P0000">
       <ptitle>Löderup, Malmöhus Län, Sweden</ptitle>
       <pname value="Löderup, Malmöhus Län, Sweden"/>
+      <ptype value="Unknown" number="0"/>
     </placeobj>
-    <placeobj handle="_0000000200000002" change="1" id="P0001" type="Unknown">
+    <placeobj handle="_0000000200000002" change="1" id="P0001">
       <ptitle>Sparks, Washoe Co., NV</ptitle>
       <pname value="Sparks, Washoe Co., NV"/>
+      <ptype value="Unknown" number="0"/>
     </placeobj>
-    <placeobj handle="_0000000300000003" change="1" id="P0002" type="Unknown">
+    <placeobj handle="_0000000300000003" change="1" id="P0002">
       <ptitle>San Francisco, San Francisco Co., CA</ptitle>
       <pname value="San Francisco, San Francisco Co., CA"/>
+      <ptype value="Unknown" number="0"/>
     </placeobj>
-    <placeobj handle="_0000000400000004" change="1" id="P0003" type="Unknown">
+    <placeobj handle="_0000000400000004" change="1" id="P0003">
       <ptitle>Rønne, Bornholm, Denmark</ptitle>
       <pname value="Rønne, Bornholm, Denmark"/>
+      <ptype value="Unknown" number="0"/>
     </placeobj>
-    <placeobj handle="_0000000500000005" change="1" id="P0004" type="Unknown">
+    <placeobj handle="_0000000500000005" change="1" id="P0004">
       <ptitle>Gladsax, Kristianstad Län, Sweden</ptitle>
       <pname value="Gladsax, Kristianstad Län, Sweden"/>
+      <ptype value="Unknown" number="0"/>
     </placeobj>
-    <placeobj handle="_0000000600000006" change="1" id="P0005" type="Unknown">
+    <placeobj handle="_0000000600000006" change="1" id="P0005">
       <ptitle>Reno, Washoe Co., NV</ptitle>
       <pname value="Reno, Washoe Co., NV"/>
+      <ptype value="Unknown" number="0"/>
     </placeobj>
-    <placeobj handle="_0000000700000007" change="1" id="P0006" type="Unknown">
+    <placeobj handle="_0000000700000007" change="1" id="P0006">
       <ptitle>Hayward, Alameda Co., CA</ptitle>
       <pname value="Hayward, Alameda Co., CA"/>
+      <ptype value="Unknown" number="0"/>
     </placeobj>
-    <placeobj handle="_0000000800000008" change="1" id="P0007" type="Unknown">
+    <placeobj handle="_0000000800000008" change="1" id="P0007">
       <ptitle>Community Presbyterian Church, Danville, CA</ptitle>
       <pname value="Community Presbyterian Church, Danville, CA"/>
+      <ptype value="Unknown" number="0"/>
     </placeobj>
-    <placeobj handle="_0000000900000009" change="1" id="P0008" type="Unknown">
+    <placeobj handle="_0000000900000009" change="1" id="P0008">
       <ptitle>Sweden</ptitle>
       <pname value="Sweden"/>
+      <ptype value="Unknown" number="0"/>
     </placeobj>
-    <placeobj handle="_0000000a0000000a" change="1" id="P0009" type="Unknown">
+    <placeobj handle="_0000000a0000000a" change="1" id="P0009">
       <ptitle>Grostorp, Kristianstad Län, Sweden</ptitle>
       <pname value="Grostorp, Kristianstad Län, Sweden"/>
+      <ptype value="Unknown" number="0"/>
     </placeobj>
-    <placeobj handle="_0000000b0000000b" change="1" id="P0010" type="Unknown">
+    <placeobj handle="_0000000b0000000b" change="1" id="P0010">
       <ptitle>Copenhagen, Denmark</ptitle>
       <pname value="Copenhagen, Denmark"/>
+      <ptype value="Unknown" number="0"/>
     </placeobj>
-    <placeobj handle="_0000000c0000000c" change="1" id="P0011" type="Unknown">
+    <placeobj handle="_0000000c0000000c" change="1" id="P0011">
       <ptitle>Hoya/Jona/Hoia, Sweden</ptitle>
       <pname value="Hoya/Jona/Hoia, Sweden"/>
+      <ptype value="Unknown" number="0"/>
     </placeobj>
-    <placeobj handle="_0000000d0000000d" change="1" id="P0012" type="Unknown">
+    <placeobj handle="_0000000d0000000d" change="1" id="P0012">
       <ptitle>Simrishamn, Kristianstad Län, Sweden</ptitle>
       <pname value="Simrishamn, Kristianstad Län, Sweden"/>
+      <ptype value="Unknown" number="0"/>
     </placeobj>
-    <placeobj handle="_0000000e0000000e" change="1" id="P0013" type="Unknown">
+    <placeobj handle="_0000000e0000000e" change="1" id="P0013">
       <ptitle>Fremont, Alameda Co., CA</ptitle>
       <pname value="Fremont, Alameda Co., CA"/>
+      <ptype value="Unknown" number="0"/>
     </placeobj>
-    <placeobj handle="_0000000f0000000f" change="1" id="P0016" type="Unknown">
+    <placeobj handle="_0000000f0000000f" change="1" id="P0016">
       <ptitle>Santa Rosa, Sonoma Co., CA</ptitle>
       <pname value="Santa Rosa, Sonoma Co., CA"/>
+      <ptype value="Unknown" number="0"/>
     </placeobj>
-    <placeobj handle="_0000001000000010" change="1" id="P0017" type="Unknown">
+    <placeobj handle="_0000001000000010" change="1" id="P0017">
       <ptitle>San Jose, Santa Clara Co., CA</ptitle>
       <pname value="San Jose, Santa Clara Co., CA"/>
+      <ptype value="Unknown" number="0"/>
     </placeobj>
-    <placeobj handle="_0000001100000011" change="1" id="P0019" type="Unknown">
+    <placeobj handle="_0000001100000011" change="1" id="P0019">
       <ptitle>Smestorp, Kristianstad Län, Sweden</ptitle>
       <pname value="Smestorp, Kristianstad Län, Sweden"/>
+      <ptype value="Unknown" number="0"/>
     </placeobj>
-    <placeobj handle="_0000001200000012" change="1" id="P0020" type="Unknown">
+    <placeobj handle="_0000001200000012" change="1" id="P0020">
       <ptitle>Tommarp, Kristianstad Län, Sweden</ptitle>
       <pname value="Tommarp, Kristianstad Län, Sweden"/>
+      <ptype value="Unknown" number="0"/>
     </placeobj>
-    <placeobj handle="_0000001300000013" change="1" id="P0021" type="Unknown">
+    <placeobj handle="_0000001300000013" change="1" id="P0021">
       <ptitle>Rønne Bornholm, Denmark</ptitle>
       <pname value="Rønne Bornholm, Denmark"/>
+      <ptype value="Unknown" number="0"/>
     </placeobj>
-    <placeobj handle="_0000001400000014" change="1" id="P0022" type="Unknown">
+    <placeobj handle="_0000001400000014" change="1" id="P0022">
       <ptitle>Woodland, Yolo Co., CA</ptitle>
       <pname value="Woodland, Yolo Co., CA"/>
+      <ptype value="Unknown" number="0"/>
     </placeobj>
-    <placeobj handle="_0000001500000015" change="1" id="P0023" type="Unknown">
+    <placeobj handle="_0000001500000015" change="1" id="P0023">
       <ptitle>San Ramon, Conta Costa Co., CA</ptitle>
       <pname value="San Ramon, Conta Costa Co., CA"/>
+      <ptype value="Unknown" number="0"/>
     </placeobj>
-    <placeobj handle="_0000001600000016" change="1" id="P0026" type="Country">
+    <placeobj handle="_0000001600000016" change="1" id="P0026">
       <ptitle>United States of America</ptitle>
       <pname value="USA"/>
+      <ptype value="Country" number="1"/>
     </placeobj>
-    <placeobj handle="_0000001700000017" change="1" id="P0028" type="State">
+    <placeobj handle="_0000001700000017" change="1" id="P0028">
       <ptitle>California, USA</ptitle>
       <pname value="California"/>
-      <placeref hlink="_0000001600000016">
+      <ptype value="State" number="2"/>
+      <placeref hlink="_0000001600000016" type="Administrative">
         <dateval val="2016-06-04"/>
       </placeref>
     </placeobj>
-    <placeobj handle="_0000001800000018" change="1" id="P0025" type="State">
+    <placeobj handle="_0000001800000018" change="1" id="P0025">
       <ptitle>Colorado, USA</ptitle>
       <pname value="Colorado"/>
-      <placeref hlink="_0000001600000016"/>
+      <ptype value="State" number="2"/>
+      <placeref hlink="_0000001600000016" type="Administrative"/>
     </placeobj>
-    <placeobj handle="_0000001900000019" change="1" id="P0027" type="County">
+    <placeobj handle="_0000001900000019" change="1" id="P0027">
       <ptitle>Sacramento Co., California, USA</ptitle>
       <pname value="Sacramento Co."/>
-      <placeref hlink="_0000001700000017">
+      <ptype value="County" number="3"/>
+      <placeref hlink="_0000001700000017" type="Administrative">
         <dateval val="2016-06-01"/>
       </placeref>
     </placeobj>
-    <placeobj handle="_0000001a0000001a" change="1" id="P0015" type="City">
+    <placeobj handle="_0000001a0000001a" change="1" id="P0015">
       <ptitle>Sacramento, Sacramento Co., CA</ptitle>
       <pname value="Sacramento, Sacramento Co., CA"/>
-      <placeref hlink="_0000001900000019">
+      <ptype value="City" number="4"/>
+      <placeref hlink="_0000001900000019" type="Administrative">
         <dateval val="2016-06-04"/>
       </placeref>
     </placeobj>
-    <placeobj handle="_0000001b0000001b" change="1" id="P0024" type="County">
+    <placeobj handle="_0000001b0000001b" change="1" id="P0024">
       <ptitle>Denver Co., Colorado, USA</ptitle>
       <pname value="Denver Co."/>
-      <placeref hlink="_0000001800000018"/>
+      <ptype value="County" number="3"/>
+      <placeref hlink="_0000001800000018" type="Administrative"/>
     </placeobj>
-    <placeobj handle="_0000001c0000001c" change="1" id="P0014" type="City">
+    <placeobj handle="_0000001c0000001c" change="1" id="P0014">
       <ptitle>Denver, Denver Co., CO</ptitle>
-      <pname value="Denver, Denver Co., CO"/>
+      <pname value="Denver"/>
+      <ptype value="City" number="4"/>
       <coord long="104.9903 W" lat="39.7392"/>
-      <placeref hlink="_0000001b0000001b"/>
+      <placeref hlink="_0000001b0000001b" type="Administrative"/>
     </placeobj>
-    <placeobj handle="_0000001d0000001d" change="1" id="P0033" type="Unknown">
+    <placeobj handle="_0000001d0000001d" change="1" id="P0033">
       <ptitle>UC Berkeley</ptitle>
       <pname value="UC Berkeley"/>
+      <ptype value="Unknown" number="0"/>
     </placeobj>
   </places>
 </database>
