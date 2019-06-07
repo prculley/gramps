@@ -145,9 +145,10 @@ class PlaceDisplay:
             return place.title
         if fmt == -1:
             fmt = config.get('preferences.place-format')
+            if fmt > len(self.place_formats) - 1:
+                config.set('preferences.place-format', 0)
         if fmt > len(self.place_formats) - 1:
             fmt = 0
-            config.set('preferences.place-format', 0)
         _pf = self.place_formats[fmt]
         lang = _pf.language
         all_places = get_location_list(_db, place, date, lang, hier=_pf.hier)

@@ -40,7 +40,7 @@ Mary Smith was born on 3/28/1923.
 #------------------------------------------------------------------------
 from gramps.gen.lib import EventType, PlaceType, Location
 from gramps.gen.utils.db import get_birth_or_fallback, get_death_or_fallback
-from gramps.gen.utils.location import get_main_location
+from gramps.gen.utils.location import get_location_list, get_code
 from gramps.gen.display.place import displayer as _pd
 from gramps.gen.const import GRAMPS_LOCALE as glocale
 
@@ -336,52 +336,90 @@ class PlaceFormat(GenericFormat):
     def __init__(self, database, _in):
         self.database = database
         GenericFormat.__init__(self, _in)
+        self.date = None
 
     def get_place(self, database, event):
         """ A helper method for retrieving a place from an event """
         if event:
             bplace_handle = event.get_place_handle()
+            self.date = event.date
             if bplace_handle:
                 return database.get_place_from_handle(bplace_handle)
         return None
 
     def _default_format(self, place):
-        return _pd.display(self.database, place)
+        return _pd.display(self.database, place, date=self.date)
 
     def parse_format(self, database, place):
-        """ Parse the place """
+        """ Parse the place
+        e = street      o = phone (doesn't work for places)
+        l = locality    i = parish
+        c = city        t = title (default)
+        u = county      x = longitude
+        s = state       y = latitude
+        p = postal      1-5 = title (format number from 1-5)
+        n = country
+        """
 
         if self.is_blank(place):
             return
 
         code = "elcuspn" + "oitxy"
         upper = code.upper()
+        code += "12345"
 
-        main_loc = get_main_location(database, place)
         location = Location()
-        location.set_street(main_loc.get(PlaceType.STREET, ''))
-        location.set_locality(main_loc.get(PlaceType.LOCALITY, ''))
-        location.set_parish(main_loc.get(PlaceType.PARISH, ''))
-        location.set_city(main_loc.get(PlaceType.CITY, ''))
-        location.set_county(main_loc.get(PlaceType.COUNTY, ''))
-        location.set_state(main_loc.get(PlaceType.STATE, ''))
-        location.set_postal_code(main_loc.get(PlaceType.STREET, ''))
-        location.set_country(main_loc.get(PlaceType.COUNTRY, ''))
+        loc_list = get_location_list(database, place, date=self.date)
+        for loc in loc_list:
+            # loc_list shoud be in order from smallest to largest
+            name, place_type, dummy_hndl, abbrs = loc
+            if place_type == PlaceType.STREET:
+                location.set_street(name)
+                continue
+            elif place_type == PlaceType.LOCALITY:
+                location.set_locality(name)
+                continue
+            elif place_type == PlaceType.PARISH:
+                location.set_parish(name)
+                continue
+            elif place_type & PlaceType.G_COUNTRY and not location.country:
+                # should find smaller of country group
+                location.set_country(abbrs[0].value if abbrs else name)
+                continue
+            elif place_type & PlaceType.G_REGION and not location.county:
+                # should find smaller of region group (county)
+                location.set_county(name)
+                continue
+            elif place_type & PlaceType.G_REGION:
+                # should find largest (state)
+                location.set_state(name)
+                continue
+            elif place_type & PlaceType.G_PLACE:
+                # should find largest (city)
+                location.set_city(name)
+
+        def get_title(fmt=-1):
+            return _pd.display(self.database, place, fmt=fmt)
 
         function = [location.get_street,
                     location.get_locality,
                     location.get_city,
                     location.get_county,
                     location.get_state,
-                    place.get_code,
+                    lambda : get_code(place),
                     location.get_country,
 
-                    location.get_phone,
+                    location.get_phone,  # never returns anything
                     location.get_parish,
-                    place.get_title,
+                    get_title,
                     place.get_longitude,
-                    place.get_latitude
-                   ]
+                    place.get_latitude,
+                    lambda : get_title(fmt=0),
+                    lambda : get_title(fmt=1),
+                    lambda : get_title(fmt=2),
+                    lambda : get_title(fmt=3),
+                    lambda : get_title(fmt=4)
+                    ]
 
         return self.generic_format(place, code, upper, function)
 
