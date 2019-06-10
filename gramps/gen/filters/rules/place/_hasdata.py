@@ -35,6 +35,7 @@ _ = glocale.translation.sgettext
 from .. import Rule
 from ....lib import PlaceType
 
+
 #-------------------------------------------------------------------------
 #
 # HasData
@@ -45,9 +46,8 @@ class HasData(Rule):
     Rule that checks for a place with a particular value
     """
 
-    labels = [ _('Name:'),
-                    _('Place type:'),
-                    ]
+    labels = [_('Name:'),
+              _('Place type:')]
     name = _('Places matching parameters')
     description = _('Matches places with particular parameters')
     category = _('General filters')

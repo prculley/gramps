@@ -72,8 +72,8 @@ class HasPlace(Rule):
         if not self.match_substring(0, place.get_title()):
             return False
 
-        if not self.match_substring(7, place.get_code()):
-            return False
+        # if not self.match_substring(7, place.get_code()):
+            # return False
 
         # If no location data was given then we're done: match
         if not any(self.list[1:7] + [self.list[8]]):

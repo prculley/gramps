@@ -101,6 +101,7 @@ _TITLES = {
 _name2typeclass = {
     _('Personal event:')     : EventType,
     _('Family event:')       : EventType,
+    _('Place event:')        : EventType,
     _('Event type:')         : EventType,
     _('Personal attribute:') : AttributeType,
     _('Family attribute:')   : AttributeType,
