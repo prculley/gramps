@@ -49,11 +49,11 @@ import logging
 # Gramps module
 #------------------------------------------------
 from gramps.gen.const import GRAMPS_LOCALE as glocale
-from gramps.gen.lib import (PlaceType, Place)
+from gramps.gen.lib import (PlaceType as P_T, Place)
 from gramps.gen.plug.report import Bibliography
 from gramps.plugins.lib.libhtml import Html
 from gramps.gen.utils.place import conv_lat_lon
-from gramps.gen.utils.location import get_main_location
+from gramps.gen.utils.location import get_location_list
 
 #------------------------------------------------
 # specific narrative web import
@@ -212,8 +212,21 @@ class PlacePages(BasePage):
                     if place:
                         if place.get_change_time() > ldatec:
                             ldatec = place.get_change_time()
-                        plc_title = self.report.obj_dict[Place][place_handle][1]
-                        main_location = get_main_location(self.r_db, place)
+                        plc_title = self.report.obj_dict[
+                            Place][place_handle][1]
+                        loc_list = get_location_list(self.r_db, place)
+                        state = country = ''
+                        for loc in loc_list:
+                            # loc_list shoud be in order from small to largest
+                            name, place_type, dummy_hndl, _abbrs = loc
+                            if place_type & P_T.G_COUNTRY and not country:
+                                # should find smaller of country group
+                                country = name
+                                continue
+                            elif place_type & P_T.G_REGION:
+                                # should find largest (state)
+                                state = name
+                                continue
 
                         if plc_title and plc_title != " ":
                             letter = get_index_letter(first_letter(plc_title),
@@ -249,10 +262,8 @@ class PlacePages(BasePage):
                             Html("td", data or "&nbsp;", class_=colclass,
                                  inline=True)
                             for (colclass, data) in [
-                                ["ColumnState",
-                                 main_location.get(PlaceType.STATE, '')],
-                                ["ColumnCountry",
-                                 main_location.get(PlaceType.COUNTRY, '')]
+                                ["ColumnState", state],
+                                ["ColumnCountry", country]
                             ]
                         )
 
