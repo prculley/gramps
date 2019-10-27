@@ -38,9 +38,9 @@ from gramps.gui.dialog import (InfoDialog)
 from ..lib import (AttributeType, EventType, MarkerType,
                    NameOriginType, PlaceHierType, Tag)
 from ..lib.placetype import PlaceType, DM_GRP
-from gramps.gen.utils.file import create_checksum
-from gramps.gen.utils.id import create_id
-from gramps.gui.dialog import (InfoDialog)
+from ..utils.place import translate_en_loc
+from ..utils.file import create_checksum
+from ..utils.id import create_id
 from .dbconst import (PERSON_KEY, FAMILY_KEY, EVENT_KEY, MEDIA_KEY, PLACE_KEY,
                       REPOSITORY_KEY, CITATION_KEY, SOURCE_KEY, NOTE_KEY,
                       TAG_KEY)
@@ -123,6 +123,14 @@ def gramps_upgrade_20(self):
             attrs = [code_attr]
         else:
             attrs = []
+
+        # get longitude localized E,W translated to English
+        long = long.replace(
+            translate_en_loc['E'], 'E').replace(translate_en_loc['W'], 'W')
+        # get latitude localized N,S translated to English
+        lat = lat.replace(
+            translate_en_loc['N'], 'N').replace(translate_en_loc['S'], 'S')
+
         new_place_data = (hndl, gramps_id, title, long, lat, new_prefs,
                           new_names, new_types, eventrefs, alt_loc, urls,
                           media_list, citation_list, note_list, change,
