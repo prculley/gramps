@@ -34,11 +34,12 @@ import logging
 #
 #------------------------------------------------------------------------
 from gramps.cli.clidbman import NAME_FILE
-from gramps.gen.lib import (AttributeType, EventType, MarkerType,
-                            NameOriginType, PlaceHierType, PlaceType, Tag)
-from gramps.gen.utils.file import create_checksum
-from gramps.gen.utils.id import create_id
 from gramps.gui.dialog import (InfoDialog)
+from ..lib import (AttributeType, EventType, MarkerType,
+                   NameOriginType, PlaceHierType, PlaceType, Tag)
+from ..utils.place import translate_en_loc
+from ..utils.file import create_checksum
+from ..utils.id import create_id
 from .dbconst import (PERSON_KEY, FAMILY_KEY, EVENT_KEY, MEDIA_KEY, PLACE_KEY,
                       REPOSITORY_KEY, CITATION_KEY, SOURCE_KEY, NOTE_KEY,
                       TAG_KEY)
@@ -50,7 +51,7 @@ LOG = logging.getLogger(".upgrade")
 
 def gramps_upgrade_20(self):
     """
-    Upgrade database from version 18 to 19.
+    Upgrade database from version 19 to 20.
     Place update.
     """
     length = self.get_number_of_places()
@@ -76,7 +77,7 @@ def gramps_upgrade_20(self):
         # PlaceType
         # date = cal, mod, qual, val, text, sort, ny
         mtdate = (0, 0, 0, (0, 0, 0, False), '', 0, 0)
-        if the_type[0] == -1:  # older CUSTOM value
+        if not the_type[0]:  # older CUSTOM value == 0
             for t_val, (text, _groups, _vis) in PlaceType.DATAMAP.items():
                 if the_type[1].lower() == text.lower():
                     break
@@ -85,6 +86,10 @@ def gramps_upgrade_20(self):
                 t_val = PlaceType.new()
                 PlaceType.DATAMAP[t_val] = (the_type[1],
                                             PlaceType.G_PLACE, True)
+        elif the_type[0] == -1:  # older UNKNOWN
+            t_val = 0            # new UNKNOWN
+        else:   # Standard place type value
+            t_val = the_type[0]
         # the place type becomes the top (only) item in placetype list
         new_types = [(t_val,   # type number
                       mtdate,  # empty date
@@ -96,6 +101,14 @@ def gramps_upgrade_20(self):
             attrs = [code_attr]
         else:
             attrs = []
+
+        # get longitude localized E,W translated to English
+        long = long.replace(
+            translate_en_loc['E'], 'E').replace(translate_en_loc['W'], 'W')
+        # get latitude localized N,S translated to English
+        lat = lat.replace(
+            translate_en_loc['N'], 'N').replace(translate_en_loc['S'], 'S')
+
         new_place_data = (hndl, gramps_id, title, long, lat, new_prefs,
                           new_names, new_types, eventrefs, alt_loc, urls,
                           media_list, citation_list, note_list, change,
