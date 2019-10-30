@@ -1432,11 +1432,15 @@ class GrampsPreferences(ConfigureDialog):
         """
         Called to rebuild the place format list.
         """
+        active = self.pformat.get_active()
         model = Gtk.ListStore(str)
         for fmt in _pd.get_formats():
             model.append([fmt.name])
         self.pformat.set_model(model)
-        self.pformat.set_active(0)
+        if active != -1 and active < len(model):
+            self.pformat.set_active(active)
+        else:
+            self.pformat.set_active(0)
 
     def check_for_type_changed(self, obj):
         active = obj.get_active()

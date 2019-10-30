@@ -28,18 +28,47 @@ Class handling displaying of places.
 # Python imports
 #
 #---------------------------------------------------------------
-
+import os
+import json
 #-------------------------------------------------------------------------
 #
 # Gramps modules
 #
 #-------------------------------------------------------------------------
+import gramps.gen.lib as lib
 from ..config import config
 from ..utils.location import get_location_list
 from ..lib import PlaceType as P_T
 from ..lib import PlaceHierType
+from ..const import PLACE_FORMATS
 from ..const import GRAMPS_LOCALE as glocale
 _ = glocale.translation.gettext
+
+
+def _default(obj):
+    """ json function to manage saving objects in our PlaceFormats """
+    obj_dict = {'_class': obj.__class__.__name__}
+    if isinstance(obj, lib.GrampsType):
+        obj_dict['string'] = getattr(obj, 'string')
+    else:
+        obj_dict.update(obj.__dict__.items())
+    return obj_dict
+
+
+def _object_hook(obj_dict):
+    """ json function to manage loading objects for our PlaceFormats """
+    cls = obj_dict['_class']
+    if cls == 'PlaceFormat':
+        obj = PlaceFormat.__new__(PlaceFormat)
+    elif cls == 'PlaceRule':
+        obj = PlaceRule.__new__(PlaceRule)
+    else:
+        obj = getattr(lib, cls)()
+    if isinstance(obj, lib.GrampsType):
+        setattr(obj, 'string', obj_dict['string'])
+    else:
+        obj.__dict__.update(obj_dict)
+    return obj
 
 
 #-------------------------------------------------------------------------
@@ -91,12 +120,15 @@ class PlaceRule:
         V_NUMST: _("Street Number")
     }
 
-    def __init__(self, where, r_type, r_value, vis, abb):
+    def __init__(self, where, r_type, r_value, r_detail, vis, abb):
         """ Place Format Rule """
-        self.where = where      # None, or place handle
-        self.type = r_type      # on of T_ group, type, or street/num
-        self.value = r_value    # int, PlaceType group or type number
-        self.vis = vis          # int, one of the V_ values above
+        self.where = where       # None, or place handle
+        self.where_id = None     # the place gramps_id
+        self.where_title = None  # the place title
+        self.type = r_type       # on of T_ group, type, or street/num
+        self.value = r_value     # int, PlaceType group or type number
+        self.detail = r_detail   # PlaceType DATAMAP or GROUPMAP item contents
+        self.vis = vis           # int, one of the V_ values above
         self.abb = abb  # PlaceAbbrevType with extra values, A_NONE, A_FIRST
 
 
@@ -284,12 +316,51 @@ class PlaceDisplay:
         self.place_formats = formats
 
     def load_formats(self, formats):
-        """ load formats from db """
-        length = len(self.place_formats)
+        """
+        :param formats: list of formats from db metadata.
+        :type formats: list of PlaceFormat objects.
+
+        load formats obtained from db, and from the saved json file.
+
+        If the current session has no user formats, we will load the last
+        saved json formats to form an initial format set.
+
+        If the current session already has user formats, from a prior opened
+        db, we will keep them to form an initial format set.
+
+        If the newly opened db making this call has a named format we will
+        not change it, and update the session to use it.
+
+        If the current contents of place formats from this session has new user
+        formats, they will end up in the db.
+        """
+        if len(self.place_formats) == 1 and os.path.exists(PLACE_FORMATS):
+            try:
+                with open(PLACE_FORMATS, 'r', encoding='utf8') as _fp:
+                    self.place_formats = json.load(_fp,
+                                                   object_hook=_object_hook)
+            except BaseException:
+                print(_("Error in '%s' file: cannot load.") % PLACE_FORMATS)
         for new_fmt in formats:
-            for index in range(length):
+            for index in range(len(self.place_formats)):
                 if new_fmt.name == self.place_formats[index].name:
-                    continue
+                    self.place_formats[index] = new_fmt
+                    break
+            else:
                 self.place_formats.append(new_fmt)
+
+    def save_formats(self):
+        """ this saves the current format set to the json file.  Saving to the
+        db is done elsewhere.
+        """
+        if len(self.place_formats) > 1:
+            try:
+                with open(PLACE_FORMATS, 'w', encoding='utf8') as _fp:
+                    json.dump(self.place_formats, _fp, indent=2,
+                              default=_default, ensure_ascii=False,
+                              sort_keys=True)
+            except BaseException:
+                print(_("Failure writing %s") % PLACE_FORMATS)
+
 
 displayer = PlaceDisplay()

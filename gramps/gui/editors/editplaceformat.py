@@ -25,6 +25,8 @@
 #
 #-------------------------------------------------------------------------
 from gi.repository import Gtk
+import re
+import json
 
 #-------------------------------------------------------------------------
 #
@@ -36,6 +38,7 @@ from ..glade import Glade
 from ..listmodel import ListModel, NOSORT, INTEGER
 from ..autocomp import StandardCustomSelector
 from ..selectors.selectplace import SelectPlace
+from gramps.gen.config import config
 from gramps.gen.lib import PlaceType, PlaceHierType, PlaceAbbrevType
 from gramps.gen.lib.placetype import DM_NAME
 from gramps.gen.errors import HandleError
@@ -43,6 +46,13 @@ from gramps.gen.display.place import displayer as _pd
 from gramps.gen.display.place import PlaceFormat, PlaceRule
 from gramps.gen.const import GRAMPS_LOCALE as glocale
 _ = glocale.translation.gettext
+# gets the prefix, number, suffix specified in a format string, eg:
+# P%04dX returns 'P', '04', 'X'  It has to have the integer format with at
+# least 3 digits to pass.
+_parseformat = re.compile(r'(^[^\d]*)%(0[3-9])d([^\d]*$)')
+# finds prefix, number, suffix of a Gramps ID ignoring a leading or
+# trailing space.  The number must be at least three digits.
+_prob_id = re.compile(r'^ *([^\d]*)(\d{3,9})([^\d]*) *$')
 
 
 #-------------------------------------------------------------------------
@@ -68,6 +78,7 @@ class EditPlaceFormat(ManagedWindow):
         self.top.get_object('rem_btn').connect('clicked', self.__remove_rule)
         self.top.get_object('up_btn').connect('clicked', self.__up_rule)
         self.top.get_object('down_btn').connect('clicked', self.__down_rule)
+        self.top.get_object('infobar').connect('response', self.__info_close)
         self.window.connect('response', self.__close)
         self.model = None
         self.rule_model = None
@@ -118,31 +129,33 @@ class EditPlaceFormat(ManagedWindow):
                  (_('Display'), NOSORT, 150),
                  ('', NOSORT, 150, INTEGER)],
                 event_func=self.__edit_rule)
-        bad_rule = []
         for indx, rule in enumerate(self.rules):
             where = rule.where
-            try:
-                if where:
+            if where:
+                try:
                     p_name = self.dbstate.db.get_place_from_handle(
                         where).get_name().get_value()
-                else:
-                    p_name = _('All')
-            except HandleError:
-                # deals with missing handles due to changed db or removed item
-                p_name = _("Unknown")
+                except HandleError:
+                    # deal with missing place due to changed db or removed item
+                    self.top.get_object('infobar').show()
+                    p_name = _("Unknown")
+            else:
+                p_name = _('All')
             r_type = rule.type
-            try:
-                if r_type == PlaceRule.T_GRP:
-                    rt_name = _("%s Group") % PlaceType.GROUPMAP[rule.value][0]
-                elif r_type == PlaceRule.T_TYP:
-                    rt_name = PlaceType.DATAMAP[rule.value][DM_NAME]
-                else:
-                    rt_name = _("Street Format")
-            except KeyError:
-                # deals with missing groups or types due to changed db or
-                # removed item
-                bad_rule.append(rule)
-                continue
+            if r_type == PlaceRule.T_GRP:
+                if rule.value not in PlaceType.GROUPMAP:
+                    # Group missing, put it back, deals with deleted Group or
+                    # changed db
+                    PlaceType.GROUPMAP[rule.value] = tuple(rule.detail)
+                rt_name = _("%s Group") % PlaceType.GROUPMAP[rule.value][0]
+            elif r_type == PlaceRule.T_TYP:
+                if rule.value not in PlaceType.DATAMAP:
+                    # Type missing, put it back, deals with deleted Group or
+                    # changed db
+                    PlaceType.DATAMAP[rule.value] = tuple(rule.detail)
+                rt_name = PlaceType.DATAMAP[rule.value][DM_NAME]
+            else:
+                rt_name = _("Street Format")
             r_abb = int(rule.abb)
             if rule.vis >= PlaceRule.V_ALL and r_abb != PlaceRule.A_NONE:
                 if r_abb == PlaceRule.A_FIRST:
@@ -154,8 +167,6 @@ class EditPlaceFormat(ManagedWindow):
             else:
                 vis = PlaceRule.VIS_MAP[rule.vis]
             self.rule_model.add((p_name, rt_name, vis, indx))
-        for rule in bad_rule:
-            self.rules.remove(rule)
 
     def __name_changed(self, entry):
         dummy_store, iter_ = self.model.get_selected()
@@ -202,13 +213,16 @@ class EditPlaceFormat(ManagedWindow):
         """ Save or abandon work """
         fmt = self.formats[self.current_format]
         self.__save_format(fmt)
-        self.dbstate.db.save_place_formats(_pd.get_formats())
+        formats = _pd.get_formats()
+        self.dbstate.db.save_place_formats(formats)
+        _pd.save_formats()
         self.callback()
         self.close()
 
     def __add_rule(self, _button):
         """ Add a new rule """
         rule = PlaceRule(None, PlaceRule.T_GRP, PlaceType.G_COUNTRY,
+                         PlaceType.DATAMAP[PlaceType.G_COUNTRY],
                          PlaceRule.V_SMALL, PlaceAbbrevType(PlaceRule.A_NONE))
         self.rules.append(rule)
         EditPlaceRule(self.uistate, self.dbstate, self.track, rule,
@@ -249,6 +263,10 @@ class EditPlaceFormat(ManagedWindow):
         self.rule_model.move_down(row)
         self.rules.insert(row + 1, self.rules.pop(row))
 
+    def __info_close(self, widget, _resp):
+        """ hide the infobar when closed """
+        widget.hide()
+
 
 #-------------------------------------------------------------------------
 #
@@ -258,7 +276,12 @@ class EditPlaceFormat(ManagedWindow):
 class EditPlaceRule(ManagedWindow):
     """ Editor for Place Rules """
     def __init__(self, uistate, dbstate, track, rule, callback):
+        self.db = dbstate.db
         self.dbstate = dbstate
+        self.rule = rule
+        self.where = None       # temp storage for "where" place handle
+        self.where_id = ''      # temp storage for "where" place gramps_id
+        self.where_title = ''   # temp storage for "where" place title
         self.title = _('Place Format Rule Editor')
         ManagedWindow.__init__(self, uistate, track, EditPlaceRule, modal=True)
         self.callback = callback
@@ -269,19 +292,17 @@ class EditPlaceRule(ManagedWindow):
         self.top.get_object('place_btn').connect('clicked', self.__place_btn)
         self.window.connect('response', self.__done)
         self.where_cb = self.top.get_object('where_cb')
-        self.where = None
         self.type_combo = None
         self.vis_cb = self.top.get_object('vis_cb')
-        self.rule = rule
         # set 'where' label
-        try:
-            if rule.where:
-                p_name = self.dbstate.db.get_place_from_handle(
+        if rule.where:
+            try:
+                p_name = self.db.get_place_from_handle(
                     rule.where).get_name().get_value()
-            else:
-                p_name = _('All Places')
-        except HandleError:
-            p_name = _("Unknown")
+            except HandleError:
+                p_name = self._find_place_in_db()
+        else:
+            p_name = _('All Places')
         self.top.get_object('where_lbl').set_text(p_name)
         # set up what combo
         what_cb = self.top.get_object('what_cb')
@@ -291,7 +312,7 @@ class EditPlaceRule(ManagedWindow):
         self.__what_changed(what_cb, use_val=True)
         # set up abb combo
         abb = self.top.get_object('abbrev_cb')
-        custom = sorted(self.dbstate.db.get_placeabbr_types(),
+        custom = sorted(self.db.get_placeabbr_types(),
                         key=lambda s: s.lower())
         mapping = PlaceAbbrevType.get_map(PlaceAbbrevType).copy()
         mapping[-2] = _("None")
@@ -317,6 +338,8 @@ class EditPlaceRule(ManagedWindow):
         place = sel.run()
         if place:
             self.where = place.handle
+            self.where_id = place.gramps_id
+            self.where_title = _pd.display(self.db, place, fmt=0)
             name = place.get_name().get_value()
             self.top.get_object('where_lbl').set_text(name)
 
@@ -372,26 +395,81 @@ class EditPlaceRule(ManagedWindow):
     def __done(self, _obj, response):
         """ Dialog is closing """
         if response == Gtk.ResponseType.OK:
-            # need to save rule
+            # need to save rule data
             abb = self.abb_combo.get_values()
             self.rule.abb = (
                 PlaceAbbrevType(-2) if (
                     abb[0] == PlaceAbbrevType.CUSTOM) else
                 PlaceAbbrevType(abb))
             self.rule.where = self.where
+            self.rule.where_id = self.where_id
+            self.rule.where_title = self.where_title
             self.rule.type = int(self.top.get_object('what_cb').
                                  get_active_id())
-            if self.rule.type != PlaceRule.T_ST_NUM:
+            if self.rule.type == PlaceRule.T_ST_NUM:
+                self.rule.abb = PlaceAbbrevType(-2)
+            elif self.rule.type == PlaceRule.T_GRP:
+                value = self.type_combo.get_values()
+                self.rule.value = value[0]
+                self.rule.detail = PlaceType.GROUPMAP[value[0]]
+            else:  # rule.type == PlaceRule.T_TYPE
                 value = self.type_combo.get_values()
                 if value[0]:  # if not CUSTOM, use value
                     self.rule.value = value[0]
+                    self.rule.detail = PlaceType.DATAMAP[value[0]]
                 else:       # CUSTOM, pick default values instead
-                    if self.rule.type == PlaceRule.T_GRP:
-                        self.rule.value = PlaceType.G_PLACE
-                    else:
-                        self.rule.value = PlaceType.UNKNOWN
-            else:
-                self.rule.abb = PlaceAbbrevType(-2)
+                    self.rule.value = PlaceType.UNKNOWN
+                    self.rule.detail = PlaceType.DATAMAP[PlaceType.UNKNOWN]
             self.rule.vis = int(self.vis_cb.get_active_id())
         self.callback()
         self.close()
+
+    def is_unique_gid(self, gramps_id):
+        """ try to determine if this gramps ID is unique; that it is probably
+        a GOV or GeoNames ID or similar.
+        Works by calling it unique if it is NOT similar to a standard
+        Gramps ID or the currently set place ID format.
+
+        Returns True if unique
+        """
+        # get current format and determine prefix/suffix
+        p_id = config.get('preferences.pprefix')
+        formatmatch = _parseformat.match(p_id)
+        if formatmatch:
+            prefix = formatmatch.groups()[0]
+            # width_fmt = int(formatmatch.groups()[1])
+            suffix = formatmatch.groups()[2]
+        else:  # not a legal format string, use default
+            prefix = 'P'
+            # width_fmt = 4
+            suffix = ''
+        # test incoming gid to find its prefix/suffix and compare
+        match = _prob_id.match(gramps_id)
+        return not (match and
+                    (prefix == match.groups()[0] and
+                     suffix == match.groups()[2] or
+                     len(match.groups()[0]) == 1 and
+                     len(match.groups()[2]) == 0))
+
+    def _find_place_in_db(self):
+        """ Try to find a place in the current db based on its gramps_id
+        (If it is likely unique) or its title.
+
+        returns Place name if found, else "<Unknown>Previous Title"
+        """
+        if(self.is_unique_gid(self.rule.where_id) and
+           self.db.has_place_gramps_id(self.rule.where_id)):
+            place = self.db.get_place_from_gramps_id(self.rule.where_id)
+            self.where = place.handle
+            self.where_id = place.gramps_id
+            self.where_title = _pd.display(self.db, place, fmt=0)
+            return place.get_name().get_value()
+
+        for place in self.db.iter_places():
+            title = _pd.display(self.db, place, fmt=0)
+            if self.rule.where_title == title:
+                self.where = place.handle
+                self.where_id = place.gramps_id
+                self.where_title = _pd.display(self.db, place, fmt=0)
+                return place.get_name().get_value()
+        return _("<Unknown>") + self.rule.where_title
