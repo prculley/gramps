@@ -397,10 +397,7 @@ class EditPlaceRule(ManagedWindow):
         if response == Gtk.ResponseType.OK:
             # need to save rule data
             abb = self.abb_combo.get_values()
-            self.rule.abb = (
-                PlaceAbbrevType(-2) if (
-                    abb[0] == PlaceAbbrevType.CUSTOM) else
-                PlaceAbbrevType(abb))
+            self.rule.abb = PlaceAbbrevType(abb)
             self.rule.where = self.where
             self.rule.where_id = self.where_id
             self.rule.where_title = self.where_title
