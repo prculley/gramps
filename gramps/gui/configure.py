@@ -2013,7 +2013,8 @@ class GrampsPreferences(ConfigureDialog):
             self.choosefont.set_sensitive(True)
         else:
             self.find.set_sensitive(False)
-            self.choosefont.set_sensitive(False)
+            if self.choosefont:
+                self.choosefont.set_sensitive(False)
             self.uistate.emit('font-changed')
 
         return _('Genealogical Symbols'), self.grid
@@ -2159,10 +2160,6 @@ class GrampsPreferences(ConfigureDialog):
         if self.combo:
             self.combo.set_sensitive(True)
         font = config.get('utf8.selected-font')
-        if not self.uistate.viewmanager.change_font(font):
-            # We can't change the font, so reset the checkbox.
-            if obj:
-                obj.set_active(False)
         self.uistate.reload_symbols()
         self.show_default_symbols()
         self.uistate.emit('font-changed')
