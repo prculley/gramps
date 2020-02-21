@@ -235,6 +235,7 @@ def make_tst_function(tstfile, file_name):
             self.user = User()
             self.database1 = import_as_dict(fn1, self.user,
                                             skp_imp_adds=skp_imp_adds)
+            print(output)
             set_det_id(True)
             self.database2 = import_as_dict(fn2, self.user)
         self.assertIsNotNone(self.database1,

@@ -1979,6 +1979,8 @@ class DbGeneric(DbWriteBase, DbReadBase, UpdateCallback, Callback):
         Commit the specified Place to the database, storing the changes as
         part of the transaction.
         """
+        if place.gramps_id == "P0006":
+            print("Duh")
         self._commit_base(place, PLACE_KEY, trans, change_time)
 
         # Misc updates:

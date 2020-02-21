@@ -3076,27 +3076,39 @@ class GedcomParser(UpdateCallback):
         @type pref: string
         @return gen.lib.Place
         """
+        if title == 'USA' and ptype == PlaceType.UNKNOWN or xref == 'P0011':
+            print("huh")
         if xref:
-            place = self.dbase.get_place_from_gramps_id(xref)
+            hndl = self.lid2id.get(xref)
+            if hndl:
+                place = self.dbase.get_place_from_handle(hndl)
+                return place
+            else:
+                return None
+        if gov:
+            place = self.dbase.get_place_from_gramps_id(gov)
             if place:
                 return place
-        if gov:
             hndl = self.place_gov2hndl.get(gov, None)
             if hndl:
                 place = self.dbase.get_place_from_handle(hndl)
                 return place
-            place = self.dbase.get_place_from_gramps_id(gov)
-            if place:
-                return place
         for place_handle in self.place_names[title]:
             place = self.dbase.get_place_from_handle(place_handle)
-            if place.get_title() == title and (ptype == PlaceType.UNKNOWN or
-                                               place.get_type() == ptype):
+            if place.get_title() == title and place.get_type() == ptype:
                 if not pref and place.get_placeref_list() == []:
                     return place
                 for placeref in place.get_placeref_list():
                     if placeref.ref == pref:
                         return place
+#         for place_handle in self.place_names[title]:
+#             place = self.dbase.get_place_from_handle(place_handle)
+#             if place.get_title() == title and ptype == PlaceType.UNKNOWN:
+#                 if not pref and place.get_placeref_list() == []:
+#                     return place
+#                 for placeref in place.get_placeref_list():
+#                     if placeref.ref == pref:
+#                         return place
         return None
 
     def __add_place(self, event, sub_state):
@@ -3327,6 +3339,9 @@ class GedcomParser(UpdateCallback):
             else:  # only executed if the inner loop did NOT break
                 place.add_note(addendum)
         acquisition.note_list = []
+        if place.gramps_id != acquisition.gramps_id:
+            print("GID merge: %s : %s" % (place.gramps_id,
+                                          acquisition.gramps_id))
         place.merge(acquisition)
 
     def __find_file(self, fullname, altpath):
@@ -6460,12 +6475,6 @@ class GedcomParser(UpdateCallback):
            now. The .ref will have '@P001@' strings embedded that need to be
            swapped out with the handle.
         """
-        gid2gov = {}  # to correct for gov override of gids in notes
-        for gov, hndl in self.place_gov2hndl.items():
-            place = self.dbase.get_place_from_handle(hndl)
-            gid2gov[place.gramps_id] = gov
-            place.gramps_id = gov
-            self.dbase.commit_place(place, self.trans)
         for gid, hndl in self.lid2id.items():
             place = self.dbase.get_place_from_handle(hndl)
             gid = None
@@ -6494,6 +6503,15 @@ class GedcomParser(UpdateCallback):
                 # If anything chaged
                 assert(place.handle)
                 self.dbase.commit_place(place, self.trans)
+        gid2gov = {}  # to correct for gov override of gids in notes
+        for gov, hndl in self.place_gov2hndl.items():
+            if self.dbase.has_place_gramps_id(gov):
+                # we already have a place with this gov, we need to merge it
+                
+            place = self.dbase.get_place_from_handle(hndl)
+            gid2gov[place.gramps_id] = gov
+            place.gramps_id = gov
+            self.dbase.commit_place(place, self.trans)
 
     def __do_note(self, obj, note_type, text):
         """
@@ -7974,6 +7992,8 @@ class GedcomParser(UpdateCallback):
         """
         place = Place()
         gid = self.lid_map[line.token_text]
+        if gid == "P0011":
+            print("huh")
         self.locs_list.append(place)
         place.gramps_id = gid
 

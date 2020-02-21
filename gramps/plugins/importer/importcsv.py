@@ -375,7 +375,7 @@ class CSVParser:
         expl_note = create_explanation_note(self.db)
         for key in self.placeref:
             place = self.placeref[key]
-            if place.name.value == _("Unknown"):
+            if place.get_name().value == _("Unknown"):
                 txt = (', ' + key) if txt else key
                 place.add_note(expl_note.handle)
                 self.db.commit_place(place, self.trans)
@@ -885,13 +885,16 @@ class CSVParser:
         if place_longitude is not None:
             place.long = place_longitude
         if place_code is not None:
-            place.code = place_code
+            attr = Attribute()
+            attr.set_type(AttributeType.POSTAL)
+            attr.set_value(place_code)
+            place.add_attribute(attr)
         if place_enclosed_by_id is not None:
             place_enclosed_by = self.lookup("place", place_enclosed_by_id)
             if place_enclosed_by is None:
                 # Not yet found in import, so store for later
                 place_enclosed_by = self.create_place()
-                place_enclosed_by.name.set_value(_('Unknown'))
+                place_enclosed_by.get_name().set_value(_('Unknown'))
                 if(place_enclosed_by_id.startswith("[") and
                    place_enclosed_by_id.endswith("]")):
                     place_enclosed_by.gramps_id = self.db.pid2user_format(
