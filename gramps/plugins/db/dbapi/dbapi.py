@@ -252,9 +252,6 @@ class DBAPI(DbGeneric):
                   TXNUPD: "-update",
                   TXNDEL: "-delete",
                   None: "-delete"}
-        if txn.batch:
-            # FIXME: need a User GUI update callback here:
-            self.reindex_reference_map(lambda percent: percent)
         self.dbapi.commit()
         if not txn.batch:
             # Now, emit signals:
@@ -620,8 +617,8 @@ class DBAPI(DbGeneric):
                                [obj.handle,
                                 pickle.dumps(obj.serialize())])
         self._update_secondary_values(obj)
+        self._update_backlinks(obj, trans)
         if not trans.batch:
-            self._update_backlinks(obj, trans)
             if old_data:
                 trans.add(obj_key, TXNUPD, obj.handle,
                           old_data,
@@ -658,33 +655,33 @@ class DBAPI(DbGeneric):
 
     def _update_backlinks(self, obj, transaction):
 
-        # Find existing references
-        sql = ("SELECT ref_class, ref_handle " +
-               "FROM reference WHERE obj_handle = ?")
-        self.dbapi.execute(sql, [obj.handle])
-        existing_references = set(self.dbapi.fetchall())
-
-        # Once we have the list of rows that already have a reference
-        # we need to compare it with the list of objects that are
-        # still references from the primary object.
-        current_references = set(obj.get_referenced_handles_recursively())
-        no_longer_required_references = existing_references.difference(
-                                                            current_references)
-        new_references = current_references.difference(existing_references)
-
-        # Delete the existing references
-        self.dbapi.execute("DELETE FROM reference WHERE obj_handle = ?",
-                           [obj.handle])
-
-        # Now, add the current ones
-        for (ref_class_name, ref_handle) in current_references:
-            sql = ("INSERT INTO reference " +
-                   "(obj_handle, obj_class, ref_handle, ref_class)" +
-                   "VALUES(?, ?, ?, ?)")
-            self.dbapi.execute(sql, [obj.handle, obj.__class__.__name__,
-                                     ref_handle, ref_class_name])
-
         if not transaction.batch:
+            # Find existing references
+            sql = ("SELECT ref_class, ref_handle " +
+                   "FROM reference WHERE obj_handle = ?")
+            self.dbapi.execute(sql, [obj.handle])
+            existing_references = set(self.dbapi.fetchall())
+
+            # Once we have the list of rows that already have a reference
+            # we need to compare it with the list of objects that are
+            # still references from the primary object.
+            current_references = set(obj.get_referenced_handles_recursively())
+            no_longer_required_references = existing_references.difference(
+                                                                current_references)
+            new_references = current_references.difference(existing_references)
+
+            # Delete the existing references
+            self.dbapi.execute("DELETE FROM reference WHERE obj_handle = ?",
+                               [obj.handle])
+
+            # Now, add the current ones
+            for (ref_class_name, ref_handle) in current_references:
+                sql = ("INSERT INTO reference " +
+                       "(obj_handle, obj_class, ref_handle, ref_class)" +
+                       "VALUES(?, ?, ?, ?)")
+                self.dbapi.execute(sql, [obj.handle, obj.__class__.__name__,
+                                         ref_handle, ref_class_name])
+
             # Add new references to the transaction
             for (ref_class_name, ref_handle) in new_references:
                 key = (obj.handle, ref_handle)
@@ -698,6 +695,20 @@ class DBAPI(DbGeneric):
                 old_data = (obj.handle, obj.__class__.__name__,
                             ref_handle, ref_class_name)
                 transaction.add(REFERENCE_KEY, TXNDEL, key, old_data, None)
+        else:  # batch mode
+            current_references = set(obj.get_referenced_handles_recursively())
+
+            # Delete the existing references
+            self.dbapi.execute("DELETE FROM reference WHERE obj_handle = ?",
+                               [obj.handle])
+
+            # Now, add the current ones
+            for (ref_class_name, ref_handle) in current_references:
+                sql = ("INSERT INTO reference " +
+                       "(obj_handle, obj_class, ref_handle, ref_class)" +
+                       "VALUES(?, ?, ?, ?)")
+                self.dbapi.execute(sql, [obj.handle, obj.__class__.__name__,
+                                         ref_handle, ref_class_name])
 
     def _do_remove(self, handle, transaction, obj_key):
         if self.readonly or not handle:
