@@ -41,6 +41,7 @@ from gramps.gen.lib import Place
 from gramps.gui.views.listview import ListView, TEXT, ICON
 from gramps.gen.errors import WindowActiveError
 from gramps.gui.views.bookmarks import PlaceBookmarks
+from gramps.gui.views.placetypes import build_placetype_menu
 from gramps.gen.config import config
 from gramps.gui.dialog import ErrorDialog
 from gramps.gui.pluginmanager import GuiPluginManager
@@ -130,6 +131,7 @@ class PlaceBaseView(ListView):
         uistate.connect('placeformat-changed', self.build_tree)
 
         _ui = self.__create_maps_menu_actions()
+        _ui.extend(build_placetype_menu(uistate))
         self.additional_uis.append(_ui)
 
     def navigation_type(self):
@@ -327,6 +329,8 @@ class PlaceBaseView(ListView):
           <attribute name="label" translatable="yes">'''
         '''Place Filter Editor</attribute>
         </item>
+        <placeholder id='PlaceTypeMenu'>
+        </placeholder>
         </placeholder>
 ''',  # Following are the Toolbar items
         '''
@@ -453,6 +457,8 @@ class PlaceBaseView(ListView):
         '''_Look up with Map Service</attribute>
         </item>
       </section>
+        <placeholder id='PlaceTypePopup'>
+        </placeholder>
     </menu>
 ''' % _('action|_Edit...')]  # to use sgettext()
 
