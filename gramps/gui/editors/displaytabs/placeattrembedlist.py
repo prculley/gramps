@@ -1,8 +1,7 @@
 #
 # Gramps - a GTK+/GNOME based genealogy program
 #
-# Copyright (C) 2014-2015  Nick Hall
-# Copyright (C) 2019       Paul Culley
+# Copyright (C) 2000-2006  Donald N. Allingham
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -21,41 +20,24 @@
 
 #-------------------------------------------------------------------------
 #
-# GTK libraries
-#
-#-------------------------------------------------------------------------
-from gi.repository import Gtk
-
-#-------------------------------------------------------------------------
-#
 # Gramps classes
 #
 #-------------------------------------------------------------------------
-from gramps.gen.datehandler import get_date
-
+from .attrembedlist import AttrEmbedList
 
 #-------------------------------------------------------------------------
 #
-# PlaceNameModel
+#
 #
 #-------------------------------------------------------------------------
-class PlaceNameModel(Gtk.ListStore):
+class PlaceAttrEmbedList(AttrEmbedList):
 
-    def __init__(self, obj_list, db):
-        Gtk.ListStore.__init__(self, str, str, str, str, object)
-        self.db = db
-        for obj in obj_list:
-            self.append(row=[obj.get_value(),
-                             get_date(obj),
-                             obj.get_language(),
-                             self.get_abbrevs(obj),
-                             obj,
-                             ])
+    def __init__(self, dbstate, uistate, track, data):
+        AttrEmbedList.__init__(self, dbstate, uistate, track, data)
 
-    @staticmethod
-    def get_abbrevs(obj):
-        """ return the comma separated string of abbreviations """
-        txt = ''
-        for abb in obj.get_abbrevs():
-            txt += (', ' if txt else '') + abb.get_value()
-        return txt
+    def get_editor(self):
+        from .. import EditAttribute
+        return EditAttribute
+
+    def get_user_values(self):
+        return self.dbstate.db.get_place_attribute_types()

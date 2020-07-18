@@ -36,26 +36,16 @@ from gramps.gen.datehandler import get_date
 
 #-------------------------------------------------------------------------
 #
-# PlaceNameModel
+# PlaceTypeModel
 #
 #-------------------------------------------------------------------------
-class PlaceNameModel(Gtk.ListStore):
-
+class PlaceTypeModel(Gtk.ListStore):
+    """ Model for Place Type Embedded List """
     def __init__(self, obj_list, db):
-        Gtk.ListStore.__init__(self, str, str, str, str, object)
+        Gtk.ListStore.__init__(self, str, str, object)
         self.db = db
         for obj in obj_list:
-            self.append(row=[obj.get_value(),
+            self.append(row=[obj.str(expand=True),
                              get_date(obj),
-                             obj.get_language(),
-                             self.get_abbrevs(obj),
                              obj,
                              ])
-
-    @staticmethod
-    def get_abbrevs(obj):
-        """ return the comma separated string of abbreviations """
-        txt = ''
-        for abb in obj.get_abbrevs():
-            txt += (', ' if txt else '') + abb.get_value()
-        return txt
